@@ -1,0 +1,19 @@
+{
+  "name": "diagramatics",
+  "version": "1.0.0",
+  "description": "Interactive Diagram Maker",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "interactive",
+    "diagram",
+    "chart"
+  ],
+  "author": "Rayhan Alghiffari Azizi",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  }
+}
