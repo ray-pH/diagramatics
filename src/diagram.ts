@@ -43,7 +43,8 @@ export class Diagram {
     children : {[key : string]: Diagram} = {};
     paths : {[key : string]: Path} = {};
     origin_offset   : Vector2 = new Vector2(0, 0);
-    position        : Vector2 = new Vector2(0, 0);
+    /** position of the center of the diagram */
+    pos          : Vector2 = new Vector2(0, 0);
     color_stroke : string | undefined = undefined ;
     color_fill   : string | undefined = undefined ;
 
@@ -72,7 +73,7 @@ export class Diagram {
         Object.setPrototypeOf(newd, Diagram.prototype);
         // convert position and origin_offset to Vector2
         newd.origin_offset = Object.setPrototypeOf(newd.origin_offset, Vector2.prototype);
-        newd.position = Object.setPrototypeOf(newd.position, Vector2.prototype);
+        newd.pos = Object.setPrototypeOf(newd.pos, Vector2.prototype);
         // make sure all of the children are Diagram
         for (let c in newd.children) {
             Object.setPrototypeOf(newd.children[c], Diagram.prototype)
@@ -177,7 +178,7 @@ export class Diagram {
      */
     public translate(v : Vector2) : Diagram {
         let newd : Diagram = this.copy();
-        newd.position = newd.position.add(v);
+        newd.pos = newd.pos.add(v);
         // recursively translate all children
         for (let c in newd.children) {
             newd.children[c] = newd.children[c].translate(v);
@@ -186,6 +187,16 @@ export class Diagram {
         for (let p in newd.paths) {
             newd.paths[p] = newd.paths[p].translate(v);
         }
+        return newd;
+    }
+
+    /**
+     * move the diagram to a position
+     * @param v position to move to
+     */
+    public position(v : Vector2) : Diagram {
+        let dv = v.sub(this.pos).sub(this.origin_offset);
+        let newd = this.translate(dv);
         return newd;
     }
         
