@@ -132,6 +132,9 @@ export class Path {
 
 /**
  * Create a polygon from a list of points
+ * @param points list of points
+ * @param names list of names for each path
+ * @returns a polygon diagram
  */
 export function polygon(points: Vector2[], names : string[] = []) : Diagram {
     assert(points.length >= 3, "Polygon must have at least 3 points");
@@ -155,5 +158,3 @@ export function polygon(points: Vector2[], names : string[] = []) : Diagram {
     return polygon;
 
 }
-
-// export { Diagram }
