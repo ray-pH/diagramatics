@@ -48,6 +48,9 @@ export class Diagram {
         for (let i in paths) { this.paths[names[i]] = paths[i]; }
     }
 
+    /**
+     * Copy the diagram
+     */
     public copy() : Diagram {
         // do deepcopy with JSON
         let newd : Diagram = JSON.parse(JSON.stringify(this));
@@ -64,6 +67,10 @@ export class Diagram {
         }
         return newd;
     }
+    /**
+     * Set the fill color of the diagram
+     * @param color color of the fill
+     */
     public fill(color : string) : Diagram { 
         let newd : Diagram = this.copy();
         switch (newd.type) {
@@ -82,6 +89,10 @@ export class Diagram {
         return newd;
     }
 
+    /**
+     * Set the stroke color of the diagram
+     * @param color color of the stroke
+     */
     public stroke(color : string) : Diagram {
         let newd : Diagram = this.copy();
         switch (newd.type) {
