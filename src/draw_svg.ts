@@ -1,39 +1,53 @@
 import { Diagram, DiagramType, Path } from "./diagram.js";
 
-let color_fill_default = "none";
-let color_stroke_default = "black";
+const color_fill_default = "none";
+const color_stroke_default = "black";
 
-export function draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram) : void {
+function draw_polygon(svgelement : SVGSVGElement, diagram : Diagram,
+    set_html_attribute : boolean = true) : void {
+    // get color properties
+    let color_fill   = diagram.color_fill || color_fill_default;
+    let color_stroke = diagram.color_stroke || color_stroke_default;
+    let path_names : string[] = Object.keys(diagram.paths);
+
+    // get polygon points
+    let points : number[][] = [];
+    for (let c of path_names) {
+        // c must be a path
+        let path = diagram.paths[c];
+        points.push([path.start.x, path.start.y]);
+    }
+    // append last point
+    let path = diagram.paths[path_names[path_names.length - 1]];
+    points.push([path.end.x, path.end.y]);
+
+    // draw svg
+    let polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    polygon.style.fill = color_fill;
+    polygon.style.stroke = color_stroke;
+
+    svgelement.appendChild(polygon);
+    for (let p of points) {
+        var point = svgelement.createSVGPoint();
+        point.x = p[0];
+        point.y = p[1];
+        polygon.points.appendItem(point);
+    }
+
+
+    if (set_html_attribute) {
+        // set viewbox to the bounding box
+        let bbox = svgelement.getBBox();
+        svgelement.setAttribute("viewBox", `${bbox.x} ${bbox.y} ${bbox.width} ${bbox.height}`);
+        // set preserveAspectRatio to xMidYMid meet
+        svgelement.setAttribute("preserveAspectRatio", "xMidYMid meet");
+    }
+}
+
+export function draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram,
+    set_html_attribute : boolean = true) : void {
     if (diagram.type == DiagramType.Polygon) {
-        // get color properties
-        let color_fill   = diagram.color_fill || color_fill_default;
-        let color_stroke = diagram.color_stroke || color_stroke_default;
-        let path_names : string[] = Object.keys(diagram.paths);
-
-        // get polygon points
-        let points : number[][] = [];
-        for (let c of path_names) {
-            // c must be a path
-            let path = diagram.paths[c];
-            points.push([path.start.x, path.start.y]);
-        }
-        // append last point
-        let path = diagram.paths[path_names[path_names.length - 1]];
-        points.push([path.end.x, path.end.y]);
-
-        // draw svg
-        let polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-        polygon.style.fill = color_fill;
-        polygon.style.stroke = color_stroke;
-
-        svgelement.appendChild(polygon);
-        for (let p of points) {
-            var point = svgelement.createSVGPoint();
-            point.x = p[0];
-            point.y = p[1];
-            polygon.points.appendItem(point);
-        }
-
+        draw_polygon(svgelement, diagram, set_html_attribute);
     } else {
         throw new Error("Unimplemented : Only polygon is supported");
     }
