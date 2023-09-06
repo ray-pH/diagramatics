@@ -8,12 +8,18 @@ function assert(condition : boolean, message : string) : void {
 
 export enum DiagramType {
     Polygon = 'polygon',
-    Line    = 'line',
+    Curve   = 'curve',
     Diagram = 'diagram',
 }
 
 /**
 * Diagram Class 
+*
+* Diagram is a tree structure
+* Diagram can be a polygon, a curve, or a diagram
+* Polygon is a closed path
+* Curve is an open path
+* Diagram is a tree of Diagrams
 */
 export class Diagram {
     type : DiagramType;
@@ -36,6 +42,40 @@ export class Diagram {
         // TODO : check for name collision
         for (let i in paths) { this.paths[names[i]] = paths[i]; }
 
+    }
+
+    public fill(color : string) : Diagram { 
+        switch (this.type) {
+            case DiagramType.Polygon:
+                this.color_fill = color;
+                break;
+            case DiagramType.Curve:
+                // curve have no fill
+                break;
+            default:
+                // recursively set fill for all children
+                for (let c in this.children) {
+                    this.children[c].fill(color);
+                }
+        }
+        return this;
+    }
+
+    public stroke(color : string) : Diagram {
+        switch (this.type) {
+            case DiagramType.Polygon:
+                this.color_stroke = color;
+                break;
+            case DiagramType.Curve:
+                this.color_stroke = color;
+                break;
+            default:
+                // recursively set stroke for all children
+                for (let c in this.children) {
+                    this.children[c].stroke(color);
+                }
+        }
+        return this;
     }
 }
 
@@ -84,3 +124,4 @@ export function polygon(points: V2[], names : string[] = []) : Diagram {
 }
 
 // export { Diagram }
+
