@@ -2,23 +2,27 @@ import { Diagram, DiagramType, Path } from "./diagram.js";
 
 export function draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram) : void {
     if (diagram.type == DiagramType.Polygon) {
-        let polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-        svgelement.appendChild(polygon);
-        let child_names : string[] = Object.keys(diagram.children);
-        for (let c of child_names) {
+        let path_names : string[] = Object.keys(diagram.paths);
+        // get polygon points
+        let points : number[][] = [];
+        for (let c of path_names) {
             // c must be a path
-            let path = diagram.children[c] as Path;
-            var point = svgelement.createSVGPoint();
-            point.x = path.start.x;
-            point.y = path.start.y;
-            polygon.points.appendItem(point);
+            let path = diagram.paths[c];
+            points.push([path.start.x, path.start.y]);
         }
         // append last point
-        let path = diagram.children[child_names[child_names.length - 1]] as Path;
-        var point = svgelement.createSVGPoint();
-        point.x = path.end.x;
-        point.y = path.end.y;
-        polygon.points.appendItem(point);
+        let path = diagram.paths[path_names[path_names.length - 1]];
+        points.push([path.end.x, path.end.y]);
+
+        // draw points to svg
+        let polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+        svgelement.appendChild(polygon);
+        for (let p of points) {
+            var point = svgelement.createSVGPoint();
+            point.x = p[0];
+            point.y = p[1];
+            polygon.points.appendItem(point);
+        }
 
     } else {
         throw new Error("Unimplemented : Only polygon is supported");

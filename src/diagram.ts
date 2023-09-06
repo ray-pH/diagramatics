@@ -16,15 +16,26 @@ export enum DiagramType {
 * Diagram Class 
 */
 export class Diagram {
-    children : {[key : string]: (Diagram|Path)};
     type : DiagramType;
+    children : {[key : string]: Diagram} = {};
+    paths : {[key : string]: Path} = {};
+    color_stroke : string | undefined = undefined ;
+    color_fill   : string | undefined = undefined ;
 
-    constructor(childs : (Diagram|Path)[], names : string[], type_ : DiagramType){
+    constructor(type_ : DiagramType){
         this.type = type_;
-        this.children = {}
-        for (let i in childs) {
-            this.children[names[i]] = childs[i];
+    }
+    add_childs(childs : Diagram[], names : string[]){
+        // TODO : check for name collision
+        for (let i in childs) { this.children[names[i]] = childs[i]; }
+    }
+    add_paths(paths : Path[], names : string[]){
+        if (this.type == DiagramType.Diagram) {
+            throw new Error("Diagram cannot have paths");
         }
+        // TODO : check for name collision
+        for (let i in paths) { this.paths[names[i]] = paths[i]; }
+
     }
 }
 
@@ -66,9 +77,10 @@ export function polygon(points: V2[], names : string[] = []) : Diagram {
     for (let i = 0; i < imax; i++) { path_names[i] = names[i] as string; }
 
     // create diagram
-    return new Diagram(paths, path_names, DiagramType.Polygon);
+    let polygon = new Diagram(DiagramType.Polygon);
+    polygon.add_paths(paths, path_names);
+    return polygon;
+
 }
 
-
 // export { Diagram }
-
