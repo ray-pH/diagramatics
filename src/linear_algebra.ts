@@ -1,24 +1,28 @@
 /**
  *  Class for 2D Vectors 
 */
-export class V2 {
+export class Vector2 {
     constructor(public x: number, public y: number) { }
-    add(v: V2) : V2 {
-        return new V2(this.x + v.x, this.y + v.y);
+    add(v: Vector2) : Vector2 {
+        return new Vector2(this.x + v.x, this.y + v.y);
     }
-    sub(v: V2) : V2 {
-        return new V2(this.x - v.x, this.y - v.y);
+    sub(v: Vector2) : Vector2 {
+        return new Vector2(this.x - v.x, this.y - v.y);
     }
-    scale(s: number) : V2 {
-        return new V2(this.x * s, this.y * s);
+    scale(s: number) : Vector2 {
+        return new Vector2(this.x * s, this.y * s);
     }
-    dot(v: V2) : number {
+    dot(v: Vector2) : number {
         return this.x * v.x + this.y * v.y;
     }
-    cross(v: V2) : number {
+    cross(v: Vector2) : number {
         return this.x * v.y - this.y * v.x;
     }
-    equals(v: V2) : boolean {
+    equals(v: Vector2) : boolean {
         return this.x == v.x && this.y == v.y;
     }
+}
+
+export function V2(x : number, y : number) : Vector2 {
+    return new Vector2(x, y);
 }

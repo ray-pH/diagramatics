@@ -1,4 +1,4 @@
-import { V2 } from './linear_algebra.js';
+import { Vector2 } from './linear_algebra.js';
 
 function assert(condition : boolean, message : string) : void {
     if (!condition) {
@@ -103,7 +103,7 @@ export class Diagram {
 
 export class Path {
     // for now just do linear path
-    constructor(public start: V2, public end: V2) { }
+    constructor(public start: Vector2, public end: Vector2) { }
 
     /**
      * Get the point on the path at t 
@@ -112,9 +112,9 @@ export class Path {
      * @param t parameter
      * @returns the position of the point
     */
-    get_parametric_point(t : number) : V2 {
+    get_parametric_point(t : number) : Vector2 {
         // for now assume Path is linear
-        let dir : V2 = this.end.sub(this.start);
+        let dir : Vector2 = this.end.sub(this.start);
         return this.start.add(dir.scale(t));
     }
 }
@@ -122,7 +122,7 @@ export class Path {
 /**
  * Create a polygon from a list of points
  */
-export function polygon(points: V2[], names : string[] = []) : Diagram {
+export function polygon(points: Vector2[], names : string[] = []) : Diagram {
     assert(points.length >= 3, "Polygon must have at least 3 points");
     let paths : Path[] = [];
 
@@ -146,4 +146,3 @@ export function polygon(points: V2[], names : string[] = []) : Diagram {
 }
 
 // export { Diagram }
-
