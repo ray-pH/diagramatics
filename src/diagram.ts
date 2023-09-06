@@ -13,6 +13,11 @@ export enum DiagramType {
 }
 
 /**
+ * Make sure that every function return a new Diagram
+ * Diagram is immutable to the user
+ */
+
+/**
 * Diagram Class 
 *
 * Diagram is a tree structure
@@ -41,41 +46,58 @@ export class Diagram {
         }
         // TODO : check for name collision
         for (let i in paths) { this.paths[names[i]] = paths[i]; }
-
     }
 
+    public copy() : Diagram {
+        // do deepcopy with JSON
+        let newd : Diagram = JSON.parse(JSON.stringify(this));
+        // turn newd into Diagram
+        Object.setPrototypeOf(newd, Diagram.prototype);
+        // make sure all of the children are Diagram
+        for (let c in newd.children) {
+            Object.setPrototypeOf(newd.children[c], Diagram.prototype)
+            newd.children[c] = newd.children[c].copy();
+        }
+        // make sure all of the paths are Path
+        for (let p in newd.paths) {
+            Object.setPrototypeOf(newd.paths[p], Path.prototype)
+        }
+        return newd;
+    }
     public fill(color : string) : Diagram { 
-        switch (this.type) {
+        let newd : Diagram = this.copy();
+        switch (newd.type) {
             case DiagramType.Polygon:
-                this.color_fill = color;
+                newd.color_fill = color;
                 break;
             case DiagramType.Curve:
                 // curve have no fill
                 break;
             default:
                 // recursively set fill for all children
-                for (let c in this.children) {
-                    this.children[c].fill(color);
+                for (let c in newd.children) {
+                    newd.children[c].fill(color);
                 }
         }
-        return this;
+        return newd;
     }
 
     public stroke(color : string) : Diagram {
-        switch (this.type) {
+        let newd : Diagram = this.copy();
+        switch (newd.type) {
             case DiagramType.Polygon:
-                this.color_stroke = color;
+                newd.color_stroke = color;
                 break;
             case DiagramType.Curve:
-                this.color_stroke = color;
+                newd.color_stroke = color;
                 break;
             default:
                 // recursively set stroke for all children
-                for (let c in this.children) {
-                    this.children[c].stroke(color);
+                for (let c in newd.children) {
+                    newd.children[c].stroke(color);
                 }
         }
-        return this;
+        return newd;
     }
 }
 
