@@ -12,6 +12,18 @@ export enum DiagramType {
     Diagram = 'diagram',
 }
 
+export enum RelativePosition {
+    TopLeft     = 'top-left',
+    TopCenter   = 'top-center',
+    TopRight    = 'top-right',
+    CenterLeft  = 'center-left',
+    Center      = 'center',
+    CenterRight = 'center-right',
+    BottomLeft  = 'bottom-left',
+    BottomCenter= 'bottom-center',
+    BottomRight = 'bottom-right',
+}
+
 /**
  * Make sure that every function return a new Diagram
  * Diagram is immutable to the user
@@ -30,6 +42,8 @@ export class Diagram {
     type : DiagramType;
     children : {[key : string]: Diagram} = {};
     paths : {[key : string]: Path} = {};
+    origin_offset   : Vector2 = new Vector2(0, 0);
+    position        : Vector2 = new Vector2(0, 0);
     color_stroke : string | undefined = undefined ;
     color_fill   : string | undefined = undefined ;
 
@@ -56,6 +70,9 @@ export class Diagram {
         let newd : Diagram = JSON.parse(JSON.stringify(this));
         // turn newd into Diagram
         Object.setPrototypeOf(newd, Diagram.prototype);
+        // convert position and origin_offset to Vector2
+        newd.origin_offset = Object.setPrototypeOf(newd.origin_offset, Vector2.prototype);
+        newd.position = Object.setPrototypeOf(newd.position, Vector2.prototype);
         // make sure all of the children are Diagram
         for (let c in newd.children) {
             Object.setPrototypeOf(newd.children[c], Diagram.prototype)
@@ -64,9 +81,11 @@ export class Diagram {
         // make sure all of the paths are Path
         for (let p in newd.paths) {
             Object.setPrototypeOf(newd.paths[p], Path.prototype)
+            newd.paths[p] = newd.paths[p].copy();
         }
         return newd;
     }
+
     /**
      * Set the fill color of the diagram
      * @param color color of the fill
@@ -110,6 +129,67 @@ export class Diagram {
         }
         return newd;
     }
+
+    /**
+     * Get the bounding box of the diagram
+     * @returns [min, max] where min is the top left corner and max is the bottom right corner
+     */
+    public bounding_box() : [Vector2, Vector2] {
+        let minx = Infinity, miny = Infinity;
+        let maxx = -Infinity, maxy = -Infinity;
+        switch (this.type) {
+            case DiagramType.Polygon:
+                for (let p in this.paths) {
+                    let path = this.paths[p];
+                    minx = Math.min(minx, path.start.x, path.end.x);
+                    miny = Math.min(miny, path.start.y, path.end.y);
+                    maxx = Math.max(maxx, path.start.x, path.end.x);
+                    maxy = Math.max(maxy, path.start.y, path.end.y);
+                }
+                return [new Vector2(minx, miny), new Vector2(maxx, maxy)];
+            case DiagramType.Curve:
+                for (let p in this.paths) {
+                    let path = this.paths[p];
+                    minx = Math.min(minx, path.start.x, path.end.x);
+                    miny = Math.min(miny, path.start.y, path.end.y);
+                    maxx = Math.max(maxx, path.start.x, path.end.x);
+                    maxy = Math.max(maxy, path.start.y, path.end.y);
+                }
+                return [new Vector2(minx, miny), new Vector2(maxx, maxy)];
+            case DiagramType.Diagram:
+                for (let c in this.children) {
+                    let child = this.children[c];
+                    let [min, max] = child.bounding_box();
+                    minx = Math.min(minx, min.x);
+                    miny = Math.min(miny, min.y);
+                    maxx = Math.max(maxx, max.x);
+                    maxy = Math.max(maxy, max.y);
+                }
+                return [new Vector2(minx, miny), new Vector2(maxx, maxy)];
+            default:
+                throw new Error("Unreachable");
+        }
+    }
+
+    /**
+     * Translate the diagram by a vector
+     * @param v vector to translate
+     */
+    public translate(v : Vector2) : Diagram {
+        let newd : Diagram = this.copy();
+        newd.position = newd.position.add(v);
+        // recursively translate all children
+        for (let c in newd.children) {
+            newd.children[c] = newd.children[c].translate(v);
+        }
+        // recursively translate all paths
+        for (let p in newd.paths) {
+            newd.paths[p] = newd.paths[p].translate(v);
+        }
+        return newd;
+    }
+        
+        
 }
 
 export class Path {
@@ -127,6 +207,23 @@ export class Path {
         // for now assume Path is linear
         let dir : Vector2 = this.end.sub(this.start);
         return this.start.add(dir.scale(t));
+    }
+
+    copy() : Path {
+        let start = new Vector2(this.start.x, this.start.y);
+        let end = new Vector2(this.end.x, this.end.y);
+        return new Path(start, end);
+    }
+
+    /**
+     * Translate the path by a vector
+     * @param v vector to translate
+     */
+    public translate(v : Vector2) : Path {
+        let newp : Path = this.copy();
+        newp.start = newp.start.add(v);
+        newp.end = newp.end.add(v);
+        return newp;
     }
 }
 
