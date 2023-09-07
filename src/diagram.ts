@@ -44,8 +44,13 @@ export class Diagram {
     path : Path | undefined = undefined; // Polygon and Curve have a path
     /** position of the origin of the diagram */
     origin       : Vector2 = new Vector2(0, 0);
-    color_stroke : string | undefined = undefined ;
-    color_fill   : string | undefined = undefined ;
+    style : {
+        color_stroke?     : string,
+        color_fill?       : string,
+        stroke_width?     : number,
+        stroke_linecap?   : string,
+        stroke_dasharray? : number[],
+    } = {}
 
     constructor(type_ : DiagramType, args : { path? : Path, children? : Diagram[] } = {}) {
         this.type = type_;
@@ -98,7 +103,7 @@ export class Diagram {
         let newd : Diagram = this.copy();
         switch (newd.type) {
             case DiagramType.Polygon:
-                newd.color_fill = color;
+                newd.style.color_fill = color;
                 break;
             case DiagramType.Curve:
                 // curve have no fill
@@ -120,10 +125,10 @@ export class Diagram {
         let newd : Diagram = this.copy();
         switch (newd.type) {
             case DiagramType.Polygon:
-                newd.color_stroke = color;
+                newd.style.color_stroke = color;
                 break;
             case DiagramType.Curve:
-                newd.color_stroke = color;
+                newd.style.color_stroke = color;
                 break;
             default:
                 // recursively set stroke for all children
@@ -239,8 +244,6 @@ export class Diagram {
             default: throw new Error("Unknown anchor " + anchor);
         }
     }
-        
-        
 }
 
 export class Path {

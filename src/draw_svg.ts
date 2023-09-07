@@ -6,8 +6,8 @@ const color_stroke_default = "black";
 
 function draw_polygon(svgelement : SVGSVGElement, diagram : Diagram) : void {
     // get color properties
-    let color_fill   = diagram.color_fill || color_fill_default;
-    let color_stroke = diagram.color_stroke || color_stroke_default;
+    let color_fill   = diagram.style.color_fill || color_fill_default;
+    let color_stroke = diagram.style.color_stroke || color_stroke_default;
 
     // draw svg
     let polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
@@ -31,7 +31,7 @@ function draw_polygon(svgelement : SVGSVGElement, diagram : Diagram) : void {
 
 function draw_curve(svgelement : SVGSVGElement, diagram : Diagram) : void {
     // get color properties
-    let color_stroke = diagram.color_stroke || color_stroke_default;
+    let color_stroke = diagram.style.color_stroke || color_stroke_default;
 
     // draw svg
     let polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
