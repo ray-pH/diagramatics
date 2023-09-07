@@ -1,4 +1,5 @@
 import { Diagram, DiagramType, Path } from "./diagram.js";
+import { tab_color, get_color } from "./color_palette.js";
 
 const color_fill_default = "none";
 const color_stroke_default = "black";
@@ -23,8 +24,11 @@ function draw_polygon(svgelement : SVGSVGElement, diagram : Diagram,
 
     // draw svg
     let polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-    polygon.style.fill = color_fill;
-    polygon.style.stroke = color_stroke;
+    // polygon.style.fill = color_fill;
+    // polygon.style.stroke = color_stroke;
+    // use tab_color color palette
+    polygon.style.fill = get_color(color_fill, tab_color);
+    polygon.style.stroke = get_color(color_stroke, tab_color);
 
     svgelement.appendChild(polygon);
     for (let p of points) {
