@@ -12,16 +12,16 @@ export enum DiagramType {
     Diagram = 'diagram',
 }
 
-export enum RelativePosition {
-    TopLeft     = 'top-left',
-    TopCenter   = 'top-center',
-    TopRight    = 'top-right',
-    CenterLeft  = 'center-left',
-    Center      = 'center',
-    CenterRight = 'center-right',
-    BottomLeft  = 'bottom-left',
-    BottomCenter= 'bottom-center',
-    BottomRight = 'bottom-right',
+export enum Anchor {
+    TopLeft      = 'top-left',
+    TopCenter    = 'top-center',
+    TopRight     = 'top-right',
+    CenterLeft   = 'center-left',
+    CenterCenter = 'center-center',
+    CenterRight  = 'center-right',
+    BottomLeft   = 'bottom-left',
+    BottomCenter = 'bottom-center',
+    BottomRight  = 'bottom-right',
 }
 
 /**
@@ -217,6 +217,26 @@ export class Diagram {
             newd.paths[p] = newd.paths[p].rotate(angle, pivot);
         }
         return newd;
+    }
+
+    public get_anchor(anchor : Anchor) : Vector2 {
+        let [min, max] = this.bounding_box();
+        let minx = min.x, miny = min.y;
+        let maxx = max.x, maxy = max.y;
+        let midx = (minx + maxx) / 2;
+        let midy = (miny + maxy) / 2;
+        switch (anchor) {
+            case Anchor.TopLeft      : return new Vector2(minx, miny);
+            case Anchor.TopCenter    : return new Vector2(midx, miny);
+            case Anchor.TopRight     : return new Vector2(maxx, miny);
+            case Anchor.CenterLeft   : return new Vector2(minx, midy);
+            case Anchor.CenterCenter : return new Vector2(midx, midy);
+            case Anchor.CenterRight  : return new Vector2(maxx, midy);
+            case Anchor.BottomLeft   : return new Vector2(minx, maxy);
+            case Anchor.BottomCenter : return new Vector2(midx, maxy);
+            case Anchor.BottomRight  : return new Vector2(maxx, maxy);
+            default: throw new Error("Unknown anchor " + anchor);
+        }
     }
         
         
