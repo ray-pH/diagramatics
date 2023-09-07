@@ -16,11 +16,11 @@ function draw_polygon(svgelement : SVGSVGElement, diagram : Diagram,
     for (let c of path_names) {
         // c must be a path
         let path = diagram.paths[c];
-        points.push([path.start.x, path.start.y]);
+        points.push([path.points[0].x, path.points[0].y]);
     }
     // append last point
     let path = diagram.paths[path_names[path_names.length - 1]];
-    points.push([path.end.x, path.end.y]);
+    points.push([path.points.slice(-1)[0].x, path.points.slice(-1)[0].y]);
 
     // draw svg
     let polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");

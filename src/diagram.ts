@@ -140,19 +140,23 @@ export class Diagram {
             case DiagramType.Polygon:
                 for (let p in this.paths) {
                     let path = this.paths[p];
-                    minx = Math.min(minx, path.start.x, path.end.x);
-                    miny = Math.min(miny, path.start.y, path.end.y);
-                    maxx = Math.max(maxx, path.start.x, path.end.x);
-                    maxy = Math.max(maxy, path.start.y, path.end.y);
+                    for (let point of path.points) {
+                        minx = Math.min(minx, point.x);
+                        miny = Math.min(miny, point.y);
+                        maxx = Math.max(maxx, point.x);
+                        maxy = Math.max(maxy, point.y);
+                    }
                 }
                 return [new Vector2(minx, miny), new Vector2(maxx, maxy)];
             case DiagramType.Curve:
                 for (let p in this.paths) {
                     let path = this.paths[p];
-                    minx = Math.min(minx, path.start.x, path.end.x);
-                    miny = Math.min(miny, path.start.y, path.end.y);
-                    maxx = Math.max(maxx, path.start.x, path.end.x);
-                    maxy = Math.max(maxy, path.start.y, path.end.y);
+                    for (let point of path.points) {
+                        minx = Math.min(minx, point.x);
+                        miny = Math.min(miny, point.y);
+                        maxx = Math.max(maxx, point.x);
+                        maxy = Math.max(maxy, point.y);
+                    }
                 }
                 return [new Vector2(minx, miny), new Vector2(maxx, maxy)];
             case DiagramType.Diagram:
@@ -244,7 +248,7 @@ export class Diagram {
 
 export class Path {
     // for now just do linear path
-    constructor(public start: Vector2, public end: Vector2) { }
+    constructor(public points : Vector2[]) { }
 
     /**
      * Get the point on the path at t 
@@ -254,15 +258,19 @@ export class Path {
      * @returns the position of the point
     */
     get_parametric_point(t : number) : Vector2 {
+        if (this.points.length > 2) { throw Error("Get Parametric Point For n>2 is Not Implemented yet"); }
         // for now assume Path is linear
-        let dir : Vector2 = this.end.sub(this.start);
-        return this.start.add(dir.scale(t));
+        let end   = this.points.slice(-1)[0];
+        let start = this.points[0];
+        let dir : Vector2 = end.sub(start);
+        return start.add(dir.scale(t));
     }
 
     copy() : Path {
-        let start = new Vector2(this.start.x, this.start.y);
-        let end = new Vector2(this.end.x, this.end.y);
-        return new Path(start, end);
+        // let start = new Vector2(this.start.x, this.start.y);
+        // let end = new Vector2(this.end.x, this.end.y);
+        let newpoints = this.points.map(p => new Vector2(p.x, p.y));
+        return new Path(newpoints);
     }
 
     /**
@@ -271,8 +279,8 @@ export class Path {
      */
     public translate(v : Vector2) : Path {
         let newp : Path = this.copy();
-        newp.start = newp.start.add(v);
-        newp.end = newp.end.add(v);
+        // translate all the points
+        newp.points = newp.points.map(p => p.add(v));
         return newp;
     }
 
@@ -283,8 +291,8 @@ export class Path {
      */
     public rotate(angle : number, pivot : Vector2) : Path {
         let newp : Path = this.copy();
-        newp.start = newp.start.sub(pivot).rotate(angle).add(pivot);
-        newp.end   = newp.end.sub(pivot).rotate(angle).add(pivot);
+        // rotate all the points
+        newp.points = newp.points.map(p => p.sub(pivot).rotate(angle).add(pivot));
         return newp;
     }
 }
@@ -300,7 +308,7 @@ export function polygon(points: Vector2[], names : string[] = []) : Diagram {
     let paths : Path[] = [];
 
     for (let i = 0; i < points.length - 1; i++) {
-        paths.push(new Path(points[i], points[i+1]));
+        paths.push(new Path([points[i], points[i+1]]));
     }
 
     // create names ['path1', 'path2', ...]
@@ -315,5 +323,4 @@ export function polygon(points: Vector2[], names : string[] = []) : Diagram {
     let polygon = new Diagram(DiagramType.Polygon);
     polygon.add_paths(paths, path_names);
     return polygon;
-
 }
