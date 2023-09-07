@@ -47,14 +47,16 @@ export class Diagram {
     color_stroke : string | undefined = undefined ;
     color_fill   : string | undefined = undefined ;
 
-    constructor(type_ : DiagramType, path_ : Path | undefined = undefined) {
+    constructor(type_ : DiagramType, args : { path? : Path, children? : Diagram[] } = {}) {
         this.type = type_;
-        this.path = path_;
+        this.path = args.path;
+        if (args.children) { this.children = args.children; }
     }
     // add_childs(childs : Diagram[], names : string[]){
     //     // TODO : check for name collision
     //     for (let i in childs) { this.children. = childs[i]; }
     // }
+    //
 
     /**
      * Copy the diagram
@@ -291,6 +293,6 @@ export function polygon(points: Vector2[]) : Diagram {
     let path : Path = new Path(points);
 
     // create diagram
-    let polygon = new Diagram(DiagramType.Polygon, path);
+    let polygon = new Diagram(DiagramType.Polygon, {path : path});
     return polygon;
 }
