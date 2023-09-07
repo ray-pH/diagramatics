@@ -81,7 +81,7 @@ export class Diagram {
             newd.children[c] = newd.children[c].copy();
         }
         // set path to Path
-        Object.setPrototypeOf(newd.path, Path.prototype);
+        if (newd.path != undefined) Object.setPrototypeOf(newd.path, Path.prototype);
         return newd;
     }
 

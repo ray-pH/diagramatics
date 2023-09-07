@@ -67,7 +67,9 @@ export function draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram,
     } else if (diagram.type == DiagramType.Curve){
         draw_curve(svgelement, diagram);
     } else {
-        throw new Error("Unimplemented : Only polygon is supported");
+        for (let d of diagram.children) {
+            draw_to_svg(svgelement, d, false);
+        }
     }
     
     if (set_html_attribute) {
