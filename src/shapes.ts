@@ -1,5 +1,5 @@
 import { Diagram, polygon, line, diagram_combine } from './diagram.js';
-import { Vector2, V2 } from './linear_algebra.js';
+import { Vector2, V2, linspace } from './linear_algebra.js';
 
 // function helpers to create common shapes
 
@@ -49,19 +49,4 @@ export function arrow2(start : Vector2, end : Vector2, headsize : number = 3) : 
     let head_triangle  = raw_triangle.rotate(direction.angle()).position(end);
     let head_triangle2 = raw_triangle.rotate(direction.angle()+Math.PI).position(start);
     return diagram_combine([line_diagram, head_triangle, head_triangle2]);
-}
-
-/**
- * Draw xy axes
- * @param xmin minimum x value
- * @param xmax maximum x value
- * @param ymin minimum y value
- * @param ymax maximum y value
- * @returns a Diagram object
- */
-export function axes(xmin : number = -50, xmax : number = 50, ymin : number = -50, ymax : number = 50) : Diagram {
-    let xaxis = arrow2(V2(xmin,0), V2(xmax,0));
-    let yaxis = arrow2(V2(0,ymin), V2(0,ymax));
-    return diagram_combine([xaxis, yaxis]).stroke('gray').fill('gray');
-    // return xaxis;
 }
