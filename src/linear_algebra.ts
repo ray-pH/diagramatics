@@ -33,6 +33,16 @@ export class Vector2 {
     equals(v: Vector2) : boolean {
         return this.x == v.x && this.y == v.y;
     }
+    length() : number {
+        return Math.sqrt(this.x * this.x + this.y * this.y);
+    }
+    angle() : number {
+        return Math.atan2(this.y, this.x);
+    }
+    normalize() : Vector2 {
+        let len = this.length();
+        return new Vector2(this.x / len, this.y / len);
+    }
 }
 
 /**
