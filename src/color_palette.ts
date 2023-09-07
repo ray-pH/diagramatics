@@ -16,6 +16,8 @@ export const tab_color : {[key : string]: string} = {
     'lightpink'   : '#f7b6d2',
     'grey'        : '#7f7f7f',
     'lightgrey'   : '#c7c7c7',
+    'gray'        : '#7f7f7f',
+    'lightgray'   : '#c7c7c7',
     'olive'       : '#bcbd22',
     'lightolive'  : '#dbdb8d',
     'cyan'        : '#17becf',
