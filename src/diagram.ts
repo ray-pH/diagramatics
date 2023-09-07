@@ -282,6 +282,21 @@ export class Path {
     }
 }
 
+// ====== function helpers to create primitives =========
+
+
+/**
+ * Create a line from start to end 
+ * @param start start point
+ * @param end end point
+ * @returns a line diagram
+ */
+export function line(start : Vector2, end : Vector2) : Diagram {
+    let path : Path = new Path([start, end]);
+    let line = new Diagram(DiagramType.Curve, {path : path});
+    return line;
+}
+
 /**
  * Create a polygon from a list of points
  * @param points list of points
