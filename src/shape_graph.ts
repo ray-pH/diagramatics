@@ -14,6 +14,7 @@ export type axes_options = {
     yrange  : [number, number],
     xticks? : number[],
     yticks? : number[],
+    n?      : number,
 }
 
 export let default_axes_options : axes_options = {
@@ -22,6 +23,7 @@ export let default_axes_options : axes_options = {
     yrange : [-2, 2],
     xticks : undefined,
     yticks : undefined,
+    n      : 100,
 }
 
 /**
@@ -107,13 +109,16 @@ export function plot(xdata : number[], ydata : number[], axes_options? : axes_op
     return plotv(vdata, axes_options);
 }
 
+/**
+ * Plot a function
+ * @param f function to plot
+ * @param n number of points to plot
+ * @param axes_options options for the axes
+ */
+export function plotf(f : (x:number)=>number, axes_options? : axes_options) : Diagram {
+    let opt = {...default_axes_options, ...axes_options}; // use default if not defined
+    let xdata = linspace(...opt.xrange, opt.n);
+    let vdata = xdata.map(x => V2(x,f(x)));
+    return plotv(vdata, axes_options);
+}
 
-// export function plot_function(f : (x:number)=>number, 
-//     xmin : number =-50, xmax : number = 50, n : number = 100,
-//     yboundmin : number = -50, yboundmax : number = 50
-// ) : Diagram {
-//     let x = linspace(xmin, xmax, n);
-//     let y = x.map(f);
-//     let points = x.map((x,i) => V2(x,y[i]));
-//     return polygon(points).fill('none').stroke('black');
-// }
