@@ -28,8 +28,8 @@ function draw_polygon(svgelement : SVGSVGElement, diagram : Diagram) : void {
     if (diagram.path != undefined) {
         for (let p of diagram.path.points) {
             var point = svgelement.createSVGPoint();
-            point.x = p.x;
-            point.y = p.y;
+            point.x =  p.x;
+            point.y = -p.y;
             polygon.points.appendItem(point);
         }
     }
@@ -52,8 +52,8 @@ function draw_curve(svgelement : SVGSVGElement, diagram : Diagram) : void {
     if (diagram.path != undefined) {
         for (let p of diagram.path.points) {
             var point = svgelement.createSVGPoint();
-            point.x = p.x;
-            point.y = p.y;
+            point.x =  p.x;
+            point.y = -p.y;
             polyline.points.appendItem(point);
         }
     }
