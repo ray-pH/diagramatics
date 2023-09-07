@@ -79,6 +79,18 @@ export class Diagram {
     }
 
     /**
+     * Combine another diagram with this diagram
+     * @param diagrams a diagram or a list of diagrams
+     */
+    public combine(diagrams : Diagram | Diagram[]) : Diagram {
+        if (diagrams instanceof Diagram) {
+            return diagram_combine([this, diagrams]);
+        } else {
+            return diagram_combine([this, ...diagrams]);
+        }
+    }
+
+    /**
      * Set the fill color of the diagram
      * @param color color of the fill
      */
@@ -280,6 +292,16 @@ export class Path {
         newp.points = newp.points.map(p => p.sub(pivot).rotate(angle).add(pivot));
         return newp;
     }
+}
+
+/**
+ * Combine multiple diagrams into one diagram
+ * @param diagrams list of diagrams to combine
+ * @returns a diagram
+ */
+export function diagram_combine(diagrams : Diagram[]) : Diagram {
+    let newdiagrams = diagrams.map(d => d.copy());
+    return new Diagram(DiagramType.Diagram, {children : newdiagrams});
 }
 
 // ====== function helpers to create primitives =========
