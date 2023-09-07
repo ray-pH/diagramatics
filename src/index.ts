@@ -1,4 +1,4 @@
-export { Diagram, polygon } from './diagram.js';
+export { Diagram, polygon, line } from './diagram.js';
 
 export { Vector2, V2, from_degree } from './linear_algebra.js';
 
