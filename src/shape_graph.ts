@@ -38,9 +38,12 @@ export function axes_empty(axes_options? : axes_options) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
 
     let [lowerleft, upperright] = opt.bbox;
+    // get the intersection point
+    let xorigin = lowerleft.x + (upperright.x-lowerleft.x)/(opt.xrange[1]-opt.xrange[0])*(0-opt.xrange[0]);
+    let yorigin = lowerleft.y + (upperright.y-lowerleft.y)/(opt.yrange[1]-opt.yrange[0])*(0-opt.yrange[0]);
 
-    let xaxis = arrow2(V2(lowerleft.x,0), V2(upperright.x,0));
-    let yaxis = arrow2(V2(0,lowerleft.y), V2(0,upperright.y));
+    let xaxis = arrow2(V2(lowerleft.x,yorigin), V2(upperright.x,yorigin));
+    let yaxis = arrow2(V2(xorigin,lowerleft.y), V2(xorigin,upperright.y));
     return diagram_combine([xaxis, yaxis]).stroke('gray').fill('gray');
     // return xaxis;
 }
