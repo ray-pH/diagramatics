@@ -40,27 +40,21 @@ export enum Anchor {
 */
 export class Diagram {
     type : DiagramType;
-    children : {[key : string]: Diagram} = {};
-    paths : {[key : string]: Path} = {};
+    children : Diagram[] = [];
+    path : Path | undefined = undefined; // Polygon and Curve have a path
     /** position of the origin of the diagram */
     origin       : Vector2 = new Vector2(0, 0);
     color_stroke : string | undefined = undefined ;
     color_fill   : string | undefined = undefined ;
 
-    constructor(type_ : DiagramType){
+    constructor(type_ : DiagramType, path_ : Path | undefined = undefined) {
         this.type = type_;
+        this.path = path_;
     }
-    add_childs(childs : Diagram[], names : string[]){
-        // TODO : check for name collision
-        for (let i in childs) { this.children[names[i]] = childs[i]; }
-    }
-    add_paths(paths : Path[], names : string[]){
-        if (this.type == DiagramType.Diagram) {
-            throw new Error("Diagram cannot have paths");
-        }
-        // TODO : check for name collision
-        for (let i in paths) { this.paths[names[i]] = paths[i]; }
-    }
+    // add_childs(childs : Diagram[], names : string[]){
+    //     // TODO : check for name collision
+    //     for (let i in childs) { this.children. = childs[i]; }
+    // }
 
     /**
      * Copy the diagram
@@ -74,14 +68,11 @@ export class Diagram {
         newd.origin = Object.setPrototypeOf(newd.origin, Vector2.prototype);
         // make sure all of the children are Diagram
         for (let c in newd.children) {
-            Object.setPrototypeOf(newd.children[c], Diagram.prototype)
+            Object.setPrototypeOf(newd.children[c], Diagram.prototype);
             newd.children[c] = newd.children[c].copy();
         }
-        // make sure all of the paths are Path
-        for (let p in newd.paths) {
-            Object.setPrototypeOf(newd.paths[p], Path.prototype)
-            newd.paths[p] = newd.paths[p].copy();
-        }
+        // set path to Path
+        Object.setPrototypeOf(newd.path, Path.prototype);
         return newd;
     }
 
@@ -138,25 +129,21 @@ export class Diagram {
         let maxx = -Infinity, maxy = -Infinity;
         switch (this.type) {
             case DiagramType.Polygon:
-                for (let p in this.paths) {
-                    let path = this.paths[p];
-                    for (let point of path.points) {
-                        minx = Math.min(minx, point.x);
-                        miny = Math.min(miny, point.y);
-                        maxx = Math.max(maxx, point.x);
-                        maxy = Math.max(maxy, point.y);
-                    }
+                if (this.path == undefined) { throw new Error("Polygon doesn't have a path"); }
+                for (let point of this.path.points) {
+                    minx = Math.min(minx, point.x);
+                    miny = Math.min(miny, point.y);
+                    maxx = Math.max(maxx, point.x);
+                    maxy = Math.max(maxy, point.y);
                 }
                 return [new Vector2(minx, miny), new Vector2(maxx, maxy)];
             case DiagramType.Curve:
-                for (let p in this.paths) {
-                    let path = this.paths[p];
-                    for (let point of path.points) {
-                        minx = Math.min(minx, point.x);
-                        miny = Math.min(miny, point.y);
-                        maxx = Math.max(maxx, point.x);
-                        maxy = Math.max(maxy, point.y);
-                    }
+                if (this.path == undefined) { throw new Error("Polygon doesn't have a path"); }
+                for (let point of this.path.points) {
+                    minx = Math.min(minx, point.x);
+                    miny = Math.min(miny, point.y);
+                    maxx = Math.max(maxx, point.x);
+                    maxy = Math.max(maxy, point.y);
                 }
                 return [new Vector2(minx, miny), new Vector2(maxx, maxy)];
             case DiagramType.Diagram:
@@ -185,10 +172,8 @@ export class Diagram {
         for (let c in newd.children) {
             newd.children[c] = newd.children[c].translate(v);
         }
-        // recursively translate all paths
-        for (let p in newd.paths) {
-            newd.paths[p] = newd.paths[p].translate(v);
-        }
+        // translate paths
+        if (newd.path != undefined) newd.path = newd.path.translate(v);
         return newd;
     }
 
@@ -216,10 +201,8 @@ export class Diagram {
         for (let c in newd.children) {
             newd.children[c] = newd.children[c].rotate(angle, pivot);
         }
-        // rotate all paths
-        for (let p in newd.paths) { 
-            newd.paths[p] = newd.paths[p].rotate(angle, pivot);
-        }
+        // rotate path
+        if (newd.path != undefined) newd.path = newd.path.rotate(angle, pivot);
         return newd;
     }
 
@@ -303,24 +286,11 @@ export class Path {
  * @param names list of names for each path
  * @returns a polygon diagram
  */
-export function polygon(points: Vector2[], names : string[] = []) : Diagram {
+export function polygon(points: Vector2[]) : Diagram {
     assert(points.length >= 3, "Polygon must have at least 3 points");
-    let paths : Path[] = [];
-
-    for (let i = 0; i < points.length - 1; i++) {
-        paths.push(new Path([points[i], points[i+1]]));
-    }
-
-    // create names ['path1', 'path2', ...]
-    let path_names : string[] = [];
-    for (let i in paths) { path_names.push('path' + i.toString()); }
-
-    // put custom names
-    let imax = Math.min(path_names.length, names.length);
-    for (let i = 0; i < imax; i++) { path_names[i] = names[i] as string; }
+    let path : Path = new Path(points);
 
     // create diagram
-    let polygon = new Diagram(DiagramType.Polygon);
-    polygon.add_paths(paths, path_names);
+    let polygon = new Diagram(DiagramType.Polygon, path);
     return polygon;
 }

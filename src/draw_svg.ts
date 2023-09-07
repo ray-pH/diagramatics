@@ -9,18 +9,6 @@ function draw_polygon(svgelement : SVGSVGElement, diagram : Diagram,
     // get color properties
     let color_fill   = diagram.color_fill || color_fill_default;
     let color_stroke = diagram.color_stroke || color_stroke_default;
-    let path_names : string[] = Object.keys(diagram.paths);
-
-    // get polygon points
-    let points : number[][] = [];
-    for (let c of path_names) {
-        // c must be a path
-        let path = diagram.paths[c];
-        points.push([path.points[0].x, path.points[0].y]);
-    }
-    // append last point
-    let path = diagram.paths[path_names[path_names.length - 1]];
-    points.push([path.points.slice(-1)[0].x, path.points.slice(-1)[0].y]);
 
     // draw svg
     let polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
@@ -31,13 +19,14 @@ function draw_polygon(svgelement : SVGSVGElement, diagram : Diagram,
     polygon.style.stroke = get_color(color_stroke, tab_color);
 
     svgelement.appendChild(polygon);
-    for (let p of points) {
-        var point = svgelement.createSVGPoint();
-        point.x = p[0];
-        point.y = p[1];
-        polygon.points.appendItem(point);
+    if (diagram.path != undefined) {
+        for (let p of diagram.path.points) {
+            var point = svgelement.createSVGPoint();
+            point.x = p.x;
+            point.y = p.y;
+            polygon.points.appendItem(point);
+        }
     }
-
 
     if (set_html_attribute) {
         // set viewbox to the bounding box
