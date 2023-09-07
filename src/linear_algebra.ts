@@ -58,3 +58,18 @@ export function V2(x : number, y : number) : Vector2 {
 export class Matrix22 {
     constructor(public a: number, public b: number, public c: number, public d: number) { }
 }
+
+/**
+ * Create a equivalently spaced array of numbers from start to end
+ * @param start start value
+ * @param end end value
+ * @param n number of points
+ */
+export function linspace(start: number, end: number, n: number = 100) : number[] {
+    let result = [];
+    let step = (end - start) / (n - 1);
+    for (let i = 0; i < n; i++) {
+        result.push(start + step * i);
+    }
+    return result;
+}
