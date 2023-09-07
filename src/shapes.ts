@@ -26,6 +26,20 @@ export function square(side : number) : Diagram {
     return rectangle(side, side);
 }
 
+/**
+ * Create regular polygon centered at origin
+ * @param n number of sides
+ * @param radius radius of the polygon
+ * @returns a Diagram object
+ */
+export function regular_polygon(n : number, radius : number) : Diagram {
+    let points : Vector2[] = [];
+    for (let i = 0; i < n; i++) {
+        points.push(V2(0,radius).rotate(i*2*Math.PI/n));
+    }
+    return polygon(points);
+}
+
 
 /**
  * Create arrow from start to end
