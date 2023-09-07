@@ -47,9 +47,9 @@ export class Diagram {
     style : {
         color_stroke?     : string,
         color_fill?       : string,
-        stroke_width?     : number,
+        stroke_width?     : string, // number
         stroke_linecap?   : string,
-        stroke_dasharray? : number[],
+        stroke_dasharray? : string, // number[]
     } = {}
 
     constructor(type_ : DiagramType, args : { path? : Path, children? : Diagram[] } = {}) {
@@ -95,49 +95,33 @@ export class Diagram {
         }
     }
 
-    /**
-     * Set the fill color of the diagram
-     * @param color color of the fill
-     */
-    public fill(color : string) : Diagram { 
+    private update_style(stylename : keyof Diagram['style'], stylevalue : string) : Diagram {
         let newd : Diagram = this.copy();
-        switch (newd.type) {
-            case DiagramType.Polygon:
-                newd.style.color_fill = color;
-                break;
-            case DiagramType.Curve:
-                // curve have no fill
-                break;
-            default:
-                // recursively set fill for all children
-                for (let c in newd.children) {
-                    newd.children[c].fill(color);
-                }
+        if (newd.type == DiagramType.Polygon || newd.type == DiagramType.Curve) {
+            newd.style[stylename] = stylevalue;
+        } else {
+            newd.children = newd.children.map(c => c.update_style(stylename, stylevalue));
         }
         return newd;
     }
 
-    /**
-     * Set the stroke color of the diagram
-     * @param color color of the stroke
-     */
-    public stroke(color : string) : Diagram {
-        let newd : Diagram = this.copy();
-        switch (newd.type) {
-            case DiagramType.Polygon:
-                newd.style.color_stroke = color;
-                break;
-            case DiagramType.Curve:
-                newd.style.color_stroke = color;
-                break;
-            default:
-                // recursively set stroke for all children
-                for (let c in newd.children) {
-                    newd.children[c].stroke(color);
-                }
-        }
-        return newd;
+    public fill(color : string) : Diagram { 
+        return this.update_style('color_fill', color);
     }
+    public stroke(color : string) : Diagram { 
+        return this.update_style('color_stroke', color);
+    }
+    public strokewidth(width : number) : Diagram { 
+        return this.update_style('stroke_width', width.toString());
+    }
+    public strokelinecap(linecap : 'butt' | 'round' | 'square') : Diagram {
+        return this.update_style('stroke_linecap', linecap);
+    }
+    public strokedasharray(dasharray : number[]) : Diagram {
+        return this.update_style('stroke_dasharray', dasharray.join(','));
+    }
+
+
 
     /**
      * Get the bounding box of the diagram
