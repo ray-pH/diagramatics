@@ -29,6 +29,14 @@ export enum Anchor {
  * Diagram is immutable to the user
  */
 
+export type DiagramStyle = {
+    "stroke"?           : string,
+    "fill"?             : string,
+    "stroke-width"?     : string, // number
+    "stroke-linecap"?   : string,
+    "stroke-dasharray"? : string, // number[]
+    // TODO : add more style
+}
 /**
 * Diagram Class 
 *
@@ -43,14 +51,8 @@ export class Diagram {
     children : Diagram[] = [];
     path : Path | undefined = undefined; // Polygon and Curve have a path
     /** position of the origin of the diagram */
-    origin       : Vector2 = new Vector2(0, 0);
-    style : {
-        color_stroke?     : string,
-        color_fill?       : string,
-        stroke_width?     : string, // number
-        stroke_linecap?   : string,
-        stroke_dasharray? : string, // number[]
-    } = {}
+    origin : Vector2 = new Vector2(0, 0);
+    style  : DiagramStyle = {}
 
     constructor(type_ : DiagramType, args : { path? : Path, children? : Diagram[] } = {}) {
         this.type = type_;
@@ -106,19 +108,19 @@ export class Diagram {
     }
 
     public fill(color : string) : Diagram { 
-        return this.update_style('color_fill', color);
+        return this.update_style('fill', color);
     }
     public stroke(color : string) : Diagram { 
-        return this.update_style('color_stroke', color);
+        return this.update_style('stroke', color);
     }
     public strokewidth(width : number) : Diagram { 
-        return this.update_style('stroke_width', width.toString());
+        return this.update_style('stroke-width', width.toString());
     }
     public strokelinecap(linecap : 'butt' | 'round' | 'square') : Diagram {
-        return this.update_style('stroke_linecap', linecap);
+        return this.update_style('stroke-linecap', linecap);
     }
     public strokedasharray(dasharray : number[]) : Diagram {
-        return this.update_style('stroke_dasharray', dasharray.join(','));
+        return this.update_style('stroke-dasharray', dasharray.join(','));
     }
 
 

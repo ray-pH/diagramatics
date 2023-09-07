@@ -1,21 +1,28 @@
-import { Diagram, DiagramType, Path } from "./diagram.js";
+import { Diagram, DiagramType, DiagramStyle, Path } from "./diagram.js";
 import { tab_color, get_color } from "./color_palette.js";
 
-const color_fill_default = "none";
-const color_stroke_default = "black";
+const default_diagram_style : DiagramStyle = {
+    "fill"             : "none",
+    "stroke"           : "black",
+    "stroke-width"     : "1",
+    "stroke-linecap"   : "butt",
+    "stroke-dasharray" : "none",
+}
 
 function draw_polygon(svgelement : SVGSVGElement, diagram : Diagram) : void {
-    // get color properties
-    let color_fill   = diagram.style.color_fill || color_fill_default;
-    let color_stroke = diagram.style.color_stroke || color_stroke_default;
+    // get properties
+    let style = {...default_diagram_style, ...diagram.style}; // use default if not defined
+    style.fill = get_color(style.fill as string, tab_color);
+    style.stroke = get_color(style.stroke as string, tab_color);
 
     // draw svg
     let polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    for (let stylename in style) {
+        polygon.style[stylename as any] = (style as any)[stylename as any];
+    }
     // polygon.style.fill = color_fill;
     // polygon.style.stroke = color_stroke;
     // use tab_color color palette
-    polygon.style.fill = get_color(color_fill, tab_color);
-    polygon.style.stroke = get_color(color_stroke, tab_color);
 
     svgelement.appendChild(polygon);
     if (diagram.path != undefined) {
@@ -30,17 +37,16 @@ function draw_polygon(svgelement : SVGSVGElement, diagram : Diagram) : void {
 
 
 function draw_curve(svgelement : SVGSVGElement, diagram : Diagram) : void {
-    // get color properties
-    let color_stroke = diagram.style.color_stroke || color_stroke_default;
+    // get properties
+    let style = {...default_diagram_style, ...diagram.style}; // use default if not defined
+    style.fill = "none";
+    style.stroke = get_color(style.stroke as string, tab_color);
 
     // draw svg
     let polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-    // path.style.fill = color_fill;
-    // path.style.stroke = color_stroke;
-    // use tab_color color palette
-    // curve.style.fill = get_color(color_fill, tab_color);
-    polyline.style.fill = "none";
-    polyline.style.stroke = get_color(color_stroke, tab_color);
+    for (let stylename in style) {
+        polyline.style[stylename as any] = (style as any)[stylename as any];
+    }
 
     svgelement.appendChild(polyline);
     if (diagram.path != undefined) {
