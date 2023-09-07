@@ -72,18 +72,3 @@ export function draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram,
         svgelement.setAttribute("preserveAspectRatio", "xMidYMid meet");
     }
 }
-
-// var svg = document.getElementById("svg");
-// var polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-// svg.appendChild(polygon);
-//
-// var array = arr = [ [ 0,0 ], 
-//              [ 50,50 ],
-//              [ 50,20 ], ];
-//
-// for (value of array) {
-//   var point = svg.createSVGPoint();
-//   point.x = value[0];
-//   point.y = value[1];
-//   polygon.points.appendItem(point);
-// }
