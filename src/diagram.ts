@@ -211,6 +211,21 @@ export class Diagram {
         return newd;
     }
 
+    /**
+     * Scale the diagram by a scale around a origin
+     * @param scale scale to scale (x, y)
+     * @param origin origin point, if left undefined, scale around the origin
+     */
+    public scale(scale : Vector2, origin? : Vector2) : Diagram {
+        let newd : Diagram = this.copy();
+        if (origin == undefined) { origin = newd.origin; }
+        // scale all children
+        newd.children = newd.children.map(c => c.scale(scale, origin));
+        // scale path
+        if (newd.path != undefined) newd.path = newd.path.scale(scale, origin);
+        return newd;
+    }
+
     public get_anchor(anchor : Anchor) : Vector2 {
         let [min, max] = this.bounding_box();
         let minx = min.x, miny = min.y;
@@ -279,6 +294,18 @@ export class Path {
         let newp : Path = this.copy();
         // rotate all the points
         newp.points = newp.points.map(p => p.sub(pivot).rotate(angle).add(pivot));
+        return newp;
+    }
+
+    /**
+     * Scale the path by a scale around a origin
+     * @param scale scale to scale (x, y)
+     * @param origin origin point
+     */
+    public scale(scale : Vector2, origin : Vector2) : Path {
+        let newp : Path = this.copy();
+        // scale all the points
+        newp.points = newp.points.map(p => p.sub(origin).mul(scale).add(origin));
         return newp;
     }
 }

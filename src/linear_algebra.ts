@@ -19,6 +19,9 @@ export class Vector2 {
     scale(s: number) : Vector2 {
         return new Vector2(this.x * s, this.y * s);
     }
+    mul(v: Vector2) : Vector2 {
+        return new Vector2(this.x * v.x, this.y * v.y);
+    }
     rotate(angle: number) : Vector2 {
         let x = this.x * Math.cos(angle) - this.y * Math.sin(angle);
         let y = this.x * Math.sin(angle) + this.y * Math.cos(angle);
