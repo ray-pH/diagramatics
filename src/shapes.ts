@@ -1,4 +1,4 @@
-import { Diagram, polygon } from './diagram.js';
+import { Diagram, polygon, line, diagram_combine } from './diagram.js';
 import { Vector2, V2 } from './linear_algebra.js';
 
 // function helpers to create common shapes
@@ -24,4 +24,11 @@ export function rectangle(width : number, height : number) : Diagram {
  */
 export function square(side : number) : Diagram {
     return rectangle(side, side);
+}
+export function arrow(start : Vector2, end : Vector2, headsize : number = 3) : Diagram {
+    let line_diagram = line(start, end);
+    let direction    = end.sub(start);
+    let raw_triangle = polygon([V2(0,0), V2(-headsize, headsize/2), V2(-headsize, -headsize/2)]);
+    let head_triangle = raw_triangle.rotate(direction.angle()).translate(direction);
+    return diagram_combine([line_diagram, head_triangle]);
 }
