@@ -42,9 +42,8 @@ export class Diagram {
     type : DiagramType;
     children : {[key : string]: Diagram} = {};
     paths : {[key : string]: Path} = {};
-    origin_offset   : Vector2 = new Vector2(0, 0);
-    /** position of the center of the diagram */
-    pos          : Vector2 = new Vector2(0, 0);
+    /** position of the origin of the diagram */
+    origin       : Vector2 = new Vector2(0, 0);
     color_stroke : string | undefined = undefined ;
     color_fill   : string | undefined = undefined ;
 
@@ -72,8 +71,7 @@ export class Diagram {
         // turn newd into Diagram
         Object.setPrototypeOf(newd, Diagram.prototype);
         // convert position and origin_offset to Vector2
-        newd.origin_offset = Object.setPrototypeOf(newd.origin_offset, Vector2.prototype);
-        newd.pos = Object.setPrototypeOf(newd.pos, Vector2.prototype);
+        newd.origin = Object.setPrototypeOf(newd.origin, Vector2.prototype);
         // make sure all of the children are Diagram
         for (let c in newd.children) {
             Object.setPrototypeOf(newd.children[c], Diagram.prototype)
@@ -178,7 +176,7 @@ export class Diagram {
      */
     public translate(v : Vector2) : Diagram {
         let newd : Diagram = this.copy();
-        newd.pos = newd.pos.add(v);
+        newd.origin = newd.origin.add(v);
         // recursively translate all children
         for (let c in newd.children) {
             newd.children[c] = newd.children[c].translate(v);
@@ -195,8 +193,29 @@ export class Diagram {
      * @param v position to move to
      */
     public position(v : Vector2) : Diagram {
-        let dv = v.sub(this.pos).sub(this.origin_offset);
+        let dv = v.sub(this.origin)
         let newd = this.translate(dv);
+        return newd;
+    }
+
+    /**
+     * Rotate the diagram by an angle around a pivot
+     * @param angle angle to rotate
+     * @param pivot pivot point, if left undefined, rotate around the origin
+     */
+    public rotate(angle : number, pivot : Vector2 | undefined = undefined) : Diagram {
+        let newd : Diagram = this.copy();
+      
+        if (pivot == undefined) { pivot = newd.origin; }
+
+        // rotate all children
+        for (let c in newd.children) {
+            newd.children[c] = newd.children[c].rotate(angle, pivot);
+        }
+        // rotate all paths
+        for (let p in newd.paths) { 
+            newd.paths[p] = newd.paths[p].rotate(angle, pivot);
+        }
         return newd;
     }
         
@@ -234,6 +253,18 @@ export class Path {
         let newp : Path = this.copy();
         newp.start = newp.start.add(v);
         newp.end = newp.end.add(v);
+        return newp;
+    }
+
+    /**
+     * Rotate the path by an angle around a pivot
+     * @param angle angle to rotate
+     * @param pivot pivot point
+     */
+    public rotate(angle : number, pivot : Vector2) : Path {
+        let newp : Path = this.copy();
+        newp.start = newp.start.sub(pivot).rotate(angle).add(pivot);
+        newp.end   = newp.end.sub(pivot).rotate(angle).add(pivot);
         return newp;
     }
 }
