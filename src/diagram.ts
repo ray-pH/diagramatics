@@ -9,6 +9,7 @@ function assert(condition : boolean, message : string) : void {
 export enum DiagramType {
     Polygon = 'polygon',
     Curve   = 'curve',
+    Empty   = 'empty',
     Diagram = 'diagram',
 }
 
@@ -101,8 +102,12 @@ export class Diagram {
         let newd : Diagram = this.copy();
         if (newd.type == DiagramType.Polygon || newd.type == DiagramType.Curve) {
             newd.style[stylename] = stylevalue;
-        } else {
+        } else if (newd.type == DiagramType.Diagram) {
             newd.children = newd.children.map(c => c.update_style(stylename, stylevalue));
+        } else if (newd.type == DiagramType.Empty) {
+            // do nothing
+        } else {
+            throw new Error("Unreachable, unknown diagram type : " + newd.type);
         }
         return newd;
     }
@@ -132,26 +137,7 @@ export class Diagram {
     public bounding_box() : [Vector2, Vector2] {
         let minx = Infinity, miny = Infinity;
         let maxx = -Infinity, maxy = -Infinity;
-        switch (this.type) {
-            case DiagramType.Polygon:
-                if (this.path == undefined) { throw new Error("Polygon doesn't have a path"); }
-                for (let point of this.path.points) {
-                    minx = Math.min(minx, point.x);
-                    miny = Math.min(miny, point.y);
-                    maxx = Math.max(maxx, point.x);
-                    maxy = Math.max(maxy, point.y);
-                }
-                return [new Vector2(minx, miny), new Vector2(maxx, maxy)];
-            case DiagramType.Curve:
-                if (this.path == undefined) { throw new Error("Polygon doesn't have a path"); }
-                for (let point of this.path.points) {
-                    minx = Math.min(minx, point.x);
-                    miny = Math.min(miny, point.y);
-                    maxx = Math.max(maxx, point.x);
-                    maxy = Math.max(maxy, point.y);
-                }
-                return [new Vector2(minx, miny), new Vector2(maxx, maxy)];
-            case DiagramType.Diagram:
+        if (this.type == DiagramType.Diagram){
                 for (let c in this.children) {
                     let child = this.children[c];
                     let [min, max] = child.bounding_box();
@@ -161,8 +147,19 @@ export class Diagram {
                     maxy = Math.max(maxy, max.y);
                 }
                 return [new Vector2(minx, miny), new Vector2(maxx, maxy)];
-            default:
-                throw new Error("Unreachable");
+        }
+        else if (this.type == DiagramType.Curve || this.type == DiagramType.Polygon || this.type == DiagramType.Empty){
+                if (this.path == undefined) { throw new Error(this.type + " must have a path"); }
+                for (let point of this.path.points) {
+                    minx = Math.min(minx, point.x);
+                    miny = Math.min(miny, point.y);
+                    maxx = Math.max(maxx, point.x);
+                    maxy = Math.max(maxy, point.y);
+                }
+                return [new Vector2(minx, miny), new Vector2(maxx, maxy)];
+        } 
+        else {
+            throw new Error("Unreachable, unknown diagram type : " + this.type);
         }
     }
 
@@ -359,4 +356,15 @@ export function polygon(points: Vector2[]) : Diagram {
     // create diagram
     let polygon = new Diagram(DiagramType.Polygon, {path : path});
     return polygon;
+}
+
+/**
+ * Create an empty diagram, 
+ * can be used to describe the bounding box of a diagram that will be shown
+ * @param bbox bounding box of the empty diagram
+ */
+export function empty(bbox : [Vector2, Vector2]) : Diagram {
+    let path : Path = new Path(bbox);
+    let emp = new Diagram(DiagramType.Empty, {path : path});
+    return emp;
 }

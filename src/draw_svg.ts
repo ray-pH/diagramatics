@@ -66,10 +66,14 @@ export function draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram,
         draw_polygon(svgelement, diagram);
     } else if (diagram.type == DiagramType.Curve){
         draw_curve(svgelement, diagram);
-    } else {
+    } else if (diagram.type == DiagramType.Empty){
+        // do nothing
+    } else if (diagram.type == DiagramType.Diagram){
         for (let d of diagram.children) {
             draw_to_svg(svgelement, d, false);
         }
+    } else {
+        throw new Error("Unreachable, unknown diagram type : " + diagram.type);
     }
     
     if (set_html_attribute) {
