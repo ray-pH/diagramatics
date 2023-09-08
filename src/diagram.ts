@@ -230,15 +230,15 @@ export class Diagram {
         let midx = (minx + maxx) / 2;
         let midy = (miny + maxy) / 2;
         switch (anchor) {
-            case Anchor.TopLeft      : return new Vector2(minx, miny);
-            case Anchor.TopCenter    : return new Vector2(midx, miny);
-            case Anchor.TopRight     : return new Vector2(maxx, miny);
+            case Anchor.TopLeft      : return new Vector2(minx, maxy);
+            case Anchor.TopCenter    : return new Vector2(midx, maxy);
+            case Anchor.TopRight     : return new Vector2(maxx, maxy);
             case Anchor.CenterLeft   : return new Vector2(minx, midy);
             case Anchor.CenterCenter : return new Vector2(midx, midy);
             case Anchor.CenterRight  : return new Vector2(maxx, midy);
-            case Anchor.BottomLeft   : return new Vector2(minx, maxy);
-            case Anchor.BottomCenter : return new Vector2(midx, maxy);
-            case Anchor.BottomRight  : return new Vector2(maxx, maxy);
+            case Anchor.BottomLeft   : return new Vector2(minx, miny);
+            case Anchor.BottomCenter : return new Vector2(midx, miny);
+            case Anchor.BottomRight  : return new Vector2(maxx, miny);
             default: throw new Error("Unknown anchor " + anchor);
         }
     }
