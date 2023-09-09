@@ -131,6 +131,25 @@ export class Diagram {
         return newd;
     }
 
+    /**
+     * Add points to the diagram
+     * if the diagram is a polygon or curve, add points to the path
+     * if the diagram is a diagram, add points to the last polygon or curve child
+     * @param points points to add
+     */
+    public add_points(points : Vector2[]) : Diagram {
+        let newd : Diagram = this.copy();
+        if (newd.type == DiagramType.Polygon || newd.type == DiagramType.Curve) {
+            if (newd.path == undefined) { throw new Error(this.type + " must have a path"); }
+            newd.path = newd.path.add_points(points);
+        } else if (newd.type == DiagramType.Diagram) {
+            // add point to the last polygon or curve child
+            let last_child = newd.children[newd.children.length - 1];
+            newd.children[newd.children.length - 1] = last_child.add_points(points);
+        }
+        return newd;
+    }
+
     private update_style(stylename : keyof Diagram['style'], stylevalue : string) : Diagram {
         let newd : Diagram = this.copy();
         if (newd.type == DiagramType.Polygon || newd.type == DiagramType.Curve) {
@@ -371,6 +390,16 @@ export class Path {
             length += this.points[i].sub(this.points[i-1]).length();
         }
         return length;
+    }
+
+    /**
+     * add points to the path
+     * @param points points to add
+     */
+    public add_points(points : Vector2[]) : Path {
+        let newp : Path = this.copy();
+        newp.points = newp.points.concat(points);
+        return newp;
     }
 
     /**
