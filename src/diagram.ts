@@ -33,6 +33,7 @@ export enum Anchor {
 export type DiagramStyle = {
     "stroke"?           : string,
     "fill"?             : string,
+    "opacity"?          : string,
     "stroke-width"?     : string, // number
     "stroke-linecap"?   : string,
     "stroke-dasharray"? : string, // number[]
@@ -164,6 +165,9 @@ export class Diagram {
     }
     public stroke(color : string) : Diagram { 
         return this.update_style('stroke', color);
+    }
+    public opacity(opacity : number) : Diagram {
+        return this.update_style('opacity', opacity.toString());
     }
     public strokewidth(width : number) : Diagram { 
         return this.update_style('stroke-width', width.toString());
