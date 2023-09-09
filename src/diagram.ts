@@ -60,11 +60,6 @@ export class Diagram {
         this.path = args.path;
         if (args.children) { this.children = args.children; }
     }
-    // add_childs(childs : Diagram[], names : string[]){
-    //     // TODO : check for name collision
-    //     for (let i in childs) { this.children. = childs[i]; }
-    // }
-    //
 
     /**
      * Copy the diagram
