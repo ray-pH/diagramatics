@@ -386,12 +386,6 @@ export class Path {
             let dir : Vector2 = end.sub(start);
             return start.add(dir.scale(t));
         }
-        // if (this.points.length > 2) { throw Error("Get Parametric Point For n>2 is Not Implemented yet"); }
-        // for now assume Path is linear
-        // let end   = this.points.slice(-1)[0];
-        // let start = this.points[0];
-        // let dir : Vector2 = end.sub(start);
-        // return start.add(dir.scale(t));
     }
 
 
