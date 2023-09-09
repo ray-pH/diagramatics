@@ -223,6 +223,14 @@ export class Diagram {
         return newd;
     }
 
+    /**
+     * Get the position of the anchor of the diagram
+     * @param anchor anchor to get, anchors can be
+     *   'top-left', 'top-center', 'top-right'
+     *   'center-left', 'center-center', 'center-right'
+     *   'bottom-left', 'bottom-center', 'bottom-right'
+     * @returns the position of the anchor
+     */
     public get_anchor(anchor : Anchor) : Vector2 {
         let [min, max] = this.bounding_box();
         let minx = min.x, miny = min.y;
