@@ -253,27 +253,77 @@ export class Diagram {
             default: throw new Error("Unknown anchor " + anchor);
         }
     }
+
+    public path_length() : number {
+        if (this.type == DiagramType.Diagram) {
+            let length = 0;
+            for (let c in this.children) {
+                length += this.children[c].path_length();
+            }
+            return length;
+        } else if (this.type == DiagramType.Curve || this.type == DiagramType.Polygon) {
+            if (this.path == undefined) { throw new Error(this.type + " must have a path"); }
+            return this.path.length();
+        } else if (this.type == DiagramType.Empty) {
+            // for now, do the same as polygon and curve
+            if (this.path == undefined) { throw new Error(this.type + " must have a path"); }
+            return this.path.length();
+        } else {
+            throw new Error("Unreachable, unknown diagram type : " + this.type);
+        }
+    }
+
+    /**
+     * Get the point on the path at t
+     * Path can be described parametrically in the form of (x(t), y(t))
+     * Path start at t=0 and ends at t=1
+     * If segment_index (n) is defined, get the point at the nth segment
+     * If segment_index (n) is defined, t can be outside of [0, 1] and will return the extrapolated point
+     * @param t parameter
+     * @param segment_index (only works for polygon and curves)
+     * if n is defined, get the point at the nth segment
+     * @returns the position of the point
+     */
+    public get_parametric_point(t : number, segment_index? : number) : Vector2 {
+        if (this.type == DiagramType.Diagram) {
+            // use entire length, use the childrens
+            let cumuative_length = [];
+            let length   = 0.0;
+            for (let c in this.children) {
+                length += this.children[c].path_length();
+                cumuative_length.push(length);
+            }
+            let total_length = length;
+            let cumulative_t = cumuative_length.map(l => l / total_length);
+
+            // figure out which children t is in
+            for (let i = 0; i < cumulative_t.length; i++) {
+                if (t < cumulative_t[i]) {
+                    let child_id = i;
+
+                    let prev_t = (i == 0) ? 0 : cumulative_t[i-1];
+                    let segment_t = (t - prev_t) / (cumulative_t[i] - prev_t);
+                    return this.children[child_id].get_parametric_point(segment_t);
+                }
+            }
+            throw Error("Unreachable");
+        } else if (this.type == DiagramType.Curve || this.type == DiagramType.Polygon) {
+            // get the point on the path
+            if (this.path == undefined) { throw new Error(this.type + " must have a path"); }
+            return this.path.get_parametric_point(t, segment_index);
+        } else if (this.type == DiagramType.Empty) {
+            // for now do the same as polygon and curve
+            if (this.path == undefined) { throw new Error(this.type + " must have a path"); }
+            return this.path.get_parametric_point(t, segment_index);
+        } else {
+            throw new Error("Unreachable, unknown diagram type : " + this.type);
+        }
+    }
 }
 
 export class Path {
     // for now just do linear path
     constructor(public points : Vector2[]) { }
-
-    /**
-     * Get the point on the path at t 
-     * Path can be described parametrically in the form of (x(t), y(t))
-     * Path start at t=0 and ends at t=1
-     * @param t parameter
-     * @returns the position of the point
-    */
-    get_parametric_point(t : number) : Vector2 {
-        if (this.points.length > 2) { throw Error("Get Parametric Point For n>2 is Not Implemented yet"); }
-        // for now assume Path is linear
-        let end   = this.points.slice(-1)[0];
-        let start = this.points[0];
-        let dir : Vector2 = end.sub(start);
-        return start.add(dir.scale(t));
-    }
 
     copy() : Path {
         // let start = new Vector2(this.start.x, this.start.y);
@@ -281,6 +331,71 @@ export class Path {
         let newpoints = this.points.map(p => new Vector2(p.x, p.y));
         return new Path(newpoints);
     }
+
+    /**
+     * Get the length of the path
+     */
+    length() : number {
+        let length = 0;
+        console.log(this);
+        for (let i = 1; i < this.points.length; i++) {
+            length += this.points[i].sub(this.points[i-1]).length();
+        }
+        return length;
+    }
+
+    /**
+     * Get the point on the path at t 
+     * Path can be described parametrically in the form of (x(t), y(t))
+     * Path start at t=0 and ends at t=1
+     * If segment_index (n) is defined, get the point at the nth segment
+     * If segment_index (n) is defined, t can be outside of [0, 1] and will return the extrapolated point
+     * @param t parameter
+     * @param segment_index if n is defined, get the point at the nth segment
+     * @returns the position of the point
+    */
+    public get_parametric_point(t : number, segment_index? : number) : Vector2 {
+        if (segment_index == undefined) { 
+            if (t < 0 || t > 1) { throw Error("t must be between 0 and 1"); }
+            // use entire length
+            let cumuative_length = [];
+            let length   = 0.0;
+            for (let i = 1; i < this.points.length; i++) {
+                length += this.points[i].sub(this.points[i-1]).length();
+                cumuative_length.push(length);
+            }
+            let total_length = length;
+            let cumulative_t = cumuative_length.map(l => l / total_length);
+            // figure out which segment t is in
+            for (let i = 0; i < cumulative_t.length; i++) {
+                if (t < cumulative_t[i]) {
+                    let segment_id = i;
+
+                    let prev_t = (i == 0) ? 0 : cumulative_t[i-1];
+                    let segment_t = (t - prev_t) / (cumulative_t[i] - prev_t);
+                    return this.get_parametric_point(segment_t, segment_id);
+                }
+            }
+            // segment must have been retrieved at this point
+            throw Error("Unreachable");
+        } else {
+            // take nth segment
+            if (segment_index < 0 || segment_index >= this.points.length - 1) { 
+                throw Error("segment_index must be between 0 and n-1"); 
+            }
+            let start = this.points[segment_index];
+            let end   = this.points[segment_index + 1];
+            let dir : Vector2 = end.sub(start);
+            return start.add(dir.scale(t));
+        }
+        // if (this.points.length > 2) { throw Error("Get Parametric Point For n>2 is Not Implemented yet"); }
+        // for now assume Path is linear
+        // let end   = this.points.slice(-1)[0];
+        // let start = this.points[0];
+        // let dir : Vector2 = end.sub(start);
+        // return start.add(dir.scale(t));
+    }
+
 
     /**
      * Translate the path by a vector
