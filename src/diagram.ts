@@ -277,11 +277,10 @@ export class Diagram {
      * Get the point on the path at t
      * Path can be described parametrically in the form of (x(t), y(t))
      * Path start at t=0 and ends at t=1
-     * If segment_index (n) is defined, get the point at the nth segment
-     * If segment_index (n) is defined, t can be outside of [0, 1] and will return the extrapolated point
      * @param t parameter
      * @param segment_index (only works for polygon and curves)
-     * if n is defined, get the point at the nth segment
+     * If segment_index (n) is defined, get the point at the nth segment
+     * If segment_index (n) is defined, t can be outside of [0, 1] and will return the extrapolated point
      * @returns the position of the point
      */
     public get_parametric_point(t : number, segment_index? : number) : Vector2 {
@@ -348,10 +347,9 @@ export class Path {
      * Get the point on the path at t 
      * Path can be described parametrically in the form of (x(t), y(t))
      * Path start at t=0 and ends at t=1
+     * @param t parameter
      * If segment_index (n) is defined, get the point at the nth segment
      * If segment_index (n) is defined, t can be outside of [0, 1] and will return the extrapolated point
-     * @param t parameter
-     * @param segment_index if n is defined, get the point at the nth segment
      * @returns the position of the point
     */
     public get_parametric_point(t : number, segment_index? : number) : Vector2 {
