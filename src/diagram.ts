@@ -276,14 +276,14 @@ export class Diagram {
     /**
      * Get the point on the path at t
      * Path can be described parametrically in the form of (x(t), y(t))
-     * Path start at t=0 and ends at t=1
+     * Path starts at t=0 and ends at t=1
      * @param t parameter
      * @param segment_index (only works for polygon and curves)
      * If segment_index (n) is defined, get the point at the nth segment
      * If segment_index (n) is defined, t can be outside of [0, 1] and will return the extrapolated point
      * @returns the position of the point
      */
-    public get_parametric_point(t : number, segment_index? : number) : Vector2 {
+    public parametric_point(t : number, segment_index? : number) : Vector2 {
         if (this.type == DiagramType.Diagram) {
             // use entire length, use the childrens
             let cumuative_length = [];
@@ -302,18 +302,18 @@ export class Diagram {
 
                     let prev_t = (i == 0) ? 0 : cumulative_t[i-1];
                     let segment_t = (t - prev_t) / (cumulative_t[i] - prev_t);
-                    return this.children[child_id].get_parametric_point(segment_t);
+                    return this.children[child_id].parametric_point(segment_t);
                 }
             }
             throw Error("Unreachable");
         } else if (this.type == DiagramType.Curve || this.type == DiagramType.Polygon) {
             // get the point on the path
             if (this.path == undefined) { throw new Error(this.type + " must have a path"); }
-            return this.path.get_parametric_point(t, segment_index);
+            return this.path.parametric_point(t, segment_index);
         } else if (this.type == DiagramType.Empty) {
             // for now do the same as polygon and curve
             if (this.path == undefined) { throw new Error(this.type + " must have a path"); }
-            return this.path.get_parametric_point(t, segment_index);
+            return this.path.parametric_point(t, segment_index);
         } else {
             throw new Error("Unreachable, unknown diagram type : " + this.type);
         }
@@ -346,13 +346,13 @@ export class Path {
     /**
      * Get the point on the path at t 
      * Path can be described parametrically in the form of (x(t), y(t))
-     * Path start at t=0 and ends at t=1
+     * Path starts at t=0 and ends at t=1
      * @param t parameter
      * If segment_index (n) is defined, get the point at the nth segment
      * If segment_index (n) is defined, t can be outside of [0, 1] and will return the extrapolated point
      * @returns the position of the point
     */
-    public get_parametric_point(t : number, segment_index? : number) : Vector2 {
+    public parametric_point(t : number, segment_index? : number) : Vector2 {
         if (segment_index == undefined) { 
             if (t < 0 || t > 1) { throw Error("t must be between 0 and 1"); }
             // use entire length
@@ -371,7 +371,7 @@ export class Path {
 
                     let prev_t = (i == 0) ? 0 : cumulative_t[i-1];
                     let segment_t = (t - prev_t) / (cumulative_t[i] - prev_t);
-                    return this.get_parametric_point(segment_t, segment_id);
+                    return this.parametric_point(segment_t, segment_id);
                 }
             }
             // segment must have been retrieved at this point
