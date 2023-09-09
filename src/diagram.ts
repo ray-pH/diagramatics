@@ -302,6 +302,24 @@ export class Diagram {
         }
     }
 
+    /**
+     * Move the origin of the diagram to a position or anchor
+     * @param pos position to move the origin to (Vector2), or anchor to move the origin to.
+     * anchors can be
+     *  'top-left', 'top-center', 'top-right'
+     *  'center-left', 'center-center', 'center-right'
+     *  'bottom-left', 'bottom-center', 'bottom-right'
+     */
+    public move_origin(pos : Vector2 | Anchor) : Diagram {
+        let newd : Diagram = this.copy();
+        if (pos instanceof Vector2) {
+            newd.origin = pos;
+        } else {
+            newd.origin = newd.get_anchor(pos);
+        }
+        return newd;
+    }
+
     public path_length() : number {
         if (this.type == DiagramType.Diagram) {
             let length = 0;
