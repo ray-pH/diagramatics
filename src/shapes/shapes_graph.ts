@@ -1,6 +1,6 @@
-import { Diagram, polygon, line, curve, diagram_combine } from './diagram.js';
-import { Vector2, V2, linspace } from './linear_algebra.js';
-import { arrow2 } from './shapes.js'
+import { Diagram, polygon, line, curve, diagram_combine } from '../diagram.js';
+import { Vector2, V2, linspace } from '../linear_algebra.js';
+import { arrow2 } from '../shapes.js'
 
 /**
  * Options for axes
