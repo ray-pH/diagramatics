@@ -129,3 +129,26 @@ export function plotf(f : (x:number)=>number, axes_options? : axes_options) : Di
     return plotv(vdata, axes_options);
 }
 
+export function under_curvef(f : (x:number)=>number, x_start : number, x_end : number,  axes_options? : axes_options ) : Diagram {
+    let opt = {...default_axes_options, ...axes_options}; // use default if not defined
+    let new_opt = {...opt}; // copy opt
+
+    new_opt.xrange = [x_start, x_end];
+
+    // map bbox from the original value in opt into the new value from x_start and x_end
+    let [lowerleft, upperright] = opt.bbox;
+    let [xmin, xmax] = opt.xrange;
+    let lowerleft_new  = V2(lowerleft.x + (x_start-xmin)/(xmax-xmin)*(upperright.x-lowerleft.x), lowerleft.y);
+    let upperright_new = V2(lowerleft.x + (x_end-xmin)/(xmax-xmin)*(upperright.x-lowerleft.x), upperright.y);
+    new_opt.bbox = [lowerleft_new, upperright_new];
+
+    // find y = 0 from the opt.yrange and opt.bbox
+    let [ymin, ymax] = opt.yrange;
+    let y0 = lowerleft.y + (0-ymin)/(ymax-ymin)*(upperright.y-lowerleft.y);
+
+    // define left and right points in y0
+    let y0left  = V2(lowerleft_new.x, y0);
+    let y0right = V2(upperright_new.x, y0);
+
+    return plotf(f, new_opt).add_points([y0right, y0left]).to_polygon();
+}
