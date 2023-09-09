@@ -37,6 +37,7 @@ export type DiagramStyle = {
     "stroke-width"?     : string, // number
     "stroke-linecap"?   : string,
     "stroke-dasharray"? : string, // number[]
+    "stroke-linejoin"?  : string,
     // TODO : add more style
 }
 /**
@@ -174,6 +175,9 @@ export class Diagram {
     }
     public strokelinecap(linecap : 'butt' | 'round' | 'square') : Diagram {
         return this.update_style('stroke-linecap', linecap);
+    }
+    public strokejoin(linejoin : 'arcs' | 'bevel' | 'miter' | 'miter-clip' | 'round') : Diagram {
+        return this.update_style('stroke-linejoin', linejoin);
     }
     public strokedasharray(dasharray : number[]) : Diagram {
         return this.update_style('stroke-dasharray', dasharray.join(','));
