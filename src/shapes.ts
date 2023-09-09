@@ -40,6 +40,16 @@ export function regular_polygon(n : number, radius : number) : Diagram {
     return polygon(points);
 }
 
+/**
+ * Create circle centered at origin
+ * *currently implemented as a regular polygon with 20 sides*
+ * @param radius radius of the circle
+ * @returns a Diagram object
+ */
+export function circle(radius : number) : Diagram {
+    return regular_polygon(20, radius);
+}
+
 
 /**
  * Create arrow from start to end
