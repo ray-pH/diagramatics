@@ -101,6 +101,36 @@ export class Diagram {
         }
     }
 
+    /**
+     * Convert the diagram to a curve
+     * If the diagram is a polygon, convert it to a curve
+     * If the diagram is a Diagram, convert all of the children to curves
+     */
+    public to_curve() : Diagram {
+        let newd : Diagram = this.copy();
+        if (newd.type == DiagramType.Polygon) {
+            newd.type = DiagramType.Curve;
+        } else if (newd.type == DiagramType.Diagram) {
+            newd.children = newd.children.map(c => c.to_curve());
+        }
+        return newd;
+    }
+
+    /**
+     * Convert the diagram to a polygon
+     * If the diagram is a curve, convert it to a polygon
+     * If the diagram is a Diagram, convert all of the children to polygons
+     */
+    public to_polygon() : Diagram {
+        let newd : Diagram = this.copy();
+        if (newd.type == DiagramType.Curve) {
+            newd.type = DiagramType.Polygon;
+        } else if (newd.type == DiagramType.Diagram) {
+            newd.children = newd.children.map(c => c.to_polygon());
+        }
+        return newd;
+    }
+
     private update_style(stylename : keyof Diagram['style'], stylevalue : string) : Diagram {
         let newd : Diagram = this.copy();
         if (newd.type == DiagramType.Polygon || newd.type == DiagramType.Curve) {
