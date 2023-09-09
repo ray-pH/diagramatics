@@ -91,8 +91,12 @@ export function plotv(data : Vector2[], axes_options? : axes_options) : Diagram 
     if (current_segment.length > 1) segments.push(current_segment);
 
     // create separate paths for each segment
-    let paths = segments.map(segment => curve(segment));
-    return diagram_combine(paths).stroke('black').fill('none');
+    let path_diagrams = segments.map(segment => curve(segment));
+    if (path_diagrams.length == 1){
+        return path_diagrams[0];
+    } else {
+        return diagram_combine(path_diagrams).stroke('black').fill('none');
+    }
 }
 
 /**
