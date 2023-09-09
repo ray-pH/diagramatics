@@ -55,6 +55,15 @@ export function V2(x : number, y : number) : Vector2 {
     return new Vector2(x, y);
 }
 
+/**
+ * Helper function to create a Vector2 from an angle
+ * @param angle angle in radians
+ * @returns Vector2 with length 1
+ */
+export function Vdir(angle : number) : Vector2 {
+    return new Vector2(Math.cos(angle), Math.sin(angle));
+}
+
 export class Matrix22 {
     constructor(public a: number, public b: number, public c: number, public d: number) { }
 }
