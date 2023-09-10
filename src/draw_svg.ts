@@ -8,6 +8,7 @@ const default_diagram_style : DiagramStyle = {
     "stroke-linecap"   : "butt",
     "stroke-dasharray" : "none",
     "stroke-linejoin"  : "round",
+    "vector-effect"    : "non-scaling-stroke",
 }
 
 function draw_polygon(svgelement : SVGSVGElement, diagram : Diagram) : void {

@@ -38,6 +38,7 @@ export type DiagramStyle = {
     "stroke-linecap"?   : string,
     "stroke-dasharray"? : string, // number[]
     "stroke-linejoin"?  : string,
+    "vector-effect"?    : string,
     // TODO : add more style
 }
 /**
@@ -181,6 +182,10 @@ export class Diagram {
     }
     public strokedasharray(dasharray : number[]) : Diagram {
         return this.update_style('stroke-dasharray', dasharray.join(','));
+    }
+    public vectoreffect(vectoreffect : 'none' | 'non-scaling-stroke' | 'non-scaling-size' | 'non-rotation' | 'fixed-position'
+) : Diagram {
+        return this.update_style('vector-effect', vectoreffect);
     }
 
 
