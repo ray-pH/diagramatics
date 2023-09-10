@@ -588,12 +588,11 @@ export function polygon(points: Vector2[]) : Diagram {
 }
 
 /**
- * Create an empty diagram, 
- * can be used to describe the bounding box of a diagram that will be shown
- * @param bbox bounding box of the empty diagram
+ * Create an empty diagram, contain just a single point
+ * @param v position of the point
+ * @returns an empty diagram
  */
-export function empty(bbox : [Vector2, Vector2]) : Diagram {
-    let path : Path = new Path(bbox);
-    let emp = new Diagram(DiagramType.Empty, {path : path});
+export function empty(v : Vector2) : Diagram {
+    let emp = new Diagram(DiagramType.Empty, {path : new Path([v])});
     return emp;
 }
