@@ -27,6 +27,28 @@ export let default_axes_options : axes_options = {
     n      : 100,
 }
 
+export function axes_transform(axes_options? : axes_options) : (v : Vector2) => Vector2 {
+    let opt = {...default_axes_options, ...axes_options}; // use default if not defined
+    if (opt.bbox == undefined) {
+        // get values from xrange and yrange
+        let [xmin, xmax] = opt.xrange;
+        let [ymin, ymax] = opt.yrange;
+        opt.bbox = [V2(xmin,ymin), V2(xmax,ymax)];
+    }
+
+    let [lowerleft, upperright] = opt.bbox;
+    let [xmin, xmax] = opt.xrange;
+    let [ymin, ymax] = opt.yrange;
+
+    return function(v : Vector2) : Vector2 {
+        let x = lowerleft.x + (v.x-xmin)/(xmax-xmin)*(upperright.x-lowerleft.x);
+        let y = lowerleft.y + (v.y-ymin)/(ymax-ymin)*(upperright.y-lowerleft.y);
+        return V2(x,y);
+    }
+}
+export let ax = axes_transform
+
+
 /**
  * Draw xy axes without ticks
  * @param axes_options options for the axes
