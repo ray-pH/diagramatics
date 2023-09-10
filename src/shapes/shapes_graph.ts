@@ -9,16 +9,17 @@ import { arrow2 } from '../shapes.js'
  * setting for multiple objects.
  */
 export type axes_options = {
-    bbox    : [Vector2, Vector2],
     xrange  : [number, number],
     yrange  : [number, number],
+    bbox?   : [Vector2, Vector2],
     xticks? : number[],
     yticks? : number[],
     n?      : number,
 }
 
 export let default_axes_options : axes_options = {
-    bbox : [V2(-100,-100), V2(100,100)],
+    // bbox   : [V2(-100,-100), V2(100,100)],
+    bbox   : undefined,
     xrange : [-2, 2],
     yrange : [-2, 2],
     xticks : undefined,
@@ -36,14 +37,20 @@ export let default_axes_options : axes_options = {
  */
 export function axes_empty(axes_options? : axes_options) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
+    if (opt.bbox == undefined) {
+        // get values from xrange and yrange
+        let [xmin, xmax] = opt.xrange;
+        let [ymin, ymax] = opt.yrange;
+        opt.bbox = [V2(xmin,ymin), V2(xmax,ymax)];
+    }
 
     let [lowerleft, upperright] = opt.bbox;
     // get the intersection point
     let xorigin = lowerleft.x + (upperright.x-lowerleft.x)/(opt.xrange[1]-opt.xrange[0])*(0-opt.xrange[0]);
     let yorigin = lowerleft.y + (upperright.y-lowerleft.y)/(opt.yrange[1]-opt.yrange[0])*(0-opt.yrange[0]);
 
-    let xaxis = arrow2(V2(lowerleft.x,yorigin), V2(upperright.x,yorigin));
-    let yaxis = arrow2(V2(xorigin,lowerleft.y), V2(xorigin,upperright.y));
+    let xaxis = arrow2(V2(lowerleft.x,yorigin), V2(upperright.x,yorigin), 0.05);
+    let yaxis = arrow2(V2(xorigin,lowerleft.y), V2(xorigin,upperright.y), 0.05);
     return diagram_combine([xaxis, yaxis]).stroke('gray').fill('gray');
     // return xaxis;
 }
@@ -65,6 +72,12 @@ export function axes_empty(axes_options? : axes_options) : Diagram {
  */
 export function plotv(data : Vector2[], axes_options? : axes_options) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
+    if (opt.bbox == undefined) {
+        // get values from xrange and yrange
+        let [xmin, xmax] = opt.xrange;
+        let [ymin, ymax] = opt.yrange;
+        opt.bbox = [V2(xmin,ymin), V2(xmax,ymax)];
+    }
 
     let [lowerleft, upperright] = opt.bbox;
     let [xmin, xmax] = opt.xrange;
@@ -136,6 +149,12 @@ export function under_curvef(f : (x:number)=>number, x_start : number, x_end : n
     new_opt.xrange = [x_start, x_end];
 
     // map bbox from the original value in opt into the new value from x_start and x_end
+    if (opt.bbox == undefined) {
+        // get values from xrange and yrange
+        let [xmin, xmax] = opt.xrange;
+        let [ymin, ymax] = opt.yrange;
+        opt.bbox = [V2(xmin,ymin), V2(xmax,ymax)];
+    }
     let [lowerleft, upperright] = opt.bbox;
     let [xmin, xmax] = opt.xrange;
     let lowerleft_new  = V2(lowerleft.x + (x_start-xmin)/(xmax-xmin)*(upperright.x-lowerleft.x), lowerleft.y);

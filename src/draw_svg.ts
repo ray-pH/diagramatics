@@ -81,11 +81,11 @@ export function draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram,
     if (set_html_attribute) {
         // set viewbox to the bounding box
         let bbox = svgelement.getBBox();
-        // add padding of 10px to the bounding box
-        bbox.x -= 10;
-        bbox.y -= 10;
-        bbox.width += 20;
-        bbox.height += 20;
+        // add padding of 10px to the bounding box (if the graph is small, it'll mess it up)
+        // bbox.x -= 10;
+        // bbox.y -= 10;
+        // bbox.width += 20;
+        // bbox.height += 20;
         svgelement.setAttribute("viewBox", `${bbox.x} ${bbox.y} ${bbox.width} ${bbox.height}`);
         // set preserveAspectRatio to xMidYMid meet
         svgelement.setAttribute("preserveAspectRatio", "xMidYMid meet");
