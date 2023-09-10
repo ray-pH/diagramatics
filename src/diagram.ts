@@ -224,6 +224,19 @@ export class Diagram {
     }
 
     /**
+     * Transform the diagram by a function
+     * @param transform_function function to transform the diagram
+     */
+    public transform(transform_function : (p : Vector2) => Vector2) : Diagram {
+        let newd : Diagram = this.copy();
+        // transform all children
+        newd.children = newd.children.map(c => c.transform(transform_function));
+        // transform path
+        if (newd.path != undefined) newd.path = newd.path.transform(transform_function);
+        return newd;
+    }
+
+    /**
      * Translate the diagram by a vector
      * @param v vector to translate
      */
@@ -473,16 +486,27 @@ export class Path {
         }
     }
 
+    /**
+     * Tranfrom the path by a function
+     * @param transform_function function to transform the path
+     */
+    public transform(transform_function : (p : Vector2) => Vector2) : Path {
+        let newp : Path = this.copy();
+        // transform all the points
+        newp.points = newp.points.map(p => transform_function(p));
+        return newp;
+    }
 
     /**
      * Translate the path by a vector
      * @param v vector to translate
      */
     public translate(v : Vector2) : Path {
-        let newp : Path = this.copy();
-        // translate all the points
-        newp.points = newp.points.map(p => p.add(v));
-        return newp;
+        return this.transform(p => p.add(v));
+        // let newp : Path = this.copy();
+        // // translate all the points
+        // newp.points = newp.points.map(p => p.add(v));
+        // return newp;
     }
 
     /**
@@ -491,10 +515,11 @@ export class Path {
      * @param pivot pivot point
      */
     public rotate(angle : number, pivot : Vector2) : Path {
-        let newp : Path = this.copy();
-        // rotate all the points
-        newp.points = newp.points.map(p => p.sub(pivot).rotate(angle).add(pivot));
-        return newp;
+        return this.transform(p => p.sub(pivot).rotate(angle).add(pivot));
+        // let newp : Path = this.copy();
+        // // rotate all the points
+        // newp.points = newp.points.map(p => p.sub(pivot).rotate(angle).add(pivot));
+        // return newp;
     }
 
     /**
@@ -503,10 +528,11 @@ export class Path {
      * @param origin origin point
      */
     public scale(scale : Vector2, origin : Vector2) : Path {
-        let newp : Path = this.copy();
-        // scale all the points
-        newp.points = newp.points.map(p => p.sub(origin).mul(scale).add(origin));
-        return newp;
+        return this.transform(p => p.sub(origin).mul(scale).add(origin));
+        // let newp : Path = this.copy();
+        // // scale all the points
+        // newp.points = newp.points.map(p => p.sub(origin).mul(scale).add(origin));
+        // return newp;
     }
 }
 
