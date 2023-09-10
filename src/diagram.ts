@@ -10,6 +10,7 @@ export enum DiagramType {
     Polygon = 'polygon',
     Curve   = 'curve',
     Empty   = 'empty',
+    Text    = 'text',
     Diagram = 'diagram',
 }
 
@@ -41,6 +42,22 @@ export type DiagramStyle = {
     "vector-effect"?    : string,
     // TODO : add more style
 }
+
+export type TextData = {
+    "text"?             : string,
+    "font-family"?      : string,
+    "font-size"?        : string,
+    "font-weight"?      : string,
+    "font-style"?       : string,
+    "text-anchor"?      : string,
+    // "dominant-baseline"?: string,
+    // "letter-spacing"?   : string,
+    // "word-spacing"?     : string,
+    // "text-decoration"?  : string,
+    // "writing-mode"?     : string,
+}
+
+
 /**
 * Diagram Class 
 *
@@ -54,14 +71,17 @@ export class Diagram {
     type : DiagramType;
     children : Diagram[] = [];
     path : Path | undefined = undefined; // Polygon and Curve have a path
-    /** position of the origin of the diagram */
-    origin : Vector2 = new Vector2(0, 0);
+    origin : Vector2 = new Vector2(0, 0); // position of the origin of the diagram
     style  : DiagramStyle = {}
+    textdata : TextData = {}
 
-    constructor(type_ : DiagramType, args : { path? : Path, children? : Diagram[] } = {}) {
+    constructor(type_ : DiagramType, 
+        args : { path? : Path, children? : Diagram[], textdata? : TextData } = {}
+    ) {
         this.type = type_;
         this.path = args.path;
         if (args.children) { this.children = args.children; }
+        if (args.textdata) { this.textdata = args.textdata; }
     }
 
     /**
@@ -187,6 +207,31 @@ export class Diagram {
 ) : Diagram {
         return this.update_style('vector-effect', vectoreffect);
     }
+
+
+    private update_textdata(textdataname : keyof Diagram['textdata'], textdatavalue : string) : Diagram {
+        let newd : Diagram = this.copy();
+        if (newd.type == DiagramType.Text) {
+            newd.textdata[textdataname] = textdatavalue;
+        } else if (newd.type == DiagramType.Diagram) {
+            newd.children = newd.children.map(c => c.update_textdata(textdataname, textdatavalue));
+        } else if (newd.type == DiagramType.Polygon || newd.type == DiagramType.Curve || newd.type == DiagramType.Empty) {
+            // do nothing
+        } else {
+            throw new Error("Unreachable, unknown diagram type : " + newd.type);
+        }
+        return newd;
+    }
+    public fontfamily(fontfamily : string) : Diagram {
+        return this.update_textdata('font-family', fontfamily);
+    }
+    public fontsize(fontsize : number) : Diagram {
+        return this.update_textdata('font-size', fontsize.toString());
+    }
+    public fontweight(fontweight : 'normal' | 'bold' | 'bolder' | 'lighter' | number ) : Diagram {
+        return this.update_textdata('font-weight', fontweight.toString());
+    }
+
 
 
 
@@ -595,4 +640,17 @@ export function polygon(points: Vector2[]) : Diagram {
 export function empty(v : Vector2) : Diagram {
     let emp = new Diagram(DiagramType.Empty, {path : new Path([v])});
     return emp;
+}
+
+/**
+ * Create a text diagram
+ * @param str text to display
+ * @returns a text diagram
+ */
+export function text(str : string) : Diagram {
+    let dtext = new Diagram(DiagramType.Text, {
+        textdata : { text : str },
+        path : new Path([new Vector2(0, 0)]),
+    });
+    return dtext;
 }

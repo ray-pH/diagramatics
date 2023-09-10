@@ -1,4 +1,4 @@
-import { Diagram, DiagramType, DiagramStyle, Path } from "./diagram.js";
+import { Diagram, DiagramType, DiagramStyle, TextData, Path } from "./diagram.js";
 import { tab_color, get_color } from "./color_palette.js";
 
 const default_diagram_style : DiagramStyle = {
@@ -9,6 +9,14 @@ const default_diagram_style : DiagramStyle = {
     "stroke-dasharray" : "none",
     "stroke-linejoin"  : "round",
     "vector-effect"    : "non-scaling-stroke",
+}
+
+const default_textdata : TextData = {
+    "text"             : "",
+    "font-family"      : "sans-serif",
+    "font-size"        : "16",
+    "font-weight"      : "normal",
+    // "text-anchor"      : "middle",
 }
 
 function draw_polygon(svgelement : SVGSVGElement, diagram : Diagram) : void {
@@ -60,22 +68,79 @@ function draw_curve(svgelement : SVGSVGElement, diagram : Diagram) : void {
         }
     }
 }
+
+/**
+ * Collect all DiagramType.Text in the diagram
+ * @param diagram the outer diagram
+ * @returns a list of DiagramType.Text
+*/
+function collect_text(diagram : Diagram) : Diagram[] {
+    if (diagram.type == DiagramType.Text) {
+        return [diagram];
+    } else if (diagram.type == DiagramType.Diagram) {
+        let result : Diagram[] = [];
+        for (let d of diagram.children) {
+            result = result.concat(collect_text(d));
+        }
+        return result;
+    } else {
+        return [];
+    }
+}
+
+function draw_text(svgelement : SVGSVGElement, diagram : Diagram) : void {
+    let textdata = {...default_textdata, ...diagram.textdata}; // use default if not defined
+    if (diagram.path == undefined) { throw new Error("Text must have a path"); }
+    // draw svg of text
+    let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    text.setAttribute("x", diagram.path.points[0].x.toString());
+    text.setAttribute("y", (-diagram.path.points[0].y).toString());
+
+    // scale font-size adjusting for svgelement.bbox and size
+    let bbox = svgelement.getBBox();
+    let svgelement_width = svgelement.width.baseVal.value;
+    let svgelement_height = svgelement.height.baseVal.value;
+    let scale = Math.min(bbox.width / svgelement_width, bbox.height / svgelement_height)
+    let font_size = parseFloat(textdata["font-size"] as string) * scale;
+
+    // set font styles (font-family, font-size, font-weight)
+    text.setAttribute("font-family", textdata["font-family"] as string);
+    text.setAttribute("font-size", font_size.toString());
+    text.setAttribute("font-weight", textdata["font-weight"] as string);
+
+    // set the content of the text
+    text.innerHTML = textdata["text"] as string;
+
+    // add to svgelement
+    svgelement.appendChild(text);
+}
     
 
 export function draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram,
-    set_html_attribute : boolean = true) : void {
+    set_html_attribute : boolean = true, render_text : boolean = true) : void {
+
+
     if (diagram.type == DiagramType.Polygon) {
         draw_polygon(svgelement, diagram);
     } else if (diagram.type == DiagramType.Curve){
         draw_curve(svgelement, diagram);
-    } else if (diagram.type == DiagramType.Empty){
+    } else if (diagram.type == DiagramType.Empty || diagram.type == DiagramType.Text){
         // do nothing
     } else if (diagram.type == DiagramType.Diagram){
         for (let d of diagram.children) {
-            draw_to_svg(svgelement, d, false);
+            draw_to_svg(svgelement, d, false, false);
         }
     } else {
-        throw new Error("Unreachable, unknown diagram type : " + diagram.type);
+        console.warn("Unreachable, unknown diagram type : " + diagram.type);
+    }
+
+    // draw text last to make the scaling works
+    // because the text is scaled based on the bounding box of the svgelement
+    if (render_text) {
+        let text_diagrams : Diagram[] = collect_text(diagram);
+        for (let d of text_diagrams) {
+            draw_text(svgelement, d);
+        }
     }
     
     if (set_html_attribute) {
