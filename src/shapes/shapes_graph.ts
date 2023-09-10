@@ -94,28 +94,15 @@ export function axes_empty(axes_options? : axes_options) : Diagram {
  */
 export function plotv(data : Vector2[], axes_options? : axes_options) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
-    if (opt.bbox == undefined) {
-        // get values from xrange and yrange
-        let [xmin, xmax] = opt.xrange;
-        let [ymin, ymax] = opt.yrange;
-        opt.bbox = [V2(xmin,ymin), V2(xmax,ymax)];
-    }
-
-    let [lowerleft, upperright] = opt.bbox;
     let [xmin, xmax] = opt.xrange;
     let [ymin, ymax] = opt.yrange;
 
-    // map xdata and ydata to axes coordinates
-    let x = data.map(v => lowerleft.x + (v.x-xmin)/(xmax-xmin)*(upperright.x-lowerleft.x));
-    let y = data.map(v => lowerleft.y + (v.y-ymin)/(ymax-ymin)*(upperright.y-lowerleft.y));
-    let v = x.map((x,i) => V2(x,y[i]));
-
-    // split v into segments that are within the bbox
+    // split data into segments that are within the range
     let segments : Vector2[][] = [];
     let current_segment : Vector2[] = [];
-    for (let i=0; i<v.length; i++) {
-        let p = v[i];
-        let is_inside = (p.x >= lowerleft.x && p.x <= upperright.x && p.y >= lowerleft.y && p.y <= upperright.y);
+    for (let i=0; i < data.length; i++) {
+        let p = data[i];
+        let is_inside = (p.x >= xmin && p.x <= xmax && p.y >= ymin && p.y <= ymax);
         if (!is_inside) {
             if (current_segment.length > 1) segments.push(current_segment);
             current_segment = [];
@@ -125,13 +112,16 @@ export function plotv(data : Vector2[], axes_options? : axes_options) : Diagram 
     }
     if (current_segment.length > 1) segments.push(current_segment);
 
+    let d : Diagram;
     // create separate paths for each segment
     let path_diagrams = segments.map(segment => curve(segment));
     if (path_diagrams.length == 1){
-        return path_diagrams[0];
+        d = path_diagrams[0];
     } else {
-        return diagram_combine(path_diagrams).stroke('black').fill('none');
+        d = diagram_combine(path_diagrams).stroke('black').fill('none');
     }
+
+    return d.transform(axes_transform(opt));
 }
 
 /**
@@ -166,30 +156,13 @@ export function plotf(f : (x:number)=>number, axes_options? : axes_options) : Di
 
 export function under_curvef(f : (x:number)=>number, x_start : number, x_end : number,  axes_options? : axes_options ) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
+
     let new_opt = {...opt}; // copy opt
-
     new_opt.xrange = [x_start, x_end];
+    new_opt.bbox = undefined;
 
-    // map bbox from the original value in opt into the new value from x_start and x_end
-    if (opt.bbox == undefined) {
-        // get values from xrange and yrange
-        let [xmin, xmax] = opt.xrange;
-        let [ymin, ymax] = opt.yrange;
-        opt.bbox = [V2(xmin,ymin), V2(xmax,ymax)];
-    }
-    let [lowerleft, upperright] = opt.bbox;
-    let [xmin, xmax] = opt.xrange;
-    let lowerleft_new  = V2(lowerleft.x + (x_start-xmin)/(xmax-xmin)*(upperright.x-lowerleft.x), lowerleft.y);
-    let upperright_new = V2(lowerleft.x + (x_end-xmin)/(xmax-xmin)*(upperright.x-lowerleft.x), upperright.y);
-    new_opt.bbox = [lowerleft_new, upperright_new];
-
-    // find y = 0 from the opt.yrange and opt.bbox
-    let [ymin, ymax] = opt.yrange;
-    let y0 = lowerleft.y + (0-ymin)/(ymax-ymin)*(upperright.y-lowerleft.y);
-
-    // define left and right points in y0
-    let y0left  = V2(lowerleft_new.x, y0);
-    let y0right = V2(upperright_new.x, y0);
-
-    return plotf(f, new_opt).add_points([y0right, y0left]).to_polygon();
+    // draw plot from x_start to x_end
+    let fplot = plotf(f, new_opt);
+    let area_under = fplot.add_points([V2(x_end,0), V2(x_start,0)]).to_polygon();
+    return area_under.transform(axes_transform(opt));
 }
