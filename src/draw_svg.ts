@@ -11,12 +11,23 @@ const default_diagram_style : DiagramStyle = {
     "vector-effect"    : "non-scaling-stroke",
 }
 
+const default_text_diagram_style : DiagramStyle = {
+    "fill"             : "black",
+    "stroke"           : "none",
+    "stroke-width"     : "1",
+    "stroke-linecap"   : "butt",
+    "stroke-dasharray" : "none",
+    "stroke-linejoin"  : "round",
+    "vector-effect"    : "non-scaling-stroke",
+}
+
 const default_textdata : TextData = {
     "text"             : "",
     "font-family"      : "sans-serif",
     "font-size"        : "16",
     "font-weight"      : "normal",
-    // "text-anchor"      : "middle",
+    "text-anchor"      : "middle",
+    "dominant-baseline": "middle",
 }
 
 function draw_polygon(svgelement : SVGSVGElement, diagram : Diagram) : void {
@@ -89,6 +100,10 @@ function collect_text(diagram : Diagram) : Diagram[] {
 }
 
 function draw_text(svgelement : SVGSVGElement, diagram : Diagram) : void {
+    let style = {...default_text_diagram_style, ...diagram.style}; // use default if not defined
+    style.fill = get_color(style.fill as string, tab_color);
+    style.stroke = get_color(style.stroke as string, tab_color);
+
     let textdata = {...default_textdata, ...diagram.textdata}; // use default if not defined
     if (diagram.path == undefined) { throw new Error("Text must have a path"); }
     // draw svg of text
@@ -107,6 +122,11 @@ function draw_text(svgelement : SVGSVGElement, diagram : Diagram) : void {
     text.setAttribute("font-family", textdata["font-family"] as string);
     text.setAttribute("font-size", font_size.toString());
     text.setAttribute("font-weight", textdata["font-weight"] as string);
+    text.setAttribute("text-anchor", textdata["text-anchor"] as string);
+    text.setAttribute("dominant-baseline", textdata["dominant-baseline"] as string);
+    for (let stylename in style) {
+        text.style[stylename as any] = (style as any)[stylename as any];
+    }
 
     // set the content of the text
     text.innerHTML = textdata["text"] as string;

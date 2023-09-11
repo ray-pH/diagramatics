@@ -50,11 +50,29 @@ export type TextData = {
     "font-weight"?      : string,
     "font-style"?       : string,
     "text-anchor"?      : string,
-    // "dominant-baseline"?: string,
+    "dominant-baseline"?: string,
     // "letter-spacing"?   : string,
     // "word-spacing"?     : string,
     // "text-decoration"?  : string,
     // "writing-mode"?     : string,
+}
+
+function anchor_to_textdata(anchor : Anchor) : TextData {
+    // TODO : might want to look at
+    // hanging vs text-before-edge
+    // ideographic vs text-after-edge
+    switch (anchor) {
+        case Anchor.TopLeft      : return {"text-anchor" : "start" , "dominant-baseline" : "text-before-edge"};
+        case Anchor.TopCenter    : return {"text-anchor" : "middle", "dominant-baseline" : "text-before-edge"};
+        case Anchor.TopRight     : return {"text-anchor" : "end"   , "dominant-baseline" : "text-before-edge"};
+        case Anchor.CenterLeft   : return {"text-anchor" : "start" , "dominant-baseline" : "middle"};
+        case Anchor.CenterCenter : return {"text-anchor" : "middle", "dominant-baseline" : "middle"};
+        case Anchor.CenterRight  : return {"text-anchor" : "end"   , "dominant-baseline" : "middle"};
+        case Anchor.BottomLeft   : return {"text-anchor" : "start" , "dominant-baseline" : "text-after-edge"};
+        case Anchor.BottomCenter : return {"text-anchor" : "middle", "dominant-baseline" : "text-after-edge"};
+        case Anchor.BottomRight  : return {"text-anchor" : "end"   , "dominant-baseline" : "text-after-edge"};
+        default: throw new Error("Unknown anchor " + anchor);
+    }
 }
 
 
@@ -170,7 +188,7 @@ export class Diagram {
 
     private update_style(stylename : keyof Diagram['style'], stylevalue : string) : Diagram {
         let newd : Diagram = this.copy();
-        if (newd.type == DiagramType.Polygon || newd.type == DiagramType.Curve) {
+        if (newd.type == DiagramType.Polygon || newd.type == DiagramType.Curve || newd.type == DiagramType.Text) {
             newd.style[stylename] = stylevalue;
         } else if (newd.type == DiagramType.Diagram) {
             newd.children = newd.children.map(c => c.update_style(stylename, stylevalue));
@@ -231,8 +249,12 @@ export class Diagram {
     public fontweight(fontweight : 'normal' | 'bold' | 'bolder' | 'lighter' | number ) : Diagram {
         return this.update_textdata('font-weight', fontweight.toString());
     }
-
-
+    public textanchor(textanchor : 'start' | 'middle' | 'end' ) : Diagram {
+        return this.update_textdata('text-anchor', textanchor);
+    }
+    public dominantbaseline(dominantbaseline : 'auto' | 'text-bottom' | 'alphabetic' | 'ideographic' | 'middle' | 'central' | 'mathematical' | 'hanging' | 'text-top' ) : Diagram {
+        return this.update_textdata('dominant-baseline', dominantbaseline);
+    }
 
 
     /**
@@ -376,6 +398,7 @@ export class Diagram {
      *  'top-left', 'top-center', 'top-right'
      *  'center-left', 'center-center', 'center-right'
      *  'bottom-left', 'bottom-center', 'bottom-right'
+     * * for texts, use `move_origin_text()`
      */
     public move_origin(pos : Vector2 | Anchor) : Diagram {
         let newd : Diagram = this.copy();
@@ -384,6 +407,23 @@ export class Diagram {
         } else {
             newd.origin = newd.get_anchor(pos);
         }
+        return newd;
+    }
+
+    /**
+     * Move the origin of the diagram to an anchor
+     * @param pos anchor to move the origin to.
+     * anchors can be
+     * 'top-left', 'top-center', 'top-right'
+     * 'center-left', 'center-center', 'center-right'
+     * 'bottom-left', 'bottom-center', 'bottom-right'
+     */
+    public move_origin_text(pos : Anchor) : Diagram {
+        // for text, use text-anchor and dominant-baseline
+        let newd = this.copy();
+        let textdata = anchor_to_textdata(pos);
+        newd.textdata['text-anchor'] = textdata['text-anchor'];
+        newd.textdata['dominant-baseline'] = textdata['dominant-baseline'];
         return newd;
     }
 
