@@ -11,6 +11,8 @@ export { str_to_mathematical_italic } from './unicode_utils.js'
 export { Interactive } from './interactive.js'
 
 // Extra Shapes
-export { axes_transform, ax, axes_empty, xtickmark_empty, xtickmark,
+export { axes_transform, ax, axes_empty, 
+    xtickmark_empty, xtickmark, xticks,
+    ytickmark_empty, ytickmark, yticks,
     plot, plotv, plotf, under_curvef } from './shapes/shapes_graph.js'
 export { inclined_plane } from './shapes/shapes_mechanics.js'

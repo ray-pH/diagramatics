@@ -92,8 +92,92 @@ export function xtickmark(x : number, str : string, height : number = 0.1) : Dia
     return diagram_combine([tick, label]);
 }
 
-// export function xticks()
-//
+export function ytickmark_empty(y : number, height : number = 0.1) : Diagram {
+    return line(V2(height/2,y), V2(-height/2,y)).stroke('gray');
+}
+export function ytickmark(y : number, str : string, height : number = 0.1) : Diagram {
+    let tick = ytickmark_empty(y, height);
+    let label = textvar(str).move_origin_text(Anchor.CenterRight).translate(tick.get_anchor(Anchor.CenterLeft)).fill('gray');
+    return diagram_combine([tick, label]);
+}
+
+// ======= BEGIN utility to calculate ticks
+
+function get_tick_interval(min : number, max : number) : number {
+    let range = max-min;
+    let range_order = Math.floor(Math.log10(range));
+    let interval_to_try = [0.1, 0.15, 0.2, 0.5, 1.0].map(x => x*Math.pow(10,range_order));
+    let tick_counts = interval_to_try.map(x => Math.floor(range/x));
+    // choose the interval so that the number of ticks is between the biggest one but less than 10
+    for (let i = 0; i < tick_counts.length; i++) {
+        if (tick_counts[i] <= 10) {
+            return interval_to_try[i];
+        }
+    }
+    return interval_to_try.slice(-1)[0];
+}
+
+function get_tick_numbers_range(min : number, max : number) : number[] {
+    let interval = get_tick_interval(min, max);
+    // round min and max to the nearest interval
+    let new_min = Math.ceil(min/interval)*interval;
+    let new_max = Math.floor(max/interval)*interval;
+    let new_count = Math.floor((new_max-new_min)/interval);
+    return linspace(new_min, new_max, new_count+1);
+}
+function get_tick_numbers_aroundzero(neg : number, pos : number, nozero : boolean = true) : number[] {
+    if (neg > 0) throw new Error('neg must be negative');
+    if (pos < 0) throw new Error('pos must be positive');
+    let magnitude = Math.max(-neg, pos);
+    let interval = get_tick_interval(-magnitude, magnitude);
+
+    // round min and max to the nearest interval
+    let new_min = Math.ceil(neg/interval)*interval;
+    let new_max = Math.floor(pos/interval)*interval;
+    let new_count = Math.floor((new_max-new_min)/interval);
+    if (nozero){
+        return linspace(new_min, new_max, new_count+1).filter(x => x != 0);
+    }else{
+        return linspace(new_min, new_max, new_count+1);
+    }
+}
+function get_tick_numbers(min : number, max : number) : number[] {
+    if (min < 0 && max > 0) {
+        return get_tick_numbers_aroundzero(min, max);
+    } else {
+        return get_tick_numbers_range(min, max);
+    }
+}
+
+// ======= END utility to calculate ticks
+
+export function xticks(axes_options : axes_options) : Diagram {
+    let opt = {...default_axes_options, ...axes_options}; // use default if not defined
+    if (opt.xticks == undefined) {
+        opt.xticks = get_tick_numbers(opt.xrange[0], opt.xrange[1]);
+    }
+
+    // remove ticks outside of the range
+    // opt.xticks = opt.xticks.filter(x => x >= opt.xrange[0] && x <= opt.xrange[1]);
+    opt.xticks = opt.xticks.filter(x => x > opt.xrange[0] && x < opt.xrange[1]);
+
+    let xticks_diagrams = opt.xticks.map(x => xtickmark(x, x.toString()));
+    return diagram_combine(xticks_diagrams).transform(axes_transform(opt));
+}
+export function yticks(axes_options : axes_options) : Diagram {
+    let opt = {...default_axes_options, ...axes_options}; // use default if not defined
+    if (opt.yticks == undefined) {
+        opt.yticks = get_tick_numbers(opt.yrange[0], opt.yrange[1]);
+    }
+
+    // remove ticks outside of the range
+    // opt.yticks = opt.yticks.filter(y => y >= opt.yrange[0] && y <= opt.yrange[1]);
+    opt.yticks = opt.yticks.filter(y => y > opt.yrange[0] && y < opt.yrange[1]);
+
+    let yticks_diagrams = opt.yticks.map(y => ytickmark(y, y.toString()));
+    return diagram_combine(yticks_diagrams).transform(axes_transform(opt));
+}
+
 
 // TODO : 
 // export function axes(axes_options? : axes_options) : Diagram {

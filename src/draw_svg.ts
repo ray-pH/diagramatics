@@ -24,7 +24,7 @@ const default_text_diagram_style : DiagramStyle = {
 const default_textdata : TextData = {
     "text"             : "",
     "font-family"      : "Latin Modern Math, sans-serif",
-    "font-size"        : "16",
+    "font-size"        : "18",
     "font-weight"      : "normal",
     "text-anchor"      : "middle",
     "dominant-baseline": "middle",
