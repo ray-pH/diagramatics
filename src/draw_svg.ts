@@ -23,7 +23,7 @@ const default_text_diagram_style : DiagramStyle = {
 
 const default_textdata : TextData = {
     "text"             : "",
-    "font-family"      : "sans-serif",
+    "font-family"      : "Latin Modern Math, sans-serif",
     "font-size"        : "16",
     "font-weight"      : "normal",
     "text-anchor"      : "middle",
@@ -138,7 +138,6 @@ function draw_text(svgelement : SVGSVGElement, diagram : Diagram) : void {
 
 export function draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram,
     set_html_attribute : boolean = true, render_text : boolean = true) : void {
-
 
     if (diagram.type == DiagramType.Polygon) {
         draw_polygon(svgelement, diagram);

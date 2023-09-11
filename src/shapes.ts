@@ -1,5 +1,6 @@
-import { Diagram, polygon, line, diagram_combine } from './diagram.js';
+import { Diagram, polygon, line, text, diagram_combine } from './diagram.js';
 import { Vector2, V2, linspace } from './linear_algebra.js';
+import { str_to_mathematical_italic } from './unicode_utils.js'
 
 // function helpers to create common shapes
 
@@ -73,4 +74,13 @@ export function arrow2(start : Vector2, end : Vector2, headsize : number = 3) : 
     let head_triangle  = raw_triangle.rotate(direction.angle()).position(end);
     let head_triangle2 = raw_triangle.rotate(direction.angle()+Math.PI).position(start);
     return diagram_combine([line_diagram, head_triangle, head_triangle2]);
+}
+
+/**
+ * Create a text object with mathematical italic font
+ * @param str text to be displayed
+ * @returns a Diagram object
+ */
+export function textvar(str : string) : Diagram {
+    return text(str_to_mathematical_italic(str));
 }

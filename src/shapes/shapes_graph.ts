@@ -1,6 +1,6 @@
-import { Diagram, polygon, line, curve, diagram_combine } from '../diagram.js';
+import { Diagram, Anchor, polygon, line, curve, text, diagram_combine } from '../diagram.js';
 import { Vector2, V2, linspace } from '../linear_algebra.js';
-import { arrow2 } from '../shapes.js'
+import { arrow2, textvar } from '../shapes.js'
 
 /**
  * Options for axes
@@ -76,6 +76,24 @@ export function axes_empty(axes_options? : axes_options) : Diagram {
     return diagram_combine([xaxis, yaxis]).stroke('gray').fill('gray');
     // return xaxis;
 }
+
+/**
+ * Create a single tick mark in the x axis
+ * @param x x coordinate of the tick mark
+ * @param height height of the tick mark
+ */
+export function xtickmark_empty(x : number, height : number = 0.1) : Diagram {
+    return line(V2(x,height/2), V2(x,-height/2)).stroke('gray');
+}
+
+export function xtickmark(x : number, str : string, height : number = 0.1) : Diagram {
+    let tick = xtickmark_empty(x, height);
+    let label = textvar(str).move_origin_text(Anchor.TopCenter).translate(tick.get_anchor(Anchor.BottomCenter)).fill('gray');
+    return diagram_combine([tick, label]);
+}
+
+// export function xticks()
+//
 
 // TODO : 
 // export function axes(axes_options? : axes_options) : Diagram {
