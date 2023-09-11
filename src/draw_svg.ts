@@ -115,7 +115,7 @@ function draw_text(svgelement : SVGSVGElement, diagram : Diagram) : void {
     let bbox = svgelement.getBBox();
     let svgelement_width = svgelement.width.baseVal.value;
     let svgelement_height = svgelement.height.baseVal.value;
-    let scale = Math.min(bbox.width / svgelement_width, bbox.height / svgelement_height)
+    let scale = Math.max(bbox.width / svgelement_width, bbox.height / svgelement_height)
     let font_size = parseFloat(textdata["font-size"] as string) * scale;
 
     // set font styles (font-family, font-size, font-weight)
