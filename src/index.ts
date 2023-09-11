@@ -14,5 +14,6 @@ export { Interactive } from './interactive.js'
 export { axes_transform, ax, axes_empty, 
     xtickmark_empty, xtickmark, xticks,
     ytickmark_empty, ytickmark, yticks,
+    xyaxes, xygrid,
     plot, plotv, plotf, under_curvef } from './shapes/shapes_graph.js'
 export { inclined_plane } from './shapes/shapes_mechanics.js'

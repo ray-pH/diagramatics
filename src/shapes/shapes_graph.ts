@@ -178,6 +178,36 @@ export function yticks(axes_options : axes_options) : Diagram {
     return diagram_combine(yticks_diagrams).transform(axes_transform(opt));
 }
 
+/**
+ * Draw xy axes with ticks
+ * @param axes_options options for the axes
+ */
+export function xyaxes(axes_options? : axes_options) : Diagram {
+    let opt = {...default_axes_options, ...axes_options}; // use default if not defined
+    return diagram_combine([axes_empty(opt), xticks(opt), yticks(opt)]);
+}
+
+export function xygrid(axes_options? : axes_options) : Diagram {
+    let opt = {...default_axes_options, ...axes_options}; // use default if not defined
+    if (opt.xticks == undefined) {
+        opt.xticks = get_tick_numbers(opt.xrange[0], opt.xrange[1]);
+    }
+    if (opt.yticks == undefined) {
+        opt.yticks = get_tick_numbers(opt.yrange[0], opt.yrange[1]);
+    }
+
+    let xgrid_diagrams = opt.xticks.map(x => 
+        line(V2(x,opt.yrange[0]), V2(x,opt.yrange[1])).transform(axes_transform(opt)).stroke('gray')
+    );
+    let ygrid_diagrams = opt.yticks.map(y =>
+        line(V2(opt.xrange[0],y), V2(opt.xrange[1],y)).transform(axes_transform(opt)).stroke('gray')
+    );
+    return diagram_combine([...xgrid_diagrams, ...ygrid_diagrams]);
+
+}
+
+
+
 
 // TODO : 
 // export function axes(axes_options? : axes_options) : Diagram {
