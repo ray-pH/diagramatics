@@ -1,0 +1,96 @@
+
+/* circular button */
+.diagramatics-slider-leftcontainer{
+  float: left;
+}
+
+.diagramatics-slider-rightcontainer{
+  float: left;
+  padding-left: 10px;
+}
+
+.diagramatics-slider-moreplaybutton {
+  width:  30px;
+  height: 15px;
+  background-color: #DDD;
+  border-radius: 5px;
+  border: none;
+  color: #000;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 12px;
+  /* margin: 4px 2px; */
+  cursor: pointer;
+}
+.diagramatics-slider-moreplaybutton:hover {
+  background-color: #EEE;
+}
+
+.diagramatics-slider-playbutton {
+  width:  30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #1f77b4;
+  border: none;
+  color: white;
+  padding: 10px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 12px;
+  /* margin: 4px 2px; */
+  cursor: pointer;
+}
+.diagramatics-slider-playbutton:hover {
+  background-color: #1f77b450;
+}
+
+.diagramatics-label {
+  font-family: 'Latin Modern Math', sans-serif;
+  margin-bottom: 5px;
+}
+
+.diagramatics-slider {
+  -webkit-appearance: none;  /* Override default CSS styles */
+  appearance: none;
+  /* width: 100%; /* Full-width */ 
+
+  /* creating a custom design */
+  width: 200px;
+  cursor: pointer;
+  outline: none;
+  border-radius: 15px;
+  
+  /* New additions */
+  height: 5px;
+  background: #ccc;
+  /* background: linear-gradient(to right, #1f77b4 0%, #1f77b4 90%, #0000 90%, #0000 100%); */
+  /* create a backround color that has padding of 5px on both side */
+  /* background: linear-gradient(to right,#0000 0px, $0000 5px, #1f77b4 5px, #1f77b4 90%, #0000 90%, #0000 100%); */
+}
+
+/* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
+.diagramatics-slider::-webkit-slider-thumb {
+    /* removing default appearance */
+    -webkit-appearance: none;
+    appearance: none; 
+    cursor: pointer;
+
+    width:5px;
+    height:5px;
+    border-radius:50%;
+    background-color:#1f77b4;
+    /* clip-path:circle(50% at 50% 50%); */
+    background-clip:padding-box;
+    padding:5px;
+    border:10px solid #1f77b450;
+}
+/* Thumb: Firefox */
+.diagramatics-slider::-moz-range-thumb {
+  height: 15px;
+  width: 15px;
+  background-color: #1f77b4;
+  border-radius: 50%;
+  border: none;
+}
