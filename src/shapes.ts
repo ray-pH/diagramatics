@@ -23,7 +23,7 @@ export function rectangle(width : number, height : number) : Diagram {
  * @param side side length of the square
  * @returns a Diagram object
  */
-export function square(side : number) : Diagram {
+export function square(side : number = 1) : Diagram {
     return rectangle(side, side);
 }
 
@@ -33,7 +33,7 @@ export function square(side : number) : Diagram {
  * @param radius radius of the polygon
  * @returns a Diagram object
  */
-export function regular_polygon(n : number, radius : number) : Diagram {
+export function regular_polygon(n : number, radius : number = 1) : Diagram {
     let points : Vector2[] = [];
     for (let i = 0; i < n; i++) {
         points.push(V2(0,radius).rotate(i*2*Math.PI/n));
@@ -43,12 +43,12 @@ export function regular_polygon(n : number, radius : number) : Diagram {
 
 /**
  * Create circle centered at origin
- * *currently implemented as a regular polygon with 20 sides*
+ * *currently implemented as a regular polygon with 50 sides*
  * @param radius radius of the circle
  * @returns a Diagram object
  */
-export function circle(radius : number) : Diagram {
-    return regular_polygon(20, radius);
+export function circle(radius : number = 1) : Diagram {
+    return regular_polygon(50, radius);
 }
 
 
