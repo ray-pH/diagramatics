@@ -364,6 +364,72 @@ export class Diagram {
     }
 
     /**
+     * Reflect the diagram over a point
+     * @param p point to reflect over
+     */
+    public reflect_over_point(p : Vector2) {
+        let newd : Diagram = this.copy();
+        // reflect all children
+        newd.children = newd.children.map(c => c.reflect_over_point(p));
+        // reflect path
+        if (newd.path != undefined) newd.path = newd.path.reflect_over_point(p);
+        return newd;
+    }
+
+    /**
+     * Reflect the diagram over a line defined by two points
+     * @param p1 point on the line
+     * @param p2 point on the line
+     */
+    public reflect_over_line(p1 : Vector2, p2 : Vector2) {
+        let newd : Diagram = this.copy();
+        // reflect all children
+        newd.children = newd.children.map(c => c.reflect_over_line(p1, p2));
+        // reflect path
+        if (newd.path != undefined) newd.path = newd.path.reflect_over_line(p1, p2);
+        return newd;
+    }
+
+    /**
+     * Reflect the diagram
+     * if given 0 arguments, reflect over the origin
+     * if given 1 argument, reflect over a point p1
+     * if given 2 arguments, reflect over a line defined by two points p1 and p2
+     * @param p1 point
+     * @param p2 point
+     */
+    public reflect(p1? : Vector2, p2? : Vector2){
+        if (p1 == undefined && p2 == undefined) {
+            return this.reflect_over_point(new Vector2(0,0));
+        } else if (p1 != undefined && p2 == undefined) {
+            return this.reflect_over_point(p1);
+        } else if (p1 != undefined && p2 != undefined) {
+            return this.reflect_over_line(p1, p2);
+        } else {
+            throw new Error("Unreachable");
+        }
+    }
+
+    /**
+     * Vertical flip
+     * Reflect the diagram over a horizontal line y = a
+     * @param a y value of the line
+     */
+    public vflip(a : number = 0) {
+        return this.reflect(new Vector2(0, a), new Vector2(1, a));
+    }
+
+    /**
+     * Horizontal flip
+     * Reflect the diagram over a vertical line x = a
+     * @param a x value of the line
+     */
+    public hflip(a : number = 0){
+        return this.reflect(new Vector2(a, 0), new Vector2(a, 1));
+    }
+
+
+    /**
      * Get the position of the anchor of the diagram
      * @param anchor anchor to get, anchors can be
      *   'top-left', 'top-center', 'top-right'
@@ -619,6 +685,30 @@ export class Path {
         // newp.points = newp.points.map(p => p.sub(origin).mul(scale).add(origin));
         // return newp;
     }
+
+    /**
+     * Reflect the path over a point
+     * @param p point to reflect over
+     */
+    public reflect_over_point(p : Vector2) {
+        return this.rotate(Math.PI, p);
+    }
+
+    /**
+     * Reflect the path over a line given by two points
+     * @param p1 point on the line
+     * @param p2 point on the line
+     */
+    public reflect_over_line(p1 : Vector2, p2 : Vector2) {
+        return this.transform(p => {
+            let v = p2.sub(p1);
+            let n = v.rotate(Math.PI / 2);
+            let d = n.dot(p.sub(p1));
+            let q = p.sub(n.scale(2*d));
+            return q;
+        });
+    }
+        
 }
 
 /**
