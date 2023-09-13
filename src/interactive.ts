@@ -14,8 +14,11 @@ export class Interactive {
         this.draw_function(this.inp_variables);
     }
 
-    public slider(variable_name : string, min : number = 0, max : number = 100, value : number = 50, step : number = 1, 
-        time : number = 10){
+    public slider(variable_name : string, min : number = 0, max : number = 100, value : number = 50, step : number = -1, 
+        time : number = 1.5){
+        // if the step is -1, then it is automatically calculated
+        if (step == -1){ step = (max - min) / 100; }
+
         // initialize the variable
         this.inp_variables[variable_name] = value;
 
@@ -36,6 +39,10 @@ export class Interactive {
         let slider = create_slider(callback, min, max, value, step);
         this.inp_inputs[variable_name] = slider;
 
+        let nstep = (max - min) / step;
+        const interval_time = 1000 * time / nstep;
+        
+
         // =========== playbutton ========
         let playbutton = document.createElement('button');
         playbutton.classList.add("diagramatics-slider-playbutton");
@@ -50,7 +57,7 @@ export class Interactive {
                     if (val > max){ val = min; }
                     slider.value = val.toString();
                     callback(val);
-                }, 40);
+                }, interval_time);
             } else {
                 // if is playing
                 playbutton.innerHTML = '>';
