@@ -321,9 +321,9 @@ export class Diagram {
 
     /**
      * move the diagram to a position
-     * @param v position to move to
+     * @param v position to move to (if left undefined, move to the origin)
      */
-    public position(v : Vector2) : Diagram {
+    public position(v : Vector2 = new Vector2(0,0)) : Diagram {
         let dv = v.sub(this.origin)
         let newd = this.translate(dv);
         return newd;
