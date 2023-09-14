@@ -1,6 +1,12 @@
 import { Diagram, DiagramType, DiagramStyle, TextData, Path } from "./diagram.js";
 import { tab_color, get_color } from "./color_palette.js";
 
+// TODO : add guard for the dictionary key
+// since the implementation is using `for (let stylename in style)` without checking
+// if the correct key is in the dictionary, it can lead to unintended behavior
+// for example, `font-size` could be defined in default_text_diagram_style
+// and will shadow the `font-size` in default_diagram_style
+
 export const default_diagram_style : DiagramStyle = {
     "fill"             : "none",
     "stroke"           : "black",
