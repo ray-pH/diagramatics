@@ -61,7 +61,7 @@ export function arc(radius : number = 1, angle : number = from_degree(360)) : Di
     let n = 100;
     let points : Vector2[] = [];
     for (let i = 0; i < n; i++) {
-        points.push(V2(0,radius).rotate(i*angle/(n-1)));
+        points.push(V2(radius,0).rotate(i*angle/(n-1)));
     }
     return curve(points);
 }
