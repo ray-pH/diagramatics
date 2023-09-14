@@ -24,7 +24,26 @@ const unicode_mathematical_italic = {
     // '.' : '𝛻', '.' : '𝛳', '.' : '𝜕', '.' : '𝜖',
 }
 
+const latex_greek  = {
+    '\\alpha'   : 'α', '\\beta'    : 'β', '\\gamma'   : 'γ', '\\delta'   : 'δ', '\\epsilon' : 'ε',
+    '\\zeta'    : 'ζ', '\\eta'     : 'η', '\\theta'   : 'θ', '\\iota'    : 'ι', '\\kappa'   : 'κ',
+    '\\lambda'  : 'λ', '\\mu'      : 'μ', '\\nu'      : 'ν', '\\xi'      : 'ξ', '\\omicron' : 'ο',
+    '\\pi'      : 'π', '\\rho'     : 'ρ', '\\sigma'   : 'σ', '\\tau'     : 'τ', '\\upsilon' : 'υ',
+    '\\phi'     : 'ϕ', '\\chi'     : 'χ', '\\psi'     : 'ψ', '\\omega'   : 'ω',
+    '\\vartheta'   : 'ϑ', '\\varchi'     : 'ϰ', '\\varphi'     : 'φ', '\\varepsilon' : 'ε',
+    '\\varrho'     : 'ϱ', '\\varsigma'   : 'ς',
 
+}
+
+
+export function str_latex_to_unicode(str : string){
+    str = str + ' ';
+    for (let key in latex_greek){
+        str = str.replaceAll(key+' ', (latex_greek as any)[key]);
+    }
+    return str;
+}
 export function str_to_mathematical_italic(str : string) {
-    return [...str].map(c => (unicode_mathematical_italic as any)[c] || c).join('');
+    return [...str_latex_to_unicode(str)]
+        .map(c => (unicode_mathematical_italic as any)[c] || c).join('');
 }

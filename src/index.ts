@@ -17,7 +17,7 @@ export {
 } from './shapes.js'
 
 export {
-    str_to_mathematical_italic,
+    str_latex_to_unicode, str_to_mathematical_italic,
 } from './unicode_utils.js'
 
 export {
