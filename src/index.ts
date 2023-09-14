@@ -34,6 +34,7 @@ export {
 } from './shapes/shapes_graph.js'
 export { 
     annotation_vector, annotation_vector_text,
+    annotation_angle,
 } from './shapes/shapes_annotation.js'
 export { 
     inclined_plane,
