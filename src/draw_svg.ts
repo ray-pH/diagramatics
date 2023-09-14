@@ -1,7 +1,7 @@
 import { Diagram, DiagramType, DiagramStyle, TextData, Path } from "./diagram.js";
 import { tab_color, get_color } from "./color_palette.js";
 
-const default_diagram_style : DiagramStyle = {
+export const default_diagram_style : DiagramStyle = {
     "fill"             : "none",
     "stroke"           : "black",
     "stroke-width"     : "1",
@@ -11,7 +11,7 @@ const default_diagram_style : DiagramStyle = {
     "vector-effect"    : "non-scaling-stroke",
 }
 
-const default_text_diagram_style : DiagramStyle = {
+export const default_text_diagram_style : DiagramStyle = {
     "fill"             : "black",
     "stroke"           : "none",
     "stroke-width"     : "1",
@@ -21,7 +21,7 @@ const default_text_diagram_style : DiagramStyle = {
     "vector-effect"    : "non-scaling-stroke",
 }
 
-const default_textdata : TextData = {
+export const default_textdata : TextData = {
     "text"             : "",
     "font-family"      : "Latin Modern Math, sans-serif",
     "font-size"        : "18",

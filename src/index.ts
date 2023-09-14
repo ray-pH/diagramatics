@@ -8,6 +8,7 @@ export {
 
 export {
     draw_to_svg,
+    default_diagram_style, default_text_diagram_style, default_textdata,
 } from './draw_svg.js';
 
 export { 
