@@ -33,5 +33,8 @@ export {
     plot, plotv, plotf, under_curvef,
 } from './shapes/shapes_graph.js'
 export { 
+    annotation_vector, annotation_vector_text,
+} from './shapes/shapes_annotation.js'
+export { 
     inclined_plane,
 } from './shapes/shapes_mechanics.js'
