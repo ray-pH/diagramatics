@@ -11,7 +11,7 @@ import { str_to_mathematical_italic } from '../unicode_utils.js'
  * @param arrow_head_size size of the arrow head
  * @param text_offset offset of the text
  */
-export function annotation_vector(v : Vector2, str : string, arrow_head_size? : number, text_offset? : Vector2) : Diagram {
+export function annotation_vector(v : Vector2, str : string, text_offset? : Vector2, arrow_head_size? : number) : Diagram {
     if (text_offset == undefined){ text_offset = V2(0,0); } // default value
     let vec = arrow(v, arrow_head_size);
     if (str == ""){ return vec; } // if str is empty, return only the vector
@@ -28,7 +28,7 @@ export function annotation_vector(v : Vector2, str : string, arrow_head_size? : 
  * @param arrow_head_size size of the arrow head
  * @param text_offset offset of the text
  */
-export function annotation_vector_text(v : Vector2, str : string, arrow_head_size? : number, text_offset? : Vector2) : Diagram {
+export function annotation_vector_text(v : Vector2, str : string, text_offset? : Vector2, arrow_head_size? : number) : Diagram {
     if (text_offset == undefined){ text_offset = V2(0,0); } // default value
     let vec = arrow(v, arrow_head_size);
     if (str == ""){ return vec; } // if str is empty, return only the vector
