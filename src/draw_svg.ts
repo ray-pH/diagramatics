@@ -166,10 +166,15 @@ export function draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram,
         // set viewbox to the bounding box
         let bbox = svgelement.getBBox();
         // add padding of 10px to the bounding box (if the graph is small, it'll mess it up)
-        // bbox.x -= 10;
-        // bbox.y -= 10;
-        // bbox.width += 20;
-        // bbox.height += 20;
+        // scale 10px based on the width and height of the svgelement
+        let svgelement_width = svgelement.width.baseVal.value;
+        let svgelement_height = svgelement.height.baseVal.value;
+        let scale = Math.max(bbox.width / svgelement_width, bbox.height / svgelement_height)
+        let pad = 10 * scale;
+        bbox.x -= pad;
+        bbox.y -= pad;
+        bbox.width += 2 * pad;
+        bbox.height += 2 * pad;
         svgelement.setAttribute("viewBox", `${bbox.x} ${bbox.y} ${bbox.width} ${bbox.height}`);
         // set preserveAspectRatio to xMidYMid meet
         svgelement.setAttribute("preserveAspectRatio", "xMidYMid meet");
