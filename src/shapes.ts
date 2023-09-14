@@ -1,5 +1,5 @@
-import { Diagram, polygon, line, text, diagram_combine } from './diagram.js';
-import { Vector2, V2, linspace } from './linear_algebra.js';
+import { Diagram, polygon, line, curve, text, diagram_combine } from './diagram.js';
+import { Vector2, V2, linspace, from_degree } from './linear_algebra.js';
 import { str_to_mathematical_italic } from './unicode_utils.js'
 
 // function helpers to create common shapes
@@ -49,6 +49,21 @@ export function regular_polygon(n : number, radius : number = 1) : Diagram {
  */
 export function circle(radius : number = 1) : Diagram {
     return regular_polygon(50, radius);
+}
+
+/**
+ * Create an arc centered at origin
+ * @param radius radius of the arc
+ * @param angle angle of the arc
+ * @returns a Diagram object
+ */
+export function arc(radius : number = 1, angle : number = from_degree(360)) : Diagram {
+    let n = 100;
+    let points : Vector2[] = [];
+    for (let i = 0; i < n; i++) {
+        points.push(V2(0,radius).rotate(i*angle/(n-1)));
+    }
+    return curve(points);
 }
 
 
