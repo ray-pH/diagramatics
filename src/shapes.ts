@@ -66,7 +66,6 @@ export function arc(radius : number = 1, angle : number = from_degree(360)) : Di
     return curve(points);
 }
 
-
 /**
  * Create arrow from start to end
  * @param start start point of the arrow
@@ -74,11 +73,10 @@ export function arc(radius : number = 1, angle : number = from_degree(360)) : Di
  * @param headsize size of the arrow head
  * @returns a Diagram object
  */
-export function arrow(start : Vector2, end : Vector2, headsize : number = 3) : Diagram {
-    let line_diagram = line(start, end);
-    let direction    = end.sub(start);
+export function arrow(v : Vector2, headsize : number = 3) : Diagram {
+    let line_diagram = line(V2(0,0), v);
     let raw_triangle = polygon([V2(0,0), V2(-headsize, headsize/2), V2(-headsize, -headsize/2)]);
-    let head_triangle = raw_triangle.rotate(direction.angle()).position(end);
+    let head_triangle = raw_triangle.rotate(v.angle()).position(v);
     return diagram_combine(line_diagram, head_triangle);
 }
 
