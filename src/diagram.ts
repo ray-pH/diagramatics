@@ -473,19 +473,40 @@ export class Diagram {
     }
 
     /**
-     * Move the origin of the diagram to an anchor
-     * @param pos anchor to move the origin to.
+     * Move the origin of text diagram to an anchor
+     * @param anchor anchor to move the origin to.
      * anchors can be
      * 'top-left', 'top-center', 'top-right'
      * 'center-left', 'center-center', 'center-right'
      * 'bottom-left', 'bottom-center', 'bottom-right'
      */
-    public move_origin_text(pos : Anchor) : Diagram {
+    __move_origin_text(anchor : Anchor) : Diagram {
         // for text, use text-anchor and dominant-baseline
         let newd = this.copy();
-        let textdata = anchor_to_textdata(pos);
+        let textdata = anchor_to_textdata(anchor);
         newd.textdata['text-anchor'] = textdata['text-anchor'];
         newd.textdata['dominant-baseline'] = textdata['dominant-baseline'];
+        return newd;
+    }
+
+    /**
+     * Move the origin of text diagram to a position
+     * @param anchor anchor to move the origin to.
+     * anchors can be
+     * 'top-left', 'top-center', 'top-right'
+     * 'center-left', 'center-center', 'center-right'
+     * 'bottom-left', 'bottom-center', 'bottom-right'
+     *
+     */
+    public move_origin_text(anchor : Anchor) : Diagram {
+        let newd = this.copy();
+        if (this.type == DiagramType.Text) {
+            newd = newd.__move_origin_text(anchor);
+        } else if (this.type == DiagramType.Diagram) {
+            newd.children = newd.children.map(c => c.move_origin_text(anchor));
+        } else if (this.type == DiagramType.Polygon || this.type == DiagramType.Curve || this.type == DiagramType.Empty) {
+            // do nothing
+        }
         return newd;
     }
 
