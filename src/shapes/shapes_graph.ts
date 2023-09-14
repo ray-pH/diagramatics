@@ -73,7 +73,7 @@ export function axes_empty(axes_options? : axes_options) : Diagram {
 
     let xaxis = arrow2(V2(lowerleft.x,yorigin), V2(upperright.x,yorigin), 0.05);
     let yaxis = arrow2(V2(xorigin,lowerleft.y), V2(xorigin,upperright.y), 0.05);
-    return diagram_combine([xaxis, yaxis]).stroke('gray').fill('gray');
+    return diagram_combine(xaxis, yaxis).stroke('gray').fill('gray');
     // return xaxis;
 }
 
@@ -89,7 +89,7 @@ export function xtickmark_empty(x : number, height : number = 0.1) : Diagram {
 export function xtickmark(x : number, str : string, height : number = 0.1) : Diagram {
     let tick = xtickmark_empty(x, height);
     let label = textvar(str).move_origin_text(Anchor.TopCenter).translate(tick.get_anchor(Anchor.BottomCenter)).fill('gray');
-    return diagram_combine([tick, label]);
+    return diagram_combine(tick, label);
 }
 
 export function ytickmark_empty(y : number, height : number = 0.1) : Diagram {
@@ -98,7 +98,7 @@ export function ytickmark_empty(y : number, height : number = 0.1) : Diagram {
 export function ytickmark(y : number, str : string, height : number = 0.1) : Diagram {
     let tick = ytickmark_empty(y, height);
     let label = textvar(str).move_origin_text(Anchor.CenterRight).translate(tick.get_anchor(Anchor.CenterLeft)).fill('gray');
-    return diagram_combine([tick, label]);
+    return diagram_combine(tick, label);
 }
 
 // ======= BEGIN utility to calculate ticks
@@ -162,7 +162,7 @@ export function xticks(axes_options : axes_options) : Diagram {
     opt.xticks = opt.xticks.filter(x => x > opt.xrange[0] && x < opt.xrange[1]);
 
     let xticks_diagrams = opt.xticks.map(x => xtickmark(x, x.toString()));
-    return diagram_combine(xticks_diagrams).transform(axes_transform(opt));
+    return diagram_combine(...xticks_diagrams).transform(axes_transform(opt));
 }
 export function yticks(axes_options : axes_options) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
@@ -175,7 +175,7 @@ export function yticks(axes_options : axes_options) : Diagram {
     opt.yticks = opt.yticks.filter(y => y > opt.yrange[0] && y < opt.yrange[1]);
 
     let yticks_diagrams = opt.yticks.map(y => ytickmark(y, y.toString()));
-    return diagram_combine(yticks_diagrams).transform(axes_transform(opt));
+    return diagram_combine(...yticks_diagrams).transform(axes_transform(opt));
 }
 
 /**
@@ -184,7 +184,7 @@ export function yticks(axes_options : axes_options) : Diagram {
  */
 export function xyaxes(axes_options? : axes_options) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
-    return diagram_combine([axes_empty(opt), xticks(opt), yticks(opt)]);
+    return diagram_combine(axes_empty(opt), xticks(opt), yticks(opt));
 }
 
 export function xygrid(axes_options? : axes_options) : Diagram {
@@ -202,7 +202,7 @@ export function xygrid(axes_options? : axes_options) : Diagram {
     let ygrid_diagrams = opt.yticks.map(y =>
         line(V2(opt.xrange[0],y), V2(opt.xrange[1],y)).transform(axes_transform(opt)).stroke('gray')
     );
-    return diagram_combine([...xgrid_diagrams, ...ygrid_diagrams]);
+    return diagram_combine(...xgrid_diagrams, ...ygrid_diagrams);
 
 }
 
@@ -250,7 +250,7 @@ export function plotv(data : Vector2[], axes_options? : axes_options) : Diagram 
     if (path_diagrams.length == 1){
         d = path_diagrams[0];
     } else {
-        d = diagram_combine(path_diagrams).stroke('black').fill('none');
+        d = diagram_combine(...path_diagrams).stroke('black').fill('none');
     }
 
     return d.transform(axes_transform(opt));

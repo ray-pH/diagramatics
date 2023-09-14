@@ -79,7 +79,7 @@ export function arrow(start : Vector2, end : Vector2, headsize : number = 3) : D
     let direction    = end.sub(start);
     let raw_triangle = polygon([V2(0,0), V2(-headsize, headsize/2), V2(-headsize, -headsize/2)]);
     let head_triangle = raw_triangle.rotate(direction.angle()).position(end);
-    return diagram_combine([line_diagram, head_triangle]);
+    return diagram_combine(line_diagram, head_triangle);
 }
 
 export function arrow2(start : Vector2, end : Vector2, headsize : number = 3) : Diagram {
@@ -88,7 +88,7 @@ export function arrow2(start : Vector2, end : Vector2, headsize : number = 3) : 
     let raw_triangle = polygon([V2(0,0), V2(-headsize, headsize/2), V2(-headsize, -headsize/2)]);
     let head_triangle  = raw_triangle.rotate(direction.angle()).position(end);
     let head_triangle2 = raw_triangle.rotate(direction.angle()+Math.PI).position(start);
-    return diagram_combine([line_diagram, head_triangle, head_triangle2]);
+    return diagram_combine(line_diagram, head_triangle, head_triangle2);
 }
 
 /**

@@ -129,12 +129,8 @@ export class Diagram {
      * Combine another diagram with this diagram
      * @param diagrams a diagram or a list of diagrams
      */
-    public combine(diagrams : Diagram | Diagram[]) : Diagram {
-        if (diagrams instanceof Diagram) {
-            return diagram_combine([this, diagrams]);
-        } else {
-            return diagram_combine([this, ...diagrams]);
-        }
+    public combine(...diagrams : Diagram[]) : Diagram {
+        return diagram_combine(this, ...diagrams);
     }
 
     /**
@@ -716,7 +712,7 @@ export class Path {
  * @param diagrams list of diagrams to combine
  * @returns a diagram
  */
-export function diagram_combine(diagrams : Diagram[]) : Diagram {
+export function diagram_combine(...diagrams : Diagram[]) : Diagram {
     let newdiagrams = diagrams.map(d => d.copy());
     return new Diagram(DiagramType.Diagram, {children : newdiagrams});
 }
