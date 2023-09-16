@@ -33,9 +33,6 @@ function function_handle_path_type(func : modifierFunction) : modifierFunction {
 
 function get_round_corner_arc_points(radius : number, points : [Vector2,Vector2,Vector2]) : Vector2[] {
     let [p1, p2, p3] = points;
-    console.log(p1)
-    console.log(p2)
-    console.log(p3)
 
     let v1 = p1.sub(p2).normalize();
     let v3 = p3.sub(p2).normalize();
@@ -68,7 +65,6 @@ function get_round_corner_arc_points(radius : number, points : [Vector2,Vector2,
     let angle_a_b_minus = Math.abs(angle_a - angle_b_minus);
     if (angle_a_b_plus < angle_a_b)  angle_b = angle_b_plus;
     if (angle_a_b_minus < angle_a_b) angle_b = angle_b_minus;
-    console.log(angle_a, angle_b, linspace(angle_a, angle_b, 10));
 
     let arc_points = linspace(angle_a, angle_b, 40).map(a => pc.add(Vdir(a).scale(radius)));
     return arc_points;

@@ -24,6 +24,11 @@ export {
     Interactive,
 } from './interactive.js'
 
+// export {
+//     round_corner,
+// } from './modifier.js'
+export * as mod from './modifier.js'
+
 // Extra Shapes
 export { 
     axes_transform, ax, axes_empty, 
