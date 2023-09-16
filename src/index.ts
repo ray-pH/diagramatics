@@ -3,7 +3,7 @@ export {
 } from './diagram.js';
 
 export { 
-    Vector2, V2, Vdir, from_degree, linspace,
+    Vector2, V2, Vdir, from_degree, linspace, range,
 } from './linear_algebra.js';
 
 export {

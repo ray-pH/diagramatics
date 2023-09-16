@@ -82,3 +82,22 @@ export function linspace(start: number, end: number, n: number = 100) : number[]
     }
     return result;
 }
+
+/**
+ * Create a equivalently spaced array of numbers from start to end
+ * @param start start value
+ * @param end end value
+ * @param step step size
+ */
+export function range(start: number, end: number, step: number = 1) : number[] {
+    // step cannot be 0 and cannot be in the wrong direction
+    if (step == 0) return [];
+    let n = Math.floor((end - start) / step);
+    if (n <= 0) return [];
+
+    let result = [];
+    for (let i = start; i < end; i += step) {
+        result.push(i);
+    }
+    return result;
+}
