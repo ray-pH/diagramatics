@@ -126,6 +126,15 @@ export class Diagram {
     }
 
     /**
+     * Apply a function to the diagram
+     * @param func function to apply
+     * func takes in a diagram and returns a diagram
+     */
+    public apply(func : (d : Diagram) => Diagram) : Diagram {
+        return func(this.copy());
+    }
+
+    /**
      * Combine another diagram with this diagram
      * @param diagrams a diagram or a list of diagrams
      */
