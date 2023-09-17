@@ -105,40 +105,44 @@ function collect_text(diagram : Diagram) : Diagram[] {
     }
 }
 
-function draw_text(svgelement : SVGSVGElement, diagram : Diagram) : void {
-    let style = {...default_text_diagram_style, ...diagram.style}; // use default if not defined
-    style.fill = get_color(style.fill as string, tab_color);
-    style.stroke = get_color(style.stroke as string, tab_color);
-
-    let textdata = {...default_textdata, ...diagram.textdata}; // use default if not defined
-    if (diagram.path == undefined) { throw new Error("Text must have a path"); }
-    // draw svg of text
-    let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    text.setAttribute("x", diagram.path.points[0].x.toString());
-    text.setAttribute("y", (-diagram.path.points[0].y).toString());
+function draw_texts(svgelement : SVGSVGElement, diagrams : Diagram[]) : void {
 
     // scale font-size adjusting for svgelement.bbox and size
     let bbox = svgelement.getBBox();
     let svgelement_width = svgelement.width.baseVal.value;
     let svgelement_height = svgelement.height.baseVal.value;
     let scale = Math.max(bbox.width / svgelement_width, bbox.height / svgelement_height)
-    let font_size = parseFloat(textdata["font-size"] as string) * scale;
 
-    // set font styles (font-family, font-size, font-weight)
-    text.setAttribute("font-family", textdata["font-family"] as string);
-    text.setAttribute("font-size", font_size.toString());
-    text.setAttribute("font-weight", textdata["font-weight"] as string);
-    text.setAttribute("text-anchor", textdata["text-anchor"] as string);
-    text.setAttribute("dominant-baseline", textdata["dominant-baseline"] as string);
-    for (let stylename in style) {
-        text.style[stylename as any] = (style as any)[stylename as any];
+    for (let diagram of diagrams) {
+        let style = {...default_text_diagram_style, ...diagram.style}; // use default if not defined
+        style.fill = get_color(style.fill as string, tab_color);
+        style.stroke = get_color(style.stroke as string, tab_color);
+
+        let textdata = {...default_textdata, ...diagram.textdata}; // use default if not defined
+        if (diagram.path == undefined) { throw new Error("Text must have a path"); }
+        // draw svg of text
+        let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", diagram.path.points[0].x.toString());
+        text.setAttribute("y", (-diagram.path.points[0].y).toString());
+
+        let font_size = parseFloat(textdata["font-size"] as string) * scale;
+
+        // set font styles (font-family, font-size, font-weight)
+        text.setAttribute("font-family", textdata["font-family"] as string);
+        text.setAttribute("font-size", font_size.toString());
+        text.setAttribute("font-weight", textdata["font-weight"] as string);
+        text.setAttribute("text-anchor", textdata["text-anchor"] as string);
+        text.setAttribute("dominant-baseline", textdata["dominant-baseline"] as string);
+        for (let stylename in style) {
+            text.style[stylename as any] = (style as any)[stylename as any];
+        }
+
+        // set the content of the text
+        text.innerHTML = textdata["text"] as string;
+
+        // add to svgelement
+        svgelement.appendChild(text);
     }
-
-    // set the content of the text
-    text.innerHTML = textdata["text"] as string;
-
-    // add to svgelement
-    svgelement.appendChild(text);
 }
     
 
@@ -163,9 +167,7 @@ export function draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram,
     // because the text is scaled based on the bounding box of the svgelement
     if (render_text) {
         let text_diagrams : Diagram[] = collect_text(diagram);
-        for (let d of text_diagrams) {
-            draw_text(svgelement, d);
-        }
+        draw_texts(svgelement, text_diagrams);
     }
     
     if (set_html_attribute) {
