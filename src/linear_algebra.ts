@@ -39,6 +39,9 @@ export class Vector2 {
     length() : number {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }
+    length_sq() : number {
+        return this.x * this.x + this.y * this.y;
+    }
     angle() : number {
         return Math.atan2(this.y, this.x);
     }
