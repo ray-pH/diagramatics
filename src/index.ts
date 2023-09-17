@@ -44,3 +44,6 @@ export {
 export { 
     inclined_plane,
 } from './shapes/shapes_mechanics.js'
+
+// Mics
+export * as encoding from './encoding.js'
