@@ -18,6 +18,12 @@ export {
 } from './shapes.js'
 
 export {
+    align_vertical, align_horizontal,
+    distribute_horizontal, distribute_vertical,
+    distribute_horizontal_and_align, distribute_vertical_and_align, 
+} from './alignment.js'
+
+export {
     str_latex_to_unicode, str_to_mathematical_italic,
 } from './unicode_utils.js'
 
