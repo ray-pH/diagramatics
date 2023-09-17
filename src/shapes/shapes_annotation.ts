@@ -7,11 +7,11 @@ import { str_to_mathematical_italic } from '../unicode_utils.js'
  * Create an annotation vector
  * @param v vector to be annotated
  * @param str string to be annotated (will be converted to mathematical italic)
- * if you don't want to convert to mathematical italic, use annotation_vector_textmode
+ * if you don't want to convert to mathematical italic, use annotation.vector_text
  * @param arrow_head_size size of the arrow head
  * @param text_offset position offset of the text
  */
-export function annotation_vector(v : Vector2, str? : string, text_offset? : Vector2, arrow_head_size? : number) : Diagram {
+export function vector(v : Vector2, str? : string, text_offset? : Vector2, arrow_head_size? : number) : Diagram {
     if (text_offset == undefined){ text_offset = V2(0,0); } // default value
     let vec = arrow(v, arrow_head_size);
     if (str == "" || str == undefined){ return vec; } // if str is empty, return only the vector
@@ -24,11 +24,11 @@ export function annotation_vector(v : Vector2, str? : string, text_offset? : Vec
  * Create an annotation vector
  * @param v vector to be annotated
  * @param str string to be annotated (will not be converted to mathematical italic)
- * if you want to convert to mathematical italic, use annotation_vector
+ * if you want to convert to mathematical italic, use annotation.vector
  * @param arrow_head_size size of the arrow head
  * @param text_offset positiono ffset of the text
  */
-export function annotation_vector_text(v : Vector2, str? : string, text_offset? : Vector2, arrow_head_size? : number) : Diagram {
+export function vector_text(v : Vector2, str? : string, text_offset? : Vector2, arrow_head_size? : number) : Diagram {
     if (text_offset == undefined){ text_offset = V2(0,0); } // default value
     let vec = arrow(v, arrow_head_size);
     if (str == "" || str == undefined){ return vec; } // if str is empty, return only the vector
@@ -44,7 +44,7 @@ export function annotation_vector_text(v : Vector2, str? : string, text_offset? 
  * @param radius radius of the arc
  * @param text_offset position offset of the text
  */
-export function annotation_angle(p : [Vector2, Vector2, Vector2], 
+export function angle(p : [Vector2, Vector2, Vector2], 
     str? : string, radius : number = 1 , text_offset? : Vector2) : Diagram {
 
     if (text_offset == undefined){ text_offset = V2(0,0); } // default value

@@ -24,9 +24,6 @@ export {
     Interactive,
 } from './interactive.js'
 
-// export {
-//     round_corner,
-// } from './modifier.js'
 export * as mod from './modifier.js'
 
 // Extra Shapes
@@ -37,13 +34,9 @@ export {
     xyaxes, xygrid,
     plot, plotv, plotf, under_curvef,
 } from './shapes/shapes_graph.js'
-export { 
-    annotation_vector, annotation_vector_text,
-    annotation_angle,
-} from './shapes/shapes_annotation.js'
-export { 
-    inclined_plane,
-} from './shapes/shapes_mechanics.js'
+
+export * as annotation from './shapes/shapes_annotation.js'
+export * as mechanics from './shapes/shapes_mechanics.js'
 
 // Mics
 export * as encoding from './encoding.js'
