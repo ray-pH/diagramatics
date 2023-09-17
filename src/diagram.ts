@@ -810,3 +810,18 @@ export function text(str : string) : Diagram {
     });
     return dtext;
 }
+
+export function diagram_from_jsonstring(str : string) : Diagram {
+    try {
+        // turn str into JSON object
+        let d : Diagram = JSON.parse(str);
+        // turn d into Diagram
+        Object.setPrototypeOf(d, Diagram.prototype);
+        d = d.copy();
+        return d;
+    } catch (e) {
+        // if there's a mistake, return an empty diagram
+        console.warn(e);
+        return empty(new Vector2(0,0));
+    }
+}
