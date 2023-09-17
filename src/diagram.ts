@@ -583,6 +583,81 @@ export class Diagram {
             throw new Error("Unreachable, unknown diagram type : " + this.type);
         }
     }
+
+    public debug_bbox() : Diagram {
+        // TODO : let user supply the styling function
+        let style_bbox = (d : Diagram) => {
+            return d.fill('none').stroke('gray').strokedasharray([5,5])
+        };
+
+        let [min, max] = this.bounding_box();
+        let rect_bbox = polygon([
+            new Vector2(min.x, min.y), new Vector2(max.x, min.y), 
+            new Vector2(max.x, max.y), new Vector2(min.x, max.y)
+        ]).apply(style_bbox);
+
+        let origin_x = text('⮾').position(this.origin)
+
+        return rect_bbox.combine(origin_x);
+    }
+
+    public debug(show_index : boolean = true) : Diagram {
+        // TODO : let user supply the styling function
+        let style_path = (d : Diagram) => {
+            return d.fill('none').stroke('red').strokedasharray([5,5])
+        };
+        let style_index = (d : Diagram) => {
+            let bg = d.fill('white').stroke('white').strokewidth(5);
+            let dd = d.fill('black');
+            return bg.combine(dd);
+        };
+
+        // handle each type separately
+        if (this.type == DiagramType.Diagram) {
+            return this.debug_bbox();
+        } 
+        else if (this.type == DiagramType.Text){
+            // return empty at diagram origin
+            return empty(this.origin);
+        }
+        else if (this.type == DiagramType.Polygon || this.type == DiagramType.Curve){
+            let f_obj = this.type == DiagramType.Polygon ? polygon : curve;
+
+            let deb_bbox = this.debug_bbox();
+
+            if (this.path == undefined) { throw new Error(this.type + " must have a path"); }
+            let deb_object = f_obj(this.path.points).apply(style_path);
+
+            // if show_index is false, return only the bbox and polygon
+            if (show_index == false) { return deb_bbox.combine(deb_object); }
+
+            // iterate for all path points
+            let points = this.path.points;
+            // let point_texts = points.map((p, i) => text(i.toString()).position(p).apply(style_index));
+            let point_texts : Diagram[] = [];
+            let prev_point : Vector2 | undefined = undefined;
+
+            let [min, max] = this.bounding_box();
+            let minimum_dist_tolerance = Math.min(max.x - min.x, max.y - min.y) / 10;
+            for (let i = 0; i < points.length; i++) {
+                // push to point_texts only if far enough from prev_point
+                let dist_to_prev = prev_point == undefined ? Infinity : points[i].sub(prev_point).length();
+                if (dist_to_prev < minimum_dist_tolerance) continue;
+
+                point_texts.push(text(i.toString()).position(points[i]).apply(style_index));
+                prev_point = points[i];
+            }
+
+            return deb_bbox.combine(deb_object,...point_texts);
+        }
+        else if (this.type == DiagramType.Empty){
+            // return empty at diagram origin
+            return this.copy();
+        } 
+        else {
+            throw new Error("Unreachable, unknown diagram type : " + this.type);
+        }
+    }
 }
 
 export class Path {
