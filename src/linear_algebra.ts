@@ -49,6 +49,9 @@ export class Vector2 {
         let len = this.length();
         return new Vector2(this.x / len, this.y / len);
     }
+    copy() : Vector2 {
+        return new Vector2(this.x, this.y);
+    }
 }
 
 /**
