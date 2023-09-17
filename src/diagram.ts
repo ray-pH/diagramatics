@@ -290,6 +290,9 @@ export class Diagram {
                 }
                 return [new Vector2(minx, miny), new Vector2(maxx, maxy)];
         } 
+        else if (this.type == DiagramType.Text){
+            return [this.origin.copy(), this.origin.copy()];
+        }
         else {
             throw new Error("Unreachable, unknown diagram type : " + this.type);
         }
@@ -819,7 +822,8 @@ export class Path {
  */
 export function diagram_combine(...diagrams : Diagram[]) : Diagram {
     let newdiagrams = diagrams.map(d => d.copy());
-    return new Diagram(DiagramType.Diagram, {children : newdiagrams});
+    let newd = new Diagram(DiagramType.Diagram, {children : newdiagrams});
+    return newd.move_origin(Anchor.CenterCenter);
 }
 
 // ====== function helpers to create primitives =========
