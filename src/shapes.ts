@@ -28,10 +28,11 @@ export function square(side : number = 1) : Diagram {
 }
 
 /**
- * Create regular polygon centered at origin
+ * Create regular polygon centered at origin with a given radius
  * @param n number of sides
  * @param radius radius of the polygon
  * @returns a Diagram object
+ * \* if you want to create a regular polygon with a given side length, use regular_polygon_side
  */
 export function regular_polygon(n : number, radius : number = 1) : Diagram {
     let points : Vector2[] = [];
@@ -39,6 +40,18 @@ export function regular_polygon(n : number, radius : number = 1) : Diagram {
         points.push(V2(0,radius).rotate(i*2*Math.PI/n));
     }
     return polygon(points);
+}
+
+/**
+ * Create regular polygon centered at origin with a given side length
+ * @param n number of sides
+ * @param sidelength side length of the polygon
+ * @returns a Diagram object
+ * \* if you want to create a regular polygon with a given radius, use regular_polygon
+ */
+export function regular_polygon_side(n : number, sidelength : number = 1) : Diagram {
+    let radius = sidelength/(2*Math.sin(Math.PI/n));
+    return regular_polygon(n, radius);
 }
 
 /**

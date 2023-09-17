@@ -12,7 +12,8 @@ export {
 } from './draw_svg.js';
 
 export { 
-    rectangle, square, regular_polygon, circle, arc, 
+    rectangle, square, regular_polygon, regular_polygon_side,
+    circle, arc, 
     arrow, arrow2, textvar,
 } from './shapes.js'
 
