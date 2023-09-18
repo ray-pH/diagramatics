@@ -850,7 +850,9 @@ export class Path {
 export function diagram_combine(...diagrams : Diagram[]) : Diagram {
     let newdiagrams = diagrams.map(d => d.copy());
     let newd = new Diagram(DiagramType.Diagram, {children : newdiagrams});
-    return newd.move_origin(Anchor.CenterCenter);
+    return newd.move_origin(diagrams[0].origin);
+    // return newd.move_origin(Anchor.CenterCenter);
+    // i think it's better to keep the origin at the origin of the first diagram
 }
 
 // ====== function helpers to create primitives =========
