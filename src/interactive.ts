@@ -54,7 +54,9 @@ export class Interactive {
                 this.intervals[variable_name] = setInterval(() => {
                     let val = parseFloat(slider.value);
                     val += step;
-                    if (val > max){ val = min; }
+                    // wrap around
+                    val = ((val - min) % (max - min)) + min;
+                    
                     slider.value = val.toString();
                     callback(val);
                 }, interval_time);
