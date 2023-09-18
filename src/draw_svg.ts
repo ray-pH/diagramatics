@@ -16,6 +16,7 @@ export const default_diagram_style : DiagramStyle = {
     "stroke-linejoin"  : "round",
     "vector-effect"    : "non-scaling-stroke",
 }
+export const _init_default_diagram_style : DiagramStyle = {...default_diagram_style}
 
 export const default_text_diagram_style : DiagramStyle = {
     "fill"             : "black",
@@ -26,6 +27,7 @@ export const default_text_diagram_style : DiagramStyle = {
     "stroke-linejoin"  : "round",
     "vector-effect"    : "non-scaling-stroke",
 }
+export const _init_default_text_diagram_style : DiagramStyle = {...default_text_diagram_style}
 
 export const default_textdata : TextData = {
     "text"             : "",
@@ -35,6 +37,7 @@ export const default_textdata : TextData = {
     "text-anchor"      : "middle",
     "dominant-baseline": "middle",
 }
+export const _init_default_textdata : TextData = {...default_textdata}
 
 function draw_polygon(svgelement : SVGSVGElement, diagram : Diagram) : void {
     // get properties
