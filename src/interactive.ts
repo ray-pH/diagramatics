@@ -72,6 +72,10 @@ export class Interactive {
         let morebutton = document.createElement('button');
         morebutton.classList.add("diagramatics-slider-moreplaybutton");
         morebutton.innerHTML = '⋯';
+        morebutton.onclick = () => {
+            // alert not implementer
+            alert("Not implemented yet");
+        }
         
         // ==============================
         // add components to div
