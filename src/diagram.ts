@@ -126,6 +126,33 @@ export class Diagram {
     }
 
     /**
+     * Collect all children and subchildren of the diagram
+     * helper function for flatten()
+     */
+    private collect_children() : Diagram[] {
+        let children : Diagram[] = [];
+        if (this.type == DiagramType.Diagram) {
+            for (let c of this.children) {
+                children = children.concat(c.collect_children());
+            }
+        } else {
+            children.push(this);
+        }
+        return children;
+    }
+
+    /**
+     * Flatten the children structure of the diagram
+     * so that the diagram only has one level of children
+     * \* implemented for performance reason
+     */
+    public flatten() : Diagram {
+        let newd : Diagram = this.copy();
+        newd.children = newd.collect_children();
+        return newd;
+    }
+
+    /**
      * Apply a function to the diagram
      * @param func function to apply
      * func takes in a diagram and returns a diagram
