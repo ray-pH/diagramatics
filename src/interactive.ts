@@ -4,6 +4,7 @@ export class Interactive {
     public inp_variables : {[key : string] : any} = {};
     public inp_inputs    : {[key : string] : HTMLInputElement} = {};
     public draw_function : (inp_object : typeof this.inp_variables) => any = (_) => {};
+    public display_precision : undefined | number = 5;
     intervals : {[key : string] : any} = {};
 
     constructor(public container_div : HTMLElement, inp_object_? : {[key : string] : any}){
@@ -30,11 +31,20 @@ export class Interactive {
         labeldiv.innerHTML = `${varstyle_variable_name} = ${value}`;
 
         // =========== slider ===========
+        const format_number = (val : Number, prec : number) => {
+            let fixed = val.toFixed(prec);
+            // remove trailing zeros
+            // and if the last character is a dot, remove it
+            return fixed.replace(/\.?0+$/, "");
+        }
         // create the callback function
         const callback = (val : Number) => {
             this.inp_variables[variable_name] = val;
             this.draw_function(this.inp_variables);
-            labeldiv.innerHTML = `${varstyle_variable_name} = ${val}`;
+
+            let val_str = this.display_precision == undefined ? 
+                val.toString() : format_number(val, this.display_precision);
+            labeldiv.innerHTML = `${varstyle_variable_name} = ${val_str}`;
         }
         let slider = create_slider(callback, min, max, value, step);
         this.inp_inputs[variable_name] = slider;
