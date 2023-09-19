@@ -691,22 +691,18 @@ export class Diagram {
 }
 
 export class Path {
-    // for now just do linear path
     constructor(public points : Vector2[]) { }
 
     copy() : Path {
-        // let start = new Vector2(this.start.x, this.start.y);
-        // let end = new Vector2(this.end.x, this.end.y);
-        let newpoints = this.points.map(p => new Vector2(p.x, p.y));
+        let newpoints = this.points.map(p => new Vector2(p.x,p.y));
         return new Path(newpoints);
     }
 
     /**
      * Get the length of the path
      */
-    length() : number {
+    public length() : number {
         let length = 0;
-        console.log(this);
         for (let i = 1; i < this.points.length; i++) {
             length += this.points[i].sub(this.points[i-1]).length();
         }
@@ -785,10 +781,6 @@ export class Path {
      */
     public translate(v : Vector2) : Path {
         return this.transform(p => p.add(v));
-        // let newp : Path = this.copy();
-        // // translate all the points
-        // newp.points = newp.points.map(p => p.add(v));
-        // return newp;
     }
 
     /**
@@ -798,10 +790,6 @@ export class Path {
      */
     public rotate(angle : number, pivot : Vector2) : Path {
         return this.transform(p => p.sub(pivot).rotate(angle).add(pivot));
-        // let newp : Path = this.copy();
-        // // rotate all the points
-        // newp.points = newp.points.map(p => p.sub(pivot).rotate(angle).add(pivot));
-        // return newp;
     }
 
     /**
@@ -811,10 +799,6 @@ export class Path {
      */
     public scale(scale : Vector2, origin : Vector2) : Path {
         return this.transform(p => p.sub(origin).mul(scale).add(origin));
-        // let newp : Path = this.copy();
-        // // scale all the points
-        // newp.points = newp.points.map(p => p.sub(origin).mul(scale).add(origin));
-        // return newp;
     }
 
     /**
