@@ -15,6 +15,7 @@ export type axes_options = {
     xticks? : number[],
     yticks? : number[],
     n?      : number,
+    headsize: number,
 }
 
 export let default_axes_options : axes_options = {
@@ -25,6 +26,7 @@ export let default_axes_options : axes_options = {
     xticks : undefined,
     yticks : undefined,
     n      : 100,
+    headsize: 0.05,
 }
 
 export function axes_transform(axes_options? : axes_options) : (v : Vector2) => Vector2 {
@@ -71,8 +73,8 @@ export function axes_empty(axes_options? : axes_options) : Diagram {
     let xorigin = lowerleft.x + (upperright.x-lowerleft.x)/(opt.xrange[1]-opt.xrange[0])*(0-opt.xrange[0]);
     let yorigin = lowerleft.y + (upperright.y-lowerleft.y)/(opt.yrange[1]-opt.yrange[0])*(0-opt.yrange[0]);
 
-    let xaxis = arrow2(V2(lowerleft.x,yorigin), V2(upperright.x,yorigin), 0.05);
-    let yaxis = arrow2(V2(xorigin,lowerleft.y), V2(xorigin,upperright.y), 0.05);
+    let xaxis = arrow2(V2(lowerleft.x,yorigin), V2(upperright.x,yorigin), opt.headsize);
+    let yaxis = arrow2(V2(xorigin,lowerleft.y), V2(xorigin,upperright.y), opt.headsize);
     return diagram_combine(xaxis, yaxis).stroke('gray').fill('gray');
     // return xaxis;
 }
