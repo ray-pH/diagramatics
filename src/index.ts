@@ -1,5 +1,5 @@
 export { 
-    Diagram, polygon, line, curve, empty, text, diagram_combine,
+    Diagram, Path, polygon, line, curve, empty, text, diagram_combine,
 } from './diagram.js';
 
 export { 

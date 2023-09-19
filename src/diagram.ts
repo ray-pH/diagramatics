@@ -843,18 +843,6 @@ export function diagram_combine(...diagrams : Diagram[]) : Diagram {
 
 
 /**
- * Create a line from start to end 
- * @param start start point
- * @param end end point
- * @returns a line diagram
- */
-export function line(start : Vector2, end : Vector2) : Diagram {
-    let path : Path = new Path([start, end]);
-    let line = new Diagram(DiagramType.Curve, {path : path});
-    return line;
-}
-
-/**
  * Create a curve from a list of points
  * @param points list of points
  * @returns a curve diagram
@@ -864,6 +852,17 @@ export function curve(points : Vector2[]) : Diagram {
     let curve = new Diagram(DiagramType.Curve, {path : path});
     return curve;
 }
+
+/**
+ * Create a line from start to end 
+ * @param start start point
+ * @param end end point
+ * @returns a line diagram
+ */
+export function line(start : Vector2, end : Vector2) : Diagram {
+    return curve([start, end]);
+}
+
 
 /**
  * Create a polygon from a list of points
