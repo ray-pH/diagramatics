@@ -1,4 +1,4 @@
-import { Vector2 } from './linear_algebra.js';
+import { Vector2 } from './vector.js';
 
 function assert(condition : boolean, message : string) : void {
     if (!condition) {

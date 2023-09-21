@@ -1,5 +1,5 @@
 import { Diagram, DiagramType, diagram_combine, Anchor } from './diagram.js';
-import { Vector2, V2 } from './linear_algebra.js';
+import { Vector2, V2 } from './vector.js';
 
 
 enum VerticalAlignment {

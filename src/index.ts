@@ -4,7 +4,7 @@ export {
 
 export { 
     Vector2, V2, Vdir, 
-} from './linear_algebra.js';
+} from './vector.js';
 
 export {
     from_degree, linspace, range, array_repeat,
