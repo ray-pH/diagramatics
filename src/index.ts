@@ -3,8 +3,12 @@ export {
 } from './diagram.js';
 
 export { 
-    Vector2, V2, Vdir, from_degree, linspace, range,
+    Vector2, V2, Vdir, 
 } from './linear_algebra.js';
+
+export {
+    from_degree, linspace, range, array_repeat,
+} from './utils.js'
 
 export {
     draw_to_svg,

@@ -1,11 +1,4 @@
 /**
- * Helper function to convert from degrees to radians
- */
-export function from_degree(angle: number) : number {
-    return angle * Math.PI / 180;
-}
-
-/**
  *  Class for 2D Vectors 
 */
 export class Vector2 {
@@ -68,42 +61,4 @@ export function V2(x : number, y : number) : Vector2 {
  */
 export function Vdir(angle : number) : Vector2 {
     return new Vector2(Math.cos(angle), Math.sin(angle));
-}
-
-export class Matrix22 {
-    constructor(public a: number, public b: number, public c: number, public d: number) { }
-}
-
-/**
- * Create a equivalently spaced array of numbers from start to end
- * @param start start value
- * @param end end value
- * @param n number of points
- */
-export function linspace(start: number, end: number, n: number = 100) : number[] {
-    let result = [];
-    let step = (end - start) / (n - 1);
-    for (let i = 0; i < n; i++) {
-        result.push(start + step * i);
-    }
-    return result;
-}
-
-/**
- * Create a equivalently spaced array of numbers from start to end
- * @param start start value
- * @param end end value
- * @param step step size
- */
-export function range(start: number, end: number, step: number = 1) : number[] {
-    // step cannot be 0 and cannot be in the wrong direction
-    if (step == 0) return [];
-    let n = Math.floor((end - start) / step);
-    if (n <= 0) return [];
-
-    let result = [];
-    for (let i = start; i < end; i += step) {
-        result.push(i);
-    }
-    return result;
 }

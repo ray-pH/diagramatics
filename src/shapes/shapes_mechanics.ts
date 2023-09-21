@@ -1,5 +1,6 @@
 import { Diagram, polygon, line, diagram_combine, curve } from '../diagram.js';
-import { Vector2, V2, linspace } from '../linear_algebra.js';
+import { Vector2, V2 } from '../linear_algebra.js';
+import { linspace, from_degree } from '../utils.js';
 
 /**
  * Create an inclined plane.

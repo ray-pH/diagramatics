@@ -1,5 +1,6 @@
 import { Diagram, Anchor, polygon, line, curve, text, diagram_combine } from '../diagram.js';
-import { Vector2, V2, linspace } from '../linear_algebra.js';
+import { Vector2, V2 } from '../linear_algebra.js';
+import { linspace, from_degree } from '../utils.js';
 import { arrow2, textvar } from '../shapes.js'
 
 /**

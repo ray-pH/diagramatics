@@ -1,6 +1,7 @@
 import { Path, Diagram, DiagramType, polygon, line, curve, text, diagram_combine } from './diagram.js';
 import { arc } from './shapes.js';
-import { Vector2, V2, Vdir, linspace, range, from_degree } from './linear_algebra.js';
+import { Vector2, V2, Vdir} from './linear_algebra.js';
+import { linspace, range, from_degree } from './utils.js';
 import { str_to_mathematical_italic } from './unicode_utils.js'
 import { array_repeat } from './utils.js'
 
