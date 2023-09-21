@@ -30,7 +30,7 @@ export {
 
 export {
     Interactive,
-} from './interactive.js'
+} from './html_interactivity.js'
 
 export * as mod from './modifier.js'
 
