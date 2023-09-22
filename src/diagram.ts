@@ -335,6 +335,8 @@ export class Diagram {
         newd.children = newd.children.map(c => c.transform(transform_function));
         // transform path
         if (newd.path != undefined) newd.path = newd.path.transform(transform_function);
+        // transform origin
+        newd.origin = transform_function(newd.origin);
         return newd;
     }
 
@@ -344,13 +346,14 @@ export class Diagram {
      */
     public translate(v : Vector2) : Diagram {
         let newd : Diagram = this.copy();
-        newd.origin = newd.origin.add(v);
         // recursively translate all children
         for (let c in newd.children) {
             newd.children[c] = newd.children[c].translate(v);
         }
         // translate paths
         if (newd.path != undefined) newd.path = newd.path.translate(v);
+        // translate origin
+        newd.origin = newd.origin.add(v);
         return newd;
     }
 
@@ -380,6 +383,10 @@ export class Diagram {
         }
         // rotate path
         if (newd.path != undefined) newd.path = newd.path.rotate(angle, pivot);
+
+        // rotate origin
+        newd.origin = newd.origin.sub(pivot).rotate(angle).add(pivot);
+
         return newd;
     }
 
@@ -395,6 +402,8 @@ export class Diagram {
         newd.children = newd.children.map(c => c.scale(scale, origin));
         // scale path
         if (newd.path != undefined) newd.path = newd.path.scale(scale, origin);
+        // scale origin
+        newd.origin = newd.origin.sub(origin).mul(scale).add(origin);
         return newd;
     }
 
@@ -408,6 +417,8 @@ export class Diagram {
         newd.children = newd.children.map(c => c.reflect_over_point(p));
         // reflect path
         if (newd.path != undefined) newd.path = newd.path.reflect_over_point(p);
+        // reflect origin
+        newd.origin = newd.origin.reflect_over_point(p);
         return newd;
     }
 
@@ -422,6 +433,8 @@ export class Diagram {
         newd.children = newd.children.map(c => c.reflect_over_line(p1, p2));
         // reflect path
         if (newd.path != undefined) newd.path = newd.path.reflect_over_line(p1, p2);
+        // reflect origin
+        newd.origin = newd.origin.reflect_over_line(p1, p2);
         return newd;
     }
 
