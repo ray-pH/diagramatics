@@ -819,7 +819,7 @@ export class Path {
      * @param p point to reflect over
      */
     public reflect_over_point(p : Vector2) {
-        return this.transform(p => p.reflect_over_point(p));
+        return this.transform(p0 => p0.reflect_over_point(p));
     }
 
     /**
