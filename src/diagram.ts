@@ -462,8 +462,10 @@ export class Diagram {
      * Vertical flip
      * Reflect the diagram over a horizontal line y = a
      * @param a y value of the line
+     * if left undefined, flip over the origin
      */
-    public vflip(a : number = 0) {
+    public vflip(a? : number) {
+        if (a == undefined) { a = this.origin.y; }
         return this.reflect(new Vector2(0, a), new Vector2(1, a));
     }
 
@@ -471,8 +473,10 @@ export class Diagram {
      * Horizontal flip
      * Reflect the diagram over a vertical line x = a
      * @param a x value of the line
+     * if left undefined, flip over the origin
      */
-    public hflip(a : number = 0){
+    public hflip(a? : number){
+        if (a == undefined) { a = this.origin.x; }
         return this.reflect(new Vector2(a, 0), new Vector2(a, 1));
     }
 
