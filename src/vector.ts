@@ -42,6 +42,16 @@ export class Vector2 {
         let len = this.length();
         return new Vector2(this.x / len, this.y / len);
     }
+    reflect_over_point(p : Vector2) : Vector2{
+        return this.sub(p).rotate(Math.PI).add(p);
+    }
+    reflect_over_line(p1 : Vector2, p2 : Vector2) : Vector2 {
+        let v = p2.sub(p1);
+        let n = v.rotate(Math.PI / 2).normalize();
+        let d = n.dot(this.sub(p1));
+        let q = this.sub(n.scale(2*d));
+        return q;
+    }
     copy() : Vector2 {
         return new Vector2(this.x, this.y);
     }

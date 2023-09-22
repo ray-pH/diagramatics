@@ -806,7 +806,7 @@ export class Path {
      * @param p point to reflect over
      */
     public reflect_over_point(p : Vector2) {
-        return this.rotate(Math.PI, p);
+        return this.transform(p => p.reflect_over_point(p));
     }
 
     /**
@@ -815,13 +815,7 @@ export class Path {
      * @param p2 point on the line
      */
     public reflect_over_line(p1 : Vector2, p2 : Vector2) {
-        return this.transform(p => {
-            let v = p2.sub(p1);
-            let n = v.rotate(Math.PI / 2).normalize();
-            let d = n.dot(p.sub(p1));
-            let q = p.sub(n.scale(2*d));
-            return q;
-        });
+        return this.transform(p => p.reflect_over_line(p1, p2));
     }
         
 }
