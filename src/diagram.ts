@@ -1,4 +1,4 @@
-import { Vector2 } from './vector.js';
+import { Vector2, Transform } from './vector.js';
 
 function assert(condition : boolean, message : string) : void {
     if (!condition) {
@@ -345,16 +345,7 @@ export class Diagram {
      * @param v vector to translate
      */
     public translate(v : Vector2) : Diagram {
-        let newd : Diagram = this.copy();
-        // recursively translate all children
-        for (let c in newd.children) {
-            newd.children[c] = newd.children[c].translate(v);
-        }
-        // translate paths
-        if (newd.path != undefined) newd.path = newd.path.translate(v);
-        // translate origin
-        newd.origin = newd.origin.add(v);
-        return newd;
+        return this.transform(Transform.translate(v));
     }
 
     /**
@@ -363,8 +354,7 @@ export class Diagram {
      */
     public position(v : Vector2 = new Vector2(0,0)) : Diagram {
         let dv = v.sub(this.origin)
-        let newd = this.translate(dv);
-        return newd;
+        return this.translate(dv);
     }
 
     /**
@@ -373,21 +363,8 @@ export class Diagram {
      * @param pivot pivot point, if left undefined, rotate around the origin
      */
     public rotate(angle : number, pivot : Vector2 | undefined = undefined) : Diagram {
-        let newd : Diagram = this.copy();
-      
-        if (pivot == undefined) { pivot = newd.origin; }
-
-        // rotate all children
-        for (let c in newd.children) {
-            newd.children[c] = newd.children[c].rotate(angle, pivot);
-        }
-        // rotate path
-        if (newd.path != undefined) newd.path = newd.path.rotate(angle, pivot);
-
-        // rotate origin
-        newd.origin = newd.origin.sub(pivot).rotate(angle).add(pivot);
-
-        return newd;
+        if (pivot == undefined) { pivot = this.origin; }
+        return this.transform(Transform.rotate(angle, pivot));
     }
 
     /**
@@ -396,15 +373,8 @@ export class Diagram {
      * @param origin origin point, if left undefined, scale around the origin
      */
     public scale(scale : Vector2, origin? : Vector2) : Diagram {
-        let newd : Diagram = this.copy();
-        if (origin == undefined) { origin = newd.origin; }
-        // scale all children
-        newd.children = newd.children.map(c => c.scale(scale, origin));
-        // scale path
-        if (newd.path != undefined) newd.path = newd.path.scale(scale, origin);
-        // scale origin
-        newd.origin = newd.origin.sub(origin).mul(scale).add(origin);
-        return newd;
+        if (origin == undefined) { origin = this.origin; }
+        return this.transform(Transform.scale(scale, origin));
     }
 
     /**
@@ -412,14 +382,7 @@ export class Diagram {
      * @param p point to reflect over
      */
     public reflect_over_point(p : Vector2) {
-        let newd : Diagram = this.copy();
-        // reflect all children
-        newd.children = newd.children.map(c => c.reflect_over_point(p));
-        // reflect path
-        if (newd.path != undefined) newd.path = newd.path.reflect_over_point(p);
-        // reflect origin
-        newd.origin = newd.origin.reflect_over_point(p);
-        return newd;
+        return this.transform(Transform.reflect_over_point(p));
     }
 
     /**
@@ -428,14 +391,7 @@ export class Diagram {
      * @param p2 point on the line
      */
     public reflect_over_line(p1 : Vector2, p2 : Vector2) {
-        let newd : Diagram = this.copy();
-        // reflect all children
-        newd.children = newd.children.map(c => c.reflect_over_line(p1, p2));
-        // reflect path
-        if (newd.path != undefined) newd.path = newd.path.reflect_over_line(p1, p2);
-        // reflect origin
-        newd.origin = newd.origin.reflect_over_line(p1, p2);
-        return newd;
+        return this.transform(Transform.reflect_over_line(p1, p2));
     }
 
     /**
@@ -791,50 +747,6 @@ export class Path {
         newp.points = newp.points.map(p => transform_function(p));
         return newp;
     }
-
-    /**
-     * Translate the path by a vector
-     * @param v vector to translate
-     */
-    public translate(v : Vector2) : Path {
-        return this.transform(p => p.add(v));
-    }
-
-    /**
-     * Rotate the path by an angle around a pivot
-     * @param angle angle to rotate
-     * @param pivot pivot point
-     */
-    public rotate(angle : number, pivot : Vector2) : Path {
-        return this.transform(p => p.sub(pivot).rotate(angle).add(pivot));
-    }
-
-    /**
-     * Scale the path by a scale around a origin
-     * @param scale scale to scale (x, y)
-     * @param origin origin point
-     */
-    public scale(scale : Vector2, origin : Vector2) : Path {
-        return this.transform(p => p.sub(origin).mul(scale).add(origin));
-    }
-
-    /**
-     * Reflect the path over a point
-     * @param p point to reflect over
-     */
-    public reflect_over_point(p : Vector2) {
-        return this.transform(p0 => p0.reflect_over_point(p));
-    }
-
-    /**
-     * Reflect the path over a line given by two points
-     * @param p1 point on the line
-     * @param p2 point on the line
-     */
-    public reflect_over_line(p1 : Vector2, p2 : Vector2) {
-        return this.transform(p => p.reflect_over_line(p1, p2));
-    }
-        
 }
 
 /**
