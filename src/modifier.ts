@@ -32,6 +32,40 @@ function function_handle_path_type(func : modifierFunction) : modifierFunction {
     return modified_func;
 }
 
+
+/**
+ * Subdivide each segment of a diagram into n segments
+ * @param n number of segments to subdivide each segment into
+ * @returns function that modifies a diagram
+ */
+export function subdivide(n : number = 100) : modifierFunction {
+    function func(d : Diagram) : Diagram {
+        if (d.path == undefined) return d;
+
+        let new_points : Vector2[] = [];
+        for (let i in d.path.points){
+            let curr_i = parseInt(i);
+            let next_i = (curr_i + 1) % d.path.points.length;
+            let curr_p = d.path.points[i];
+            let next_p = d.path.points[next_i];
+
+            let xs = linspace(curr_p.x, next_p.x, n+1);
+            let ys = linspace(curr_p.y, next_p.y, n+1);
+            let subdivide_points = xs.map((x,i) => V2(x, ys[i]));
+            // ignore the last point
+            subdivide_points.pop();
+            new_points = new_points.concat(subdivide_points);
+        }
+
+        // copy the diagram so that the style and other data is intact
+        let newd = d.copy();
+        newd.path = new Path(new_points);
+        return newd;
+    }
+    return function_handle_path_type(func);
+}
+
+
 function get_round_corner_arc_points(radius : number, points : [Vector2,Vector2,Vector2]) : Vector2[] {
     let [p1, p2, p3] = points;
 
@@ -122,3 +156,4 @@ export function round_corner(radius : number | number[] =  1, point_indices? : n
     }
     return function_handle_path_type(func);
 }
+
