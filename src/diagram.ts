@@ -247,7 +247,7 @@ export class Diagram {
     public strokelinecap(linecap : 'butt' | 'round' | 'square') : Diagram {
         return this.update_style('stroke-linecap', linecap);
     }
-    public strokejoin(linejoin : 'arcs' | 'bevel' | 'miter' | 'miter-clip' | 'round') : Diagram {
+    public strokelinejoin(linejoin : 'arcs' | 'bevel' | 'miter' | 'miter-clip' | 'round') : Diagram {
         return this.update_style('stroke-linejoin', linejoin);
     }
     public strokedasharray(dasharray : number[]) : Diagram {
