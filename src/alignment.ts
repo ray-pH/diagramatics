@@ -107,7 +107,7 @@ export function distribute_vertical(diagrams : Diagram[], space : number = 0) : 
         let this_diagram = diagrams[i];
         let prev_bottom = prev_diagram.get_anchor(Anchor.BottomLeft).y;
         let this_top    = this_diagram.get_anchor(Anchor.TopLeft).y;
-        let dy = prev_bottom - this_top + space;
+        let dy = prev_bottom - this_top - space;
         distributed_diagrams.push(this_diagram.translate(V2(0, dy)));
     }
     return distributed_diagrams;
