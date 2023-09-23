@@ -71,6 +71,17 @@ function get_round_corner_arc_points(radius : number, points : [Vector2,Vector2,
     return arc_points;
 }
 
+/**
+ * Create a function that modifies a diagram by rounding the corners of a polygon or curve
+ * @param radius radius of the corner
+ * @param point_indices indices of the points to be rounded
+ * @returns function that modifies a diagram
+ *
+ * @example
+ * ```javascript
+ * let s = square(5).apply(mod.round_corner(2, [0,2]))
+ * ```
+ */
 export function round_corner(radius : number | number[] =  1, point_indices? : number[]) : modifierFunction {
     // if radius is a number, create an array of length one
     if (typeof radius == "number") radius = [radius];
