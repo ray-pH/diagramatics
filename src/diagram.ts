@@ -565,7 +565,7 @@ export class Diagram {
 
             // figure out which children t is in
             for (let i = 0; i < cumulative_t.length; i++) {
-                if (t < cumulative_t[i]) {
+                if (t <= cumulative_t[i]) {
                     let child_id = i;
 
                     let prev_t = (i == 0) ? 0 : cumulative_t[i-1];
@@ -715,7 +715,7 @@ export class Path {
             let cumulative_t = cumuative_length.map(l => l / total_length);
             // figure out which segment t is in
             for (let i = 0; i < cumulative_t.length; i++) {
-                if (t < cumulative_t[i]) {
+                if (t <= cumulative_t[i]) {
                     let segment_id = i;
 
                     let prev_t = (i == 0) ? 0 : cumulative_t[i-1];
