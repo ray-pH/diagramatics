@@ -574,14 +574,18 @@ export class Diagram {
                 }
             }
             throw Error("Unreachable");
-        } else if (this.type == DiagramType.Curve || this.type == DiagramType.Polygon) {
+        } else if (this.type == DiagramType.Curve) {
             // get the point on the path
             if (this.path == undefined) { throw new Error(this.type + " must have a path"); }
-            return this.path.parametric_point(t, segment_index);
-        } else if (this.type == DiagramType.Empty) {
-            // for now do the same as polygon and curve
+            return this.path.parametric_point(t, false, segment_index);
+        } else if (this.type == DiagramType.Polygon) {
+            // get the point on the path
             if (this.path == undefined) { throw new Error(this.type + " must have a path"); }
-            return this.path.parametric_point(t, segment_index);
+            return this.path.parametric_point(t, true, segment_index);
+        } else if (this.type == DiagramType.Empty) {
+            // just return the position
+            if (this.path == undefined) { throw new Error(this.type + " must have a path"); }
+            return this.path.points[0];
         } else {
             throw new Error("Unreachable, unknown diagram type : " + this.type);
         }
@@ -697,22 +701,28 @@ export class Path {
      * Path can be described parametrically in the form of (x(t), y(t))
      * Path starts at t=0 and ends at t=1
      * @param t parameter
-     * If segment_index (n) is defined, get the point at the nth segment
-     * If segment_index (n) is defined, t can be outside of [0, 1] and will return the extrapolated point
+     * @param closed if true, the path is closed
+     * @param segment_index 
+     * If `segment_index` (n) is defined, get the point at the nth segment.
+     * If `segment_index` (n) is defined, t can be outside of [0, 1] and will return the extrapolated point.
      * @returns the position of the point
     */
-    public parametric_point(t : number, segment_index? : number) : Vector2 {
+    public parametric_point(t : number, closed : boolean = false, segment_index? : number) : Vector2 {
+        let extended_points = this.points;
+        if (closed) extended_points = this.points.concat(this.points[0]);
+        // for a closed path, there's an extra segment connecting the last point to the first point
+
         if (segment_index == undefined) { 
             if (t < 0 || t > 1) { throw Error("t must be between 0 and 1"); }
             // use entire length
-            let cumuative_length = [];
+            let cumulative_length = [];
             let length   = 0.0;
-            for (let i = 1; i < this.points.length; i++) {
-                length += this.points[i].sub(this.points[i-1]).length();
-                cumuative_length.push(length);
+            for (let i = 1; i < extended_points.length; i++) {
+                length += extended_points[i].sub(extended_points[i-1]).length();
+                cumulative_length.push(length);
             }
             let total_length = length;
-            let cumulative_t = cumuative_length.map(l => l / total_length);
+            let cumulative_t = cumulative_length.map(l => l / total_length);
             // figure out which segment t is in
             for (let i = 0; i < cumulative_t.length; i++) {
                 if (t <= cumulative_t[i]) {
@@ -720,18 +730,18 @@ export class Path {
 
                     let prev_t = (i == 0) ? 0 : cumulative_t[i-1];
                     let segment_t = (t - prev_t) / (cumulative_t[i] - prev_t);
-                    return this.parametric_point(segment_t, segment_id);
+                    return this.parametric_point(segment_t, closed, segment_id);
                 }
             }
             // segment must have been retrieved at this point
             throw Error("Unreachable");
         } else {
             // take nth segment
-            if (segment_index < 0 || segment_index >= this.points.length - 1) { 
+            if (segment_index < 0 || segment_index > extended_points.length - 1) { 
                 throw Error("segment_index must be between 0 and n-1"); 
             }
-            let start = this.points[segment_index];
-            let end   = this.points[segment_index + 1];
+            let start = extended_points[segment_index];
+            let end   = extended_points[segment_index + 1];
             let dir : Vector2 = end.sub(start);
             return start.add(dir.scale(t));
         }
