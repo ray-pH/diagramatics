@@ -16,6 +16,13 @@ export class Interactive {
         this.draw_function(this.inp_variables);
     }
 
+    public set(variable_name : string, val : any) : void {
+        this.inp_setter[variable_name](val);
+    }
+    public get(variable_name : string) : any {
+        return this.inp_variables[variable_name];
+    }
+
     /**
      * Create a slider
      * @param variable_name name of the variable
@@ -66,6 +73,7 @@ export class Interactive {
             slider.value = val.toString();
             callback(val, false);
         }
+
         this.inp_setter[variable_name] = setter;
 
         // =========== playbutton ========
