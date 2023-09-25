@@ -404,7 +404,7 @@ export class Diagram {
      */
     public reflect(p1? : Vector2, p2? : Vector2){
         if (p1 == undefined && p2 == undefined) {
-            return this.reflect_over_point(new Vector2(0,0));
+            return this.reflect_over_point(this.origin);
         } else if (p1 != undefined && p2 == undefined) {
             return this.reflect_over_point(p1);
         } else if (p1 != undefined && p2 != undefined) {
