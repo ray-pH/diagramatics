@@ -1,10 +1,17 @@
 import { str_to_mathematical_italic } from './unicode_utils.js'
 
+function format_number(val : number, prec : number) {
+    let fixed = val.toFixed(prec);
+    // remove trailing zeros
+    // and if the last character is a dot, remove it
+    return fixed.replace(/\.?0+$/, "");
+}
+
 export class Interactive {
     public inp_variables : {[key : string] : any} = {};
-    public inp_inputs    : {[key : string] : HTMLInputElement} = {};
     public inp_setter    : {[key : string] : (_ : any) => void } = {};
-    public draw_function : (inp_object : typeof this.inp_variables) => any = (_) => {};
+    public draw_function : (inp_object : typeof this.inp_variables, setter_object? : typeof this.inp_setter) => any 
+        = (_) => {};
     public display_precision : undefined | number = 5;
     intervals : {[key : string] : any} = {};         
 
@@ -13,7 +20,7 @@ export class Interactive {
     }
 
     public draw() : void {
-        this.draw_function(this.inp_variables);
+        this.draw_function(this.inp_variables, this.inp_setter);
     }
 
     public set(variable_name : string, val : any) : void {
@@ -21,6 +28,38 @@ export class Interactive {
     }
     public get(variable_name : string) : any {
         return this.inp_variables[variable_name];
+    }
+
+    public label(variable_name : string, value : any){
+        let varstyle_variable_name = str_to_mathematical_italic(variable_name);
+
+        let labeldiv = document.createElement('div');
+        labeldiv.classList.add("diagramatics-label");
+        labeldiv.innerHTML = `${varstyle_variable_name} = ${value}`;
+
+        this.inp_variables[variable_name] = value;
+
+        // setter ==========================
+        const setter = (val : any) => {
+            this.inp_variables[variable_name] = val;
+            let val_str = this.display_precision == undefined ?
+                val.toString() : format_number(val, this.display_precision);
+            labeldiv.innerHTML = `${varstyle_variable_name} = ${val_str}`;
+        }
+        this.inp_setter[variable_name] = setter;
+
+        // ==============================
+        // add components to div
+        //
+        // <div class="diagramatics-label-container">
+        //     <div class="diagramatics-label"></div>
+        // </div>
+        
+        let container = document.createElement('div');
+        container.classList.add("diagramatics-label-container");
+        container.appendChild(labeldiv);
+
+        this.container_div.appendChild(container);
     }
 
     /**
@@ -48,12 +87,6 @@ export class Interactive {
         labeldiv.innerHTML = `${varstyle_variable_name} = ${value}`;
 
         // =========== slider ===========
-        const format_number = (val : number, prec : number) => {
-            let fixed = val.toFixed(prec);
-            // remove trailing zeros
-            // and if the last character is a dot, remove it
-            return fixed.replace(/\.?0+$/, "");
-        }
 
         // create the callback function
         const callback = (val : number, redraw : boolean = true) => {
@@ -66,9 +99,8 @@ export class Interactive {
             if (redraw) this.draw_function(this.inp_variables);
         }
         let slider = create_slider(callback, min, max, value, step);
-        this.inp_inputs[variable_name] = slider;
 
-        // create the setter function 
+        // ================ setter
         const setter = (val : number) => {
             slider.value = val.toString();
             callback(val, false);
