@@ -603,7 +603,7 @@ export class Diagram {
             new Vector2(max.x, max.y), new Vector2(min.x, max.y)
         ]).apply(style_bbox);
 
-        let origin_x = text('⮾').position(this.origin)
+        let origin_x = text('+').position(this.origin)
 
         return rect_bbox.combine(origin_x);
     }
