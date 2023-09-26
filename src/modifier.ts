@@ -18,16 +18,17 @@ function function_handle_path_type(func : modifierFunction) : modifierFunction {
     function modified_func(d : Diagram) : Diagram {
         if (d.type == DiagramType.Polygon || d.type == DiagramType.Curve ) {
             // apply directly
-            d = func(d);
+            return func(d);
         } else if (d.type == DiagramType.Diagram) {
             // recursively apply to all children
             d.children = d.children.map(c => modified_func(c));
+            return d;
         } else if (d.type == DiagramType.Text) {
             // do nothing
+            return d;
         } else {
             throw new Error("Unreachable, unknown diagram type : " + d.type);
         }
-        return d;
     }
     return modified_func;
 }
@@ -156,4 +157,3 @@ export function round_corner(radius : number | number[] =  1, point_indices? : n
     }
     return function_handle_path_type(func);
 }
-
