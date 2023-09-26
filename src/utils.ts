@@ -15,7 +15,8 @@ export function array_repeat<T>(arr : T[], len : number) : T[] {
 }
 
 /**
- * Create a equivalently spaced array of numbers from start to end
+ * Create a equivalently spaced array of numbers from start to end (inclusive) 
+ * [start, end]
  * @param start start value
  * @param end end value
  * @param n number of points
@@ -30,7 +31,8 @@ export function linspace(start: number, end: number, n: number = 100) : number[]
 }
 
 /**
- * Create a equivalently spaced array of numbers from start to end
+ * Create a equivalently spaced array of numbers from start to end (exclusive)
+ * [start, end)
  * @param start start value
  * @param end end value
  * @param step step size
