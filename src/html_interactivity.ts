@@ -15,7 +15,11 @@ export class Interactive {
     public display_precision : undefined | number = 5;
     intervals : {[key : string] : any} = {};         
 
-    constructor(public container_div : HTMLElement, inp_object_? : {[key : string] : any}){
+    constructor(
+        public diagram_svg_div : SVGSVGElement,
+        public control_container_div : HTMLElement, 
+        inp_object_? : {[key : string] : any}
+    ){
         if (inp_object_ != undefined){ this.inp_variables = inp_object_; }
     }
 
@@ -59,8 +63,9 @@ export class Interactive {
         container.classList.add("diagramatics-label-container");
         container.appendChild(labeldiv);
 
-        this.container_div.appendChild(container);
+        this.control_container_div.appendChild(container);
     }
+
 
     /**
      * Create a slider
@@ -174,7 +179,7 @@ export class Interactive {
         container.appendChild(leftcontainer);
         container.appendChild(rightcontainer);
 
-        this.container_div.appendChild(container);
+        this.control_container_div.appendChild(container);
     }
 }
 
