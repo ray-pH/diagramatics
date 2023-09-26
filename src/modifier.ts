@@ -1,7 +1,7 @@
 import { Path, Diagram, DiagramType, polygon, line, curve, text, diagram_combine } from './diagram.js';
 import { arc } from './shapes.js';
 import { Vector2, V2, Vdir} from './vector.js';
-import { linspace, range, from_degree } from './utils.js';
+import { linspace, linspace_exc, range, from_degree } from './utils.js';
 import { str_to_mathematical_italic } from './unicode_utils.js'
 import { array_repeat } from './utils.js'
 
@@ -35,6 +35,26 @@ function function_handle_path_type(func : modifierFunction) : modifierFunction {
 
 
 /**
+ * Resample a diagram so that it has `n` points
+ * @param n number of points
+ * @returns function that modifies a diagram
+ */
+export function resample(n : number) : modifierFunction{
+    // TODO : this function uses Diagram.parametric_point,
+    // which might be slow for large n
+    // for performance reason, we might want to implement it directly by calculating
+    // the points of the path here
+    function func(d : Diagram) : Diagram {
+        if (d.path == undefined) return d;
+        let ts = (d.type == DiagramType.Curve) ? linspace(0, 1, n) : linspace_exc(0, 1, n);
+        let new_points = ts.map(t => d.parametric_point(t));
+        d.path = new Path(new_points);
+        return d;
+    }
+    return function_handle_path_type(func);
+}
+
+/**
  * Subdivide each segment of a diagram into n segments
  * @param n number of segments to subdivide each segment into
  * @returns function that modifies a diagram
@@ -58,10 +78,8 @@ export function subdivide(n : number = 100) : modifierFunction {
             new_points = new_points.concat(subdivide_points);
         }
 
-        // copy the diagram so that the style and other data is intact
-        let newd = d.copy();
-        newd.path = new Path(new_points);
-        return newd;
+        d.path = new Path(new_points);
+        return d;
     }
     return function_handle_path_type(func);
 }
@@ -150,10 +168,9 @@ export function round_corner(radius : number | number[] =  1, point_indices? : n
             new_points = new_points.concat(arc_points);
         }
 
-        // copy the diagram so that the style and other data is intact
-        let newd = d.copy();
-        newd.path = new Path(new_points);
-        return newd;
+        d.path = new Path(new_points);
+        return d;
     }
     return function_handle_path_type(func);
 }
+
