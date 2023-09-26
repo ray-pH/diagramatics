@@ -147,10 +147,9 @@ function draw_texts(svgelement : SVGSVGElement, diagrams : Diagram[]) : void {
         svgelement.appendChild(text);
     }
 }
-    
 
-export function draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram,
-    set_html_attribute : boolean = true, render_text : boolean = true) : void {
+
+function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, render_text : boolean = true) : void {
 
     if (diagram.type == DiagramType.Polygon) {
         draw_polygon(svgelement, diagram);
@@ -160,7 +159,7 @@ export function draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram,
         // do nothing
     } else if (diagram.type == DiagramType.Diagram){
         for (let d of diagram.children) {
-            draw_to_svg(svgelement, d, false, false);
+            f_draw_to_svg(svgelement, d, false);
         }
     } else {
         console.warn("Unreachable, unknown diagram type : " + diagram.type);
@@ -173,14 +172,45 @@ export function draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram,
         draw_texts(svgelement, text_diagrams);
     }
     
+}
+
+
+export function draw_to_svg(outer_svgelement : SVGSVGElement, diagram : Diagram,
+    set_html_attribute : boolean = true, render_text : boolean = true, clear_svg : boolean = true) : void {
+
+    let svgelement : SVGSVGElement | undefined = undefined;
+    // check if outer_svgelement has a child with meta=diagram_svg
+    for (let i in outer_svgelement.children) {
+        let child = outer_svgelement.children[i];
+        if (child instanceof SVGSVGElement && child.getAttribute("meta") == "diagram_svg") {
+            svgelement = child;
+            break;
+        }
+    }
+
+    if (svgelement == undefined) {
+        // if svgelemet doesn't exist yet, create it
+        // create an inner svg element
+        svgelement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svgelement.setAttribute("meta", "diagram_svg")
+        svgelement.setAttribute("width", "100%");
+        svgelement.setAttribute("height", "100%");
+        outer_svgelement.appendChild(svgelement);
+    }
+
+    if (clear_svg) svgelement.innerHTML = "";
+
+
+    f_draw_to_svg(svgelement, diagram, render_text);
+
     if (set_html_attribute) {
         // set viewbox to the bounding box
         let bbox = svgelement.getBBox();
         // add padding of 10px to the bounding box (if the graph is small, it'll mess it up)
-        // scale 10px based on the width and height of the svgelement
-        let svgelement_width = svgelement.width.baseVal.value;
-        let svgelement_height = svgelement.height.baseVal.value;
-        let scale = Math.max(bbox.width / svgelement_width, bbox.height / svgelement_height)
+        // scale 10px based on the width and height of the svg
+        let svg_width = svgelement.width.baseVal.value;
+        let svg_height = svgelement.height.baseVal.value;
+        let scale = Math.max(bbox.width / svg_width, bbox.height / svg_height)
         let pad = 10 * scale;
         bbox.x -= pad;
         bbox.y -= pad;
