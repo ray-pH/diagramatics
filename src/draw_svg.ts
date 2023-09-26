@@ -156,7 +156,7 @@ export function draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram,
         draw_polygon(svgelement, diagram);
     } else if (diagram.type == DiagramType.Curve){
         draw_curve(svgelement, diagram);
-    } else if (diagram.type == DiagramType.Empty || diagram.type == DiagramType.Text){
+    } else if (diagram.type == DiagramType.Text){
         // do nothing
     } else if (diagram.type == DiagramType.Diagram){
         for (let d of diagram.children) {

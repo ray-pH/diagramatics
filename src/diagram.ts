@@ -9,7 +9,6 @@ function assert(condition : boolean, message : string) : void {
 export enum DiagramType {
     Polygon = 'polygon',
     Curve   = 'curve',
-    Empty   = 'empty',
     Text    = 'text',
     Diagram = 'diagram',
 }
@@ -224,8 +223,6 @@ export class Diagram {
             newd.style[stylename] = stylevalue;
         } else if (newd.type == DiagramType.Diagram) {
             newd.children = newd.children.map(c => c.update_style(stylename, stylevalue));
-        } else if (newd.type == DiagramType.Empty) {
-            // do nothing
         } else {
             throw new Error("Unreachable, unknown diagram type : " + newd.type);
         }
@@ -265,7 +262,7 @@ export class Diagram {
             newd.textdata[textdataname] = textdatavalue;
         } else if (newd.type == DiagramType.Diagram) {
             newd.children = newd.children.map(c => c.update_textdata(textdataname, textdatavalue));
-        } else if (newd.type == DiagramType.Polygon || newd.type == DiagramType.Curve || newd.type == DiagramType.Empty) {
+        } else if (newd.type == DiagramType.Polygon || newd.type == DiagramType.Curve) {
             // do nothing
         } else {
             throw new Error("Unreachable, unknown diagram type : " + newd.type);
@@ -307,7 +304,7 @@ export class Diagram {
                 }
                 return [new Vector2(minx, miny), new Vector2(maxx, maxy)];
         }
-        else if (this.type == DiagramType.Curve || this.type == DiagramType.Polygon || this.type == DiagramType.Empty){
+        else if (this.type == DiagramType.Curve || this.type == DiagramType.Polygon){
                 if (this.path == undefined) { throw new Error(this.type + " must have a path"); }
                 for (let point of this.path.points) {
                     minx = Math.min(minx, point.x);
@@ -516,7 +513,7 @@ export class Diagram {
             newd = newd.__move_origin_text(anchor);
         } else if (this.type == DiagramType.Diagram) {
             newd.children = newd.children.map(c => c.move_origin_text(anchor));
-        } else if (this.type == DiagramType.Polygon || this.type == DiagramType.Curve || this.type == DiagramType.Empty) {
+        } else if (this.type == DiagramType.Polygon || this.type == DiagramType.Curve) {
             // do nothing
         }
         return newd;
@@ -530,10 +527,6 @@ export class Diagram {
             }
             return length;
         } else if (this.type == DiagramType.Curve || this.type == DiagramType.Polygon) {
-            if (this.path == undefined) { throw new Error(this.type + " must have a path"); }
-            return this.path.length();
-        } else if (this.type == DiagramType.Empty) {
-            // for now, do the same as polygon and curve
             if (this.path == undefined) { throw new Error(this.type + " must have a path"); }
             return this.path.length();
         } else {
@@ -582,10 +575,6 @@ export class Diagram {
             // get the point on the path
             if (this.path == undefined) { throw new Error(this.type + " must have a path"); }
             return this.path.parametric_point(t, true, segment_index);
-        } else if (this.type == DiagramType.Empty) {
-            // just return the position
-            if (this.path == undefined) { throw new Error(this.type + " must have a path"); }
-            return this.path.points[0];
         } else {
             throw new Error("Unreachable, unknown diagram type : " + this.type);
         }
@@ -657,10 +646,6 @@ export class Diagram {
 
             return deb_bbox.combine(deb_object,...point_texts);
         }
-        else if (this.type == DiagramType.Empty){
-            // return empty at diagram origin
-            return this.copy();
-        } 
         else {
             throw new Error("Unreachable, unknown diagram type : " + this.type);
         }
@@ -818,7 +803,7 @@ export function polygon(points: Vector2[]) : Diagram {
  * @returns an empty diagram
  */
 export function empty(v : Vector2) : Diagram {
-    let emp = new Diagram(DiagramType.Empty, {path : new Path([v])});
+    let emp = curve([v])
     return emp;
 }
 

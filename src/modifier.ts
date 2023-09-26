@@ -22,7 +22,7 @@ function function_handle_path_type(func : modifierFunction) : modifierFunction {
         } else if (d.type == DiagramType.Diagram) {
             // recursively apply to all children
             d.children = d.children.map(c => modified_func(c));
-        } else if (d.type == DiagramType.Empty || d.type == DiagramType.Text) {
+        } else if (d.type == DiagramType.Text) {
             // do nothing
         } else {
             throw new Error("Unreachable, unknown diagram type : " + d.type);
