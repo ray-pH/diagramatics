@@ -122,6 +122,7 @@ export class Interactive {
         }
 
         // set viewBox and preserveAspectRatio of control_svg to be the same as diagram_svg
+        this.draw();
         control_svg.setAttribute("viewBox", diagram_svg.getAttribute("viewBox") as string);
         control_svg.setAttribute("preserveAspectRatio", diagram_svg.getAttribute("preserveAspectRatio") as string);
 
