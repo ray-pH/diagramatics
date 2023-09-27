@@ -121,8 +121,6 @@ export class Interactive {
             this.diagram_outer_svg.addEventListener('mouseup'  , (evt) => { locatorHandler.endDrag(evt); });
         }
 
-
-
         // set viewBox and preserveAspectRatio of control_svg to be the same as diagram_svg
         control_svg.setAttribute("viewBox", diagram_svg.getAttribute("viewBox") as string);
         control_svg.setAttribute("preserveAspectRatio", diagram_svg.getAttribute("preserveAspectRatio") as string);
@@ -130,8 +128,7 @@ export class Interactive {
         // ============== callback
         const callback = (pos : Vector2, redraw : boolean = true) => {
             this.inp_variables[variable_name] = pos;
-            // console.log(pos);
-            // if (redraw) this.draw();
+            if (redraw) this.draw();
         }
         this.locatorHandler.registerCallback(variable_name, callback);
 
@@ -319,12 +316,10 @@ class LocatorHandler {
         };
     }
     startDrag(evt : LocatorEvent, variable_name : string) {
-        // console.log('startDrag');
         this.selectedElement  = evt.target as SVGElement;
         this.selectedVariable = variable_name;
     }
     drag(evt : LocatorEvent) {
-        console.log('drag');
         if (this.selectedElement == undefined) return;
         if (evt instanceof MouseEvent) { evt.preventDefault(); }
         var coord = this.getMousePosition(evt);
@@ -340,7 +335,6 @@ class LocatorHandler {
         }
     }
     endDrag(_ : LocatorEvent) {
-        // console.log('endDrag');
         this.selectedElement = null;
         this.selectedVariable = null;
     }
