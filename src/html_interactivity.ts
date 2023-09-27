@@ -1,4 +1,5 @@
 import { str_to_mathematical_italic } from './unicode_utils.js'
+import { Vector2, V2 } from './vector.js';
 
 function format_number(val : number, prec : number) {
     let fixed = val.toFixed(prec);
@@ -11,6 +12,9 @@ export class Interactive {
     public inp_variables : {[key : string] : any} = {};
     public inp_setter    : {[key : string] : (_ : any) => void } = {};
     public display_mode  : "svg" | "canvas" = "svg";
+
+    // private locatorHandler? : LocatorHandler = undefined;
+    private locatorHandler : LocatorHandler;
     // no support for canvas yet
 
     public draw_function : (inp_object : typeof this.inp_variables, setter_object? : typeof this.inp_setter) => any 
@@ -24,6 +28,9 @@ export class Interactive {
         inp_object_? : {[key : string] : any}
     ){
         if (inp_object_ != undefined){ this.inp_variables = inp_object_; }
+        this.locatorHandler = new LocatorHandler(diagram_outer_svg);
+        this.diagram_outer_svg.addEventListener('mousemove', (evt) => { this.locatorHandler.drag(evt); });
+        this.diagram_outer_svg.addEventListener('mouseup'  , (evt) => { this.locatorHandler.endDrag(evt); });
     }
 
     public draw() : void {
@@ -124,8 +131,16 @@ export class Interactive {
         let scale_x = screen_width / viewBox_width;
         let scale_y = screen_height / viewBox_height;
         let scale = Math.min(scale_x, scale_y);
-        console.log(screen_width, screen_height, viewBox_width, viewBox_height, scale_x, scale_y, scale)
 
+        // ============== callback
+        const callback = (pos : Vector2, redraw : boolean = true) => {
+            this.inp_variables[variable_name] = pos;
+            console.log(pos);
+            // if (redraw) this.draw();
+        }
+        this.locatorHandler.registerCallback(variable_name, callback);
+
+        // ============== Circle element
         // create a circle element with the screen size of 10px to control_svg
         let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         circle.setAttribute("r", "10");
@@ -135,20 +150,18 @@ export class Interactive {
         // circle.setAttribute("vector-effect", "non-scaling-stroke");
         circle.setAttribute("cx", screen_width/2 + "");
         circle.setAttribute("cy", screen_height/2 + "");
+        circle.setAttribute("variable_name", variable_name);
 
-        let locator = new Locator(control_svg);
-
-        circle.addEventListener('mousedown', (evt) => { locator.startDrag(evt); });
-        // circle.addEventListener('mousemove', (evt) => { locator.drag(evt); });
-        this.diagram_outer_svg.addEventListener('mousemove', (evt) => { locator.drag(evt); });
-        this.diagram_outer_svg.addEventListener('mouseup'  , (evt) => { locator.endDrag(evt); });
-        // circle.addEventListener('mouseleave', (evt) => { locator.endDrag(evt); });
+        circle.addEventListener('mousedown', (evt) => { this.locatorHandler.startDrag(evt, variable_name); });
+        // this event listener is defined in the constructor
+        // > this.diagram_outer_svg.addEventListener('mousemove', (evt) => { this.locatorHandler.drag(evt); });
+        // > this.diagram_outer_svg.addEventListener('mouseup'  , (evt) => { this.locatorHandler.endDrag(evt); });
         //
         // touch support
-        circle.addEventListener('touchstart', (evt) => { locator.startDrag(evt); });
-        circle.addEventListener('touchmove', (evt) => { locator.drag(evt); });
-        circle.addEventListener('touchend', (evt) => { locator.endDrag(evt); });
-        circle.addEventListener('touchcancel', (evt) => { locator.endDrag(evt); });
+        // circle.addEventListener('touchstart', (evt) => { this.locatorHandler.startDrag(evt); });
+        // circle.addEventListener('touchmove', (evt) => { this.locatorHandler.drag(evt); });
+        // circle.addEventListener('touchend', (evt) => { this.locatorHandler.endDrag(evt); });
+        // circle.addEventListener('touchcancel', (evt) => { this.locatorHandler.endDrag(evt); });
 
         control_svg.appendChild(circle);
     }
@@ -291,10 +304,12 @@ function create_slider(callback : (val : number) => any, min : number = 0, max :
 // function create_locator() : SVGCircleElement {
 // }
 type LocatorEvent = TouchEvent | Touch | MouseEvent
-class Locator {
+class LocatorHandler {
 
-    selectedElement : SVGElement | null = null;
-    offset : {x : number, y : number} = { x: 0, y: 0 };
+    selectedElement  : SVGElement | null = null;
+    selectedVariable : string | null = null;
+    callbacks : {[key : string] : (pos : Vector2) => any} = {};
+    offset : Vector2 = V2(0,0);
 
     constructor(public svgcontainer : SVGSVGElement){
     }
@@ -307,26 +322,40 @@ class Locator {
             y: (evt.clientY - CTM.f) / CTM.d
         };
     }
-    startDrag(evt : LocatorEvent) {
+    startDrag(evt : LocatorEvent, variable_name : string) {
         // console.log('startDrag');
-        this.selectedElement = evt.target as SVGElement;
-        this.offset = this.getMousePosition(evt);
-        this.offset.x -= parseFloat(this.selectedElement.getAttributeNS(null, "cx") as string);
-        this.offset.y -= parseFloat(this.selectedElement.getAttributeNS(null, "cy") as string);
+        this.selectedElement  = evt.target as SVGElement;
+        this.selectedVariable = variable_name;
+        let offset = this.getMousePosition(evt);
+        offset.x -= parseFloat(this.selectedElement.getAttributeNS(null, "cx") as string);
+        offset.y -= parseFloat(this.selectedElement.getAttributeNS(null, "cy") as string);
+        this.offset.x = offset.x;
+        this.offset.y = offset.y;
     }
     drag(evt : LocatorEvent) {
         console.log('drag');
-        if (this.selectedElement) {
-            if (evt instanceof MouseEvent) { evt.preventDefault(); }
-            var coord = this.getMousePosition(evt);
-            // selectedElement.setAttributeNS(null, "cx", coord.x);
-            // selectedElement.setAttributeNS(null, "cy", coord.y);
-            this.selectedElement.setAttributeNS(null, "cx", (coord.x - this.offset.x).toString());
-            this.selectedElement.setAttributeNS(null, "cy", (coord.y - this.offset.y).toString());
+        if (this.selectedElement == undefined) return;
+        if (evt instanceof MouseEvent) { evt.preventDefault(); }
+        var coord = this.getMousePosition(evt);
+        this.selectedElement.setAttributeNS(null, "cx", (coord.x - this.offset.x).toString());
+        this.selectedElement.setAttributeNS(null, "cy", (coord.y - this.offset.y).toString());
+
+        let pos = V2(coord.x - this.offset.x, coord.y - this.offset.y);
+        // check if callback for this.selectedVariable exists
+        // if it does, call it
+        if (this.selectedVariable == null) return;
+        if (this.callbacks[this.selectedVariable] != undefined) {
+            this.callbacks[this.selectedVariable](pos);
         }
     }
     endDrag(_ : LocatorEvent) {
         // console.log('endDrag');
         this.selectedElement = null;
+        this.selectedVariable = null;
     }
+
+    registerCallback(name : string, callback : (pos : Vector2) => any){
+        this.callbacks[name] = callback;
+    }
+
 }
