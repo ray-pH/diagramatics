@@ -77,7 +77,9 @@ export class Interactive {
     }
 
 
-    public locator(variable_name : string, radius : number){
+    public locator(variable_name : string, value : Vector2, radius : number){
+        this.inp_variables[variable_name] = value;
+
         this.draw();
         let diagram_svg : SVGSVGElement | undefined = undefined;
         // check if this.diagram_outer_svg has a child with meta=control_svg
@@ -106,7 +108,7 @@ export class Interactive {
 
         // if this is the fist time this function is called, create a locatorHandler
         if (this.locatorHandler == undefined) {
-            let locatorHandler = new LocatorHandler(this.diagram_outer_svg, control_svg);
+            let locatorHandler = new LocatorHandler(control_svg);
             this.locatorHandler = locatorHandler;
             this.diagram_outer_svg.addEventListener('mousemove'  , (evt) => { locatorHandler.drag(evt);    });
             this.diagram_outer_svg.addEventListener('mouseup'    , (evt) => { locatorHandler.endDrag(evt); });
@@ -128,14 +130,14 @@ export class Interactive {
 
         // ============== Circle element
 
-        let circle = create_locator_pointer_svg(radius);
-        circle.addEventListener('mousedown', (evt) => { 
-            (this.locatorHandler as LocatorHandler).startDrag(evt, variable_name, circle);
+        let locator_svg = create_locator_pointer_svg(radius, value);
+        locator_svg.addEventListener('mousedown', (evt) => { 
+            (this.locatorHandler as LocatorHandler).startDrag(evt, variable_name, locator_svg);
         });
-        circle.addEventListener('touchstart', (evt) => { 
-            (this.locatorHandler as LocatorHandler).startDrag(evt, variable_name, circle);
+        locator_svg.addEventListener('touchstart', (evt) => { 
+            (this.locatorHandler as LocatorHandler).startDrag(evt, variable_name, locator_svg);
         });
-        control_svg.appendChild(circle);
+        control_svg.appendChild(locator_svg);
     }
 
     /**
@@ -273,7 +275,7 @@ function create_slider(callback : (val : number) => any, min : number = 0, max :
     return slider;
 }
 
-function create_locator_pointer_svg(radius : number) : SVGSVGElement {
+function create_locator_pointer_svg(radius : number, value : Vector2) : SVGSVGElement {
     let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     // set svg overflow to visible
     svg.setAttribute("overflow", "visible");
@@ -296,8 +298,8 @@ function create_locator_pointer_svg(radius : number) : SVGSVGElement {
 
     svg.appendChild(circle_outer);
     svg.appendChild(circle_inner);
-    svg.setAttribute("x", "0");
-    svg.setAttribute("y", "0");
+    svg.setAttribute("x", value.x.toString());
+    svg.setAttribute("y", (-value.y).toString());
     return svg;
 }
 
@@ -310,7 +312,7 @@ class LocatorHandler {
     selectedVariable : string | null = null;
     callbacks : {[key : string] : (pos : Vector2) => any} = {};
 
-    constructor(public outer_svg : SVGSVGElement, public control_svg : SVGSVGElement){
+    constructor(public control_svg : SVGSVGElement){
     }
 
     getMousePosition(evt : LocatorEvent ) {
@@ -334,7 +336,7 @@ class LocatorHandler {
         this.selectedElement.setAttributeNS(null, "x", (coord.x).toString());
         this.selectedElement.setAttributeNS(null, "y", (coord.y).toString());
 
-        let pos = V2(-coord.x, coord.y);
+        let pos = V2(coord.x, -coord.y);
         // check if callback for this.selectedVariable exists
         // if it does, call it
         if (this.selectedVariable == null) return;
