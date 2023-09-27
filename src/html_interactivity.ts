@@ -334,7 +334,7 @@ class LocatorHandler {
         this.selectedElement.setAttributeNS(null, "x", (coord.x).toString());
         this.selectedElement.setAttributeNS(null, "y", (coord.y).toString());
 
-        let pos = V2(coord.x, coord.y);
+        let pos = V2(-coord.x, coord.y);
         // check if callback for this.selectedVariable exists
         // if it does, call it
         if (this.selectedVariable == null) return;
