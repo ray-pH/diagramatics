@@ -77,7 +77,8 @@ export class Interactive {
     }
 
 
-    public locator(variable_name : string){
+    public locator(variable_name : string, radius : number){
+        this.draw();
         let diagram_svg : SVGSVGElement | undefined = undefined;
         // check if this.diagram_outer_svg has a child with meta=control_svg
         // if not, create one
@@ -93,17 +94,7 @@ export class Interactive {
             }
         }
 
-        // if there's no diagram_svg, return for now
-        // TODO : figure out what to actually do in this case
-        if (diagram_svg == undefined) { 
-            // if svgelemet doesn't exist yet, create it
-            // create an inner svg element
-            diagram_svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            diagram_svg.setAttribute("meta", "diagram_svg")
-            diagram_svg.setAttribute("width", "100%");
-            diagram_svg.setAttribute("height", "100%");
-            this.diagram_outer_svg.appendChild(diagram_svg);
-        }
+        if (diagram_svg == undefined) return;
 
         if (control_svg == undefined) {
             control_svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -117,12 +108,14 @@ export class Interactive {
         if (this.locatorHandler == undefined) {
             let locatorHandler = new LocatorHandler(this.diagram_outer_svg, control_svg);
             this.locatorHandler = locatorHandler;
-            this.diagram_outer_svg.addEventListener('mousemove', (evt) => { locatorHandler.drag(evt); });
-            this.diagram_outer_svg.addEventListener('mouseup'  , (evt) => { locatorHandler.endDrag(evt); });
+            this.diagram_outer_svg.addEventListener('mousemove'  , (evt) => { locatorHandler.drag(evt);    });
+            this.diagram_outer_svg.addEventListener('mouseup'    , (evt) => { locatorHandler.endDrag(evt); });
+            this.diagram_outer_svg.addEventListener('touchmove'  , (evt) => { locatorHandler.drag(evt);    });
+            this.diagram_outer_svg.addEventListener('touchend'   , (evt) => { locatorHandler.endDrag(evt); });
+            this.diagram_outer_svg.addEventListener('touchcancel', (evt) => { locatorHandler.endDrag(evt); });
         }
 
         // set viewBox and preserveAspectRatio of control_svg to be the same as diagram_svg
-        this.draw();
         control_svg.setAttribute("viewBox", diagram_svg.getAttribute("viewBox") as string);
         control_svg.setAttribute("preserveAspectRatio", diagram_svg.getAttribute("preserveAspectRatio") as string);
 
@@ -134,30 +127,14 @@ export class Interactive {
         this.locatorHandler.registerCallback(variable_name, callback);
 
         // ============== Circle element
-        // create a circle element with the screen size of 10px to control_svg
-        let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        circle.setAttribute("r", "1");
-        circle.setAttribute("fill", "blue");
-        circle.setAttribute("stroke", "black");
-        circle.setAttribute("stroke-width", "1");
-        circle.setAttribute("vector-effect", "non-scaling-stroke");
-        // circle.setAttribute("cx", screen_width/2 + "");
-        // circle.setAttribute("cy", screen_height/2 + "");
-        circle.setAttribute("cx", "0");
-        circle.setAttribute("cy", "0");
-        circle.setAttribute("variable_name", variable_name);
 
-        circle.addEventListener('mousedown', (evt) => { (this.locatorHandler as LocatorHandler).startDrag(evt, variable_name); });
-        // this event listener is defined in the constructor
-        // > this.diagram_outer_svg.addEventListener('mousemove', (evt) => { this.locatorHandler.drag(evt); });
-        // > this.diagram_outer_svg.addEventListener('mouseup'  , (evt) => { this.locatorHandler.endDrag(evt); });
-        //
-        // touch support
-        // circle.addEventListener('touchstart', (evt) => { this.locatorHandler.startDrag(evt); });
-        // circle.addEventListener('touchmove', (evt) => { this.locatorHandler.drag(evt); });
-        // circle.addEventListener('touchend', (evt) => { this.locatorHandler.endDrag(evt); });
-        // circle.addEventListener('touchcancel', (evt) => { this.locatorHandler.endDrag(evt); });
-
+        let circle = create_locator_pointer_svg(radius);
+        circle.addEventListener('mousedown', (evt) => { 
+            (this.locatorHandler as LocatorHandler).startDrag(evt, variable_name, circle);
+        });
+        circle.addEventListener('touchstart', (evt) => { 
+            (this.locatorHandler as LocatorHandler).startDrag(evt, variable_name, circle);
+        });
         control_svg.appendChild(circle);
     }
 
@@ -296,6 +273,34 @@ function create_slider(callback : (val : number) => any, min : number = 0, max :
     return slider;
 }
 
+function create_locator_pointer_svg(radius : number) : SVGSVGElement {
+    let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    // set svg overflow to visible
+    svg.setAttribute("overflow", "visible");
+    // set cursor to be pointer when hovering
+    svg.style.cursor = "pointer";
+
+    let circle_outer = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    let circle_inner = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+
+    let inner_radius    = radius * 0.4;
+
+    circle_outer.setAttribute("r", radius.toString());
+    circle_outer.setAttribute("fill", "blue");
+    circle_outer.setAttribute("fill-opacity", "0.1");
+    circle_outer.setAttribute("stroke", "none");
+
+    circle_inner.setAttribute("r", inner_radius.toString());
+    circle_inner.setAttribute("fill", "blue");
+    circle_inner.setAttribute("stroke", "none");
+
+    svg.appendChild(circle_outer);
+    svg.appendChild(circle_inner);
+    svg.setAttribute("x", "0");
+    svg.setAttribute("y", "0");
+    return svg;
+}
+
 // function create_locator() : SVGCircleElement {
 // }
 type LocatorEvent = TouchEvent | Touch | MouseEvent
@@ -316,16 +321,18 @@ class LocatorHandler {
             y: (evt.clientY - CTM.f) / CTM.d
         };
     }
-    startDrag(evt : LocatorEvent, variable_name : string) {
-        this.selectedElement  = evt.target as SVGElement;
+    startDrag(_ : LocatorEvent, variable_name : string, selectedElement : SVGElement) {
+        this.selectedElement  = selectedElement;
         this.selectedVariable = variable_name;
     }
     drag(evt : LocatorEvent) {
         if (this.selectedElement == undefined) return;
         if (evt instanceof MouseEvent) { evt.preventDefault(); }
         var coord = this.getMousePosition(evt);
-        this.selectedElement.setAttributeNS(null, "cx", (coord.x).toString());
-        this.selectedElement.setAttributeNS(null, "cy", (coord.y).toString());
+        // this.selectedElement.setAttributeNS(null, "cx", (coord.x).toString());
+        // this.selectedElement.setAttributeNS(null, "cy", (coord.y).toString());
+        this.selectedElement.setAttributeNS(null, "x", (coord.x).toString());
+        this.selectedElement.setAttributeNS(null, "y", (coord.y).toString());
 
         let pos = V2(coord.x, coord.y);
         // check if callback for this.selectedVariable exists
