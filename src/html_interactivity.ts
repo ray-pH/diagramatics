@@ -10,13 +10,16 @@ function format_number(val : number, prec : number) {
 export class Interactive {
     public inp_variables : {[key : string] : any} = {};
     public inp_setter    : {[key : string] : (_ : any) => void } = {};
+    public display_mode  : "svg" | "canvas" = "svg";
+    // no support for canvas yet
+
     public draw_function : (inp_object : typeof this.inp_variables, setter_object? : typeof this.inp_setter) => any 
         = (_) => {};
     public display_precision : undefined | number = 5;
     intervals : {[key : string] : any} = {};         
 
     constructor(
-        public diagram_svg_div : SVGSVGElement,
+        public diagram_outer_svg : SVGSVGElement,
         public control_container_div : HTMLElement, 
         inp_object_? : {[key : string] : any}
     ){
@@ -67,6 +70,89 @@ export class Interactive {
     }
 
 
+    public locator(variable_name : string){
+        let diagram_svg : SVGSVGElement | undefined = undefined;
+        // check if this.diagram_outer_svg has a child with meta=control_svg
+        // if not, create one
+        let control_svg : SVGSVGElement | undefined = undefined;
+        for (let i in this.diagram_outer_svg.children) {
+            let child = this.diagram_outer_svg.children[i];
+            if (child instanceof SVGSVGElement && child.getAttribute("meta") == "control_svg") {
+                control_svg = child;
+            }
+            // while looping, also find the diagram_svg
+            if (child instanceof SVGSVGElement && child.getAttribute("meta") == "diagram_svg") {
+                diagram_svg = child;
+            }
+        }
+
+        // if there's no diagram_svg, return for now
+        // TODO : figure out what to actually do in this case
+        if (diagram_svg == undefined) { 
+            // if svgelemet doesn't exist yet, create it
+            // create an inner svg element
+            diagram_svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            diagram_svg.setAttribute("meta", "diagram_svg")
+            diagram_svg.setAttribute("width", "100%");
+            diagram_svg.setAttribute("height", "100%");
+            this.diagram_outer_svg.appendChild(diagram_svg);
+        }
+
+        if (control_svg == undefined) {
+            control_svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            control_svg.setAttribute("meta", "control_svg");
+            control_svg.setAttribute("width", "100%");
+            control_svg.setAttribute("height", "100%");
+            this.diagram_outer_svg.appendChild(control_svg);
+        }
+
+        // set viewBox and preserveAspectRatio of control_svg to be the same as diagram_svg
+        // control_svg.setAttribute("viewBox", diagram_svg.getAttribute("viewBox") as string);
+        // control_svg.setAttribute("preserveAspectRatio", diagram_svg.getAttribute("preserveAspectRatio") as string);
+
+        // calculate the scaling factor to the real DOM
+        // get height and width from viewBox
+        let viewBox     = diagram_svg.getAttribute("viewBox") as string;
+        let viewBox_arr = viewBox.split(" ");
+        let viewBox_width = parseFloat(viewBox_arr[2]);
+        let viewBox_height = parseFloat(viewBox_arr[3]);
+
+        // get height and width from real DOM
+        let screen_width = diagram_svg.getBoundingClientRect().width;
+        let screen_height = diagram_svg.getBoundingClientRect().height;
+
+        let scale_x = screen_width / viewBox_width;
+        let scale_y = screen_height / viewBox_height;
+        let scale = Math.min(scale_x, scale_y);
+        console.log(screen_width, screen_height, viewBox_width, viewBox_height, scale_x, scale_y, scale)
+
+        // create a circle element with the screen size of 10px to control_svg
+        let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("r", "10");
+        circle.setAttribute("fill", "blue");
+        circle.setAttribute("stroke", "black");
+        circle.setAttribute("stroke-width", "1");
+        // circle.setAttribute("vector-effect", "non-scaling-stroke");
+        circle.setAttribute("cx", screen_width/2 + "");
+        circle.setAttribute("cy", screen_height/2 + "");
+
+        let locator = new Locator(control_svg);
+
+        circle.addEventListener('mousedown', (evt) => { locator.startDrag(evt); });
+        // circle.addEventListener('mousemove', (evt) => { locator.drag(evt); });
+        this.diagram_outer_svg.addEventListener('mousemove', (evt) => { locator.drag(evt); });
+        this.diagram_outer_svg.addEventListener('mouseup'  , (evt) => { locator.endDrag(evt); });
+        // circle.addEventListener('mouseleave', (evt) => { locator.endDrag(evt); });
+        //
+        // touch support
+        circle.addEventListener('touchstart', (evt) => { locator.startDrag(evt); });
+        circle.addEventListener('touchmove', (evt) => { locator.drag(evt); });
+        circle.addEventListener('touchend', (evt) => { locator.endDrag(evt); });
+        circle.addEventListener('touchcancel', (evt) => { locator.endDrag(evt); });
+
+        control_svg.appendChild(circle);
+    }
+
     /**
      * Create a slider
      * @param variable_name name of the variable
@@ -101,7 +187,7 @@ export class Interactive {
                 val.toString() : format_number(val, this.display_precision);
             labeldiv.innerHTML = `${varstyle_variable_name} = ${val_str}`;
             
-            if (redraw) this.draw_function(this.inp_variables);
+            if (redraw) this.draw();
         }
         let slider = create_slider(callback, min, max, value, step);
 
@@ -200,4 +286,47 @@ function create_slider(callback : (val : number) => any, min : number = 0, max :
     // add class to slider
     slider.classList.add("diagramatics-slider");
     return slider;
+}
+
+// function create_locator() : SVGCircleElement {
+// }
+type LocatorEvent = TouchEvent | Touch | MouseEvent
+class Locator {
+
+    selectedElement : SVGElement | null = null;
+    offset : {x : number, y : number} = { x: 0, y: 0 };
+
+    constructor(public svgcontainer : SVGSVGElement){
+    }
+
+    getMousePosition(evt : LocatorEvent ) {
+        var CTM = this.svgcontainer.getScreenCTM() as DOMMatrix;
+        if (evt instanceof TouchEvent) { evt = evt.touches[0]; }
+        return {
+            x: (evt.clientX - CTM.e) / CTM.a,
+            y: (evt.clientY - CTM.f) / CTM.d
+        };
+    }
+    startDrag(evt : LocatorEvent) {
+        // console.log('startDrag');
+        this.selectedElement = evt.target as SVGElement;
+        this.offset = this.getMousePosition(evt);
+        this.offset.x -= parseFloat(this.selectedElement.getAttributeNS(null, "cx") as string);
+        this.offset.y -= parseFloat(this.selectedElement.getAttributeNS(null, "cy") as string);
+    }
+    drag(evt : LocatorEvent) {
+        console.log('drag');
+        if (this.selectedElement) {
+            if (evt instanceof MouseEvent) { evt.preventDefault(); }
+            var coord = this.getMousePosition(evt);
+            // selectedElement.setAttributeNS(null, "cx", coord.x);
+            // selectedElement.setAttributeNS(null, "cy", coord.y);
+            this.selectedElement.setAttributeNS(null, "cx", (coord.x - this.offset.x).toString());
+            this.selectedElement.setAttributeNS(null, "cy", (coord.y - this.offset.y).toString());
+        }
+    }
+    endDrag(_ : LocatorEvent) {
+        // console.log('endDrag');
+        this.selectedElement = null;
+    }
 }
