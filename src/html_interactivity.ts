@@ -14,7 +14,7 @@ export class Interactive {
     public display_mode  : "svg" | "canvas" = "svg";
 
     // private locatorHandler? : LocatorHandler = undefined;
-    private locatorHandler : LocatorHandler;
+    private locatorHandler? : LocatorHandler = undefined;
     // no support for canvas yet
 
     public draw_function : (inp_object : typeof this.inp_variables, setter_object? : typeof this.inp_setter) => any 
@@ -28,9 +28,9 @@ export class Interactive {
         inp_object_? : {[key : string] : any}
     ){
         if (inp_object_ != undefined){ this.inp_variables = inp_object_; }
-        this.locatorHandler = new LocatorHandler(diagram_outer_svg);
-        this.diagram_outer_svg.addEventListener('mousemove', (evt) => { this.locatorHandler.drag(evt); });
-        this.diagram_outer_svg.addEventListener('mouseup'  , (evt) => { this.locatorHandler.endDrag(evt); });
+        // this.locatorHandler = new LocatorHandler(diagram_outer_svg);
+        // this.diagram_outer_svg.addEventListener('mousemove', (evt) => { this.locatorHandler.drag(evt); });
+        // this.diagram_outer_svg.addEventListener('mouseup'  , (evt) => { this.locatorHandler.endDrag(evt); });
     }
 
     public draw() : void {
@@ -113,29 +113,24 @@ export class Interactive {
             this.diagram_outer_svg.appendChild(control_svg);
         }
 
+        // if this is the fist time this function is called, create a locatorHandler
+        if (this.locatorHandler == undefined) {
+            let locatorHandler = new LocatorHandler(this.diagram_outer_svg, control_svg);
+            this.locatorHandler = locatorHandler;
+            this.diagram_outer_svg.addEventListener('mousemove', (evt) => { locatorHandler.drag(evt); });
+            this.diagram_outer_svg.addEventListener('mouseup'  , (evt) => { locatorHandler.endDrag(evt); });
+        }
+
+
+
         // set viewBox and preserveAspectRatio of control_svg to be the same as diagram_svg
-        // control_svg.setAttribute("viewBox", diagram_svg.getAttribute("viewBox") as string);
-        // control_svg.setAttribute("preserveAspectRatio", diagram_svg.getAttribute("preserveAspectRatio") as string);
-
-        // calculate the scaling factor to the real DOM
-        // get height and width from viewBox
-        let viewBox     = diagram_svg.getAttribute("viewBox") as string;
-        let viewBox_arr = viewBox.split(" ");
-        let viewBox_width = parseFloat(viewBox_arr[2]);
-        let viewBox_height = parseFloat(viewBox_arr[3]);
-
-        // get height and width from real DOM
-        let screen_width = diagram_svg.getBoundingClientRect().width;
-        let screen_height = diagram_svg.getBoundingClientRect().height;
-
-        let scale_x = screen_width / viewBox_width;
-        let scale_y = screen_height / viewBox_height;
-        let scale = Math.min(scale_x, scale_y);
+        control_svg.setAttribute("viewBox", diagram_svg.getAttribute("viewBox") as string);
+        control_svg.setAttribute("preserveAspectRatio", diagram_svg.getAttribute("preserveAspectRatio") as string);
 
         // ============== callback
         const callback = (pos : Vector2, redraw : boolean = true) => {
             this.inp_variables[variable_name] = pos;
-            console.log(pos);
+            // console.log(pos);
             // if (redraw) this.draw();
         }
         this.locatorHandler.registerCallback(variable_name, callback);
@@ -143,16 +138,18 @@ export class Interactive {
         // ============== Circle element
         // create a circle element with the screen size of 10px to control_svg
         let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        circle.setAttribute("r", "10");
+        circle.setAttribute("r", "1");
         circle.setAttribute("fill", "blue");
         circle.setAttribute("stroke", "black");
         circle.setAttribute("stroke-width", "1");
-        // circle.setAttribute("vector-effect", "non-scaling-stroke");
-        circle.setAttribute("cx", screen_width/2 + "");
-        circle.setAttribute("cy", screen_height/2 + "");
+        circle.setAttribute("vector-effect", "non-scaling-stroke");
+        // circle.setAttribute("cx", screen_width/2 + "");
+        // circle.setAttribute("cy", screen_height/2 + "");
+        circle.setAttribute("cx", "0");
+        circle.setAttribute("cy", "0");
         circle.setAttribute("variable_name", variable_name);
 
-        circle.addEventListener('mousedown', (evt) => { this.locatorHandler.startDrag(evt, variable_name); });
+        circle.addEventListener('mousedown', (evt) => { (this.locatorHandler as LocatorHandler).startDrag(evt, variable_name); });
         // this event listener is defined in the constructor
         // > this.diagram_outer_svg.addEventListener('mousemove', (evt) => { this.locatorHandler.drag(evt); });
         // > this.diagram_outer_svg.addEventListener('mouseup'  , (evt) => { this.locatorHandler.endDrag(evt); });
@@ -309,13 +306,12 @@ class LocatorHandler {
     selectedElement  : SVGElement | null = null;
     selectedVariable : string | null = null;
     callbacks : {[key : string] : (pos : Vector2) => any} = {};
-    offset : Vector2 = V2(0,0);
 
-    constructor(public svgcontainer : SVGSVGElement){
+    constructor(public outer_svg : SVGSVGElement, public control_svg : SVGSVGElement){
     }
 
     getMousePosition(evt : LocatorEvent ) {
-        var CTM = this.svgcontainer.getScreenCTM() as DOMMatrix;
+        var CTM = this.control_svg.getScreenCTM() as DOMMatrix;
         if (evt instanceof TouchEvent) { evt = evt.touches[0]; }
         return {
             x: (evt.clientX - CTM.e) / CTM.a,
@@ -326,21 +322,16 @@ class LocatorHandler {
         // console.log('startDrag');
         this.selectedElement  = evt.target as SVGElement;
         this.selectedVariable = variable_name;
-        let offset = this.getMousePosition(evt);
-        offset.x -= parseFloat(this.selectedElement.getAttributeNS(null, "cx") as string);
-        offset.y -= parseFloat(this.selectedElement.getAttributeNS(null, "cy") as string);
-        this.offset.x = offset.x;
-        this.offset.y = offset.y;
     }
     drag(evt : LocatorEvent) {
         console.log('drag');
         if (this.selectedElement == undefined) return;
         if (evt instanceof MouseEvent) { evt.preventDefault(); }
         var coord = this.getMousePosition(evt);
-        this.selectedElement.setAttributeNS(null, "cx", (coord.x - this.offset.x).toString());
-        this.selectedElement.setAttributeNS(null, "cy", (coord.y - this.offset.y).toString());
+        this.selectedElement.setAttributeNS(null, "cx", (coord.x).toString());
+        this.selectedElement.setAttributeNS(null, "cy", (coord.y).toString());
 
-        let pos = V2(coord.x - this.offset.x, coord.y - this.offset.y);
+        let pos = V2(coord.x, coord.y);
         // check if callback for this.selectedVariable exists
         // if it does, call it
         if (this.selectedVariable == null) return;
