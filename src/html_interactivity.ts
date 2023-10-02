@@ -1,3 +1,4 @@
+import { Diagram, DiagramType } from './diagram.js';
 import { str_to_mathematical_italic } from './unicode_utils.js'
 import { Vector2, V2 } from './vector.js';
 
@@ -77,7 +78,7 @@ export class Interactive {
     }
 
 
-    public locator(variable_name : string, value : Vector2, radius : number){
+    public locator(variable_name : string, value : Vector2, radius : number, track_diagram? : Diagram){
         this.inp_variables[variable_name] = value;
 
         this.draw();
@@ -127,6 +128,7 @@ export class Interactive {
             if (redraw) this.draw();
         }
         this.locatorHandler.registerCallback(variable_name, callback);
+        if (track_diagram) this.locatorHandler.registerTrack(variable_name, track_diagram);
 
         // ============== Circle element
 
@@ -305,12 +307,28 @@ function create_locator_pointer_svg(radius : number, value : Vector2) : SVGSVGEl
 
 // function create_locator() : SVGCircleElement {
 // }
+//
+function closest_point_from_points(p : Vector2, points : Vector2[]) : Vector2 {
+    if (points.length == 0) return p;
+    let closest_d2 = Infinity;
+    let closest_p = points[0];
+    for (let i in points) {
+        let d2 = points[i].sub(p).length_sq();
+        if (d2 < closest_d2) {
+            closest_d2 = d2;
+            closest_p = points[i];
+        }
+    }
+    return closest_p;
+}
+
 type LocatorEvent = TouchEvent | Touch | MouseEvent
 class LocatorHandler {
 
     selectedElement  : SVGElement | null = null;
     selectedVariable : string | null = null;
     callbacks : {[key : string] : (pos : Vector2) => any} = {};
+    tracks    : {[key : string] : Vector2[]} = {};
 
     constructor(public control_svg : SVGSVGElement){
     }
@@ -329,8 +347,14 @@ class LocatorHandler {
     }
     drag(evt : LocatorEvent) {
         if (this.selectedElement == undefined) return;
+        if (this.selectedVariable == undefined) return;
+
         if (evt instanceof MouseEvent) { evt.preventDefault(); }
-        var coord = this.getMousePosition(evt);
+        let coord = this.getMousePosition(evt);
+        if (this.tracks[this.selectedVariable] != undefined) {
+            coord = closest_point_from_points(V2(coord.x, coord.y), this.tracks[this.selectedVariable]);
+        }
+
         // this.selectedElement.setAttributeNS(null, "cx", (coord.x).toString());
         // this.selectedElement.setAttributeNS(null, "cy", (coord.y).toString());
         this.selectedElement.setAttributeNS(null, "x", (coord.x).toString());
@@ -351,6 +375,12 @@ class LocatorHandler {
 
     registerCallback(name : string, callback : (pos : Vector2) => any){
         this.callbacks[name] = callback;
+    }
+    registerTrack(name : string, diagram : Diagram){
+        if (diagram.type != DiagramType.Polygon && diagram.type != DiagramType.Curve)
+            throw Error('Track diagram must be a polygon or curve');
+        if (diagram.path == undefined) throw Error(`diagram {diagtam.type} must have a path`);
+        this.tracks[name] = diagram.path.points.map((p) => { return V2(p.x, -p.y); })
     }
 
 }
