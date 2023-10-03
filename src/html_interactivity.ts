@@ -14,7 +14,6 @@ export class Interactive {
     public inp_setter    : {[key : string] : (_ : any) => void } = {};
     public display_mode  : "svg" | "canvas" = "svg";
 
-    // private locatorHandler? : LocatorHandler = undefined;
     private locatorHandler? : LocatorHandler = undefined;
     // no support for canvas yet
 
@@ -29,9 +28,6 @@ export class Interactive {
         inp_object_? : {[key : string] : any}
     ){
         if (inp_object_ != undefined){ this.inp_variables = inp_object_; }
-        // this.locatorHandler = new LocatorHandler(diagram_outer_svg);
-        // this.diagram_outer_svg.addEventListener('mousemove', (evt) => { this.locatorHandler.drag(evt); });
-        // this.diagram_outer_svg.addEventListener('mouseup'  , (evt) => { this.locatorHandler.endDrag(evt); });
     }
 
     public draw() : void {
@@ -78,6 +74,14 @@ export class Interactive {
     }
 
 
+    /**
+     * Create a locator
+     * Locator is a draggable object that contain 2D coordinate information
+     * @param variable_name name of the variable
+     * @param value initial value
+     * @param radius radius of the locator draggable object
+     * @param track_diagram if provided, the locator will snap to the closest point on the diagram
+     */
     public locator(variable_name : string, value : Vector2, radius : number, track_diagram? : Diagram){
         this.inp_variables[variable_name] = value;
 
