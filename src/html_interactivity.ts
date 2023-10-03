@@ -132,7 +132,6 @@ export class Interactive {
             if (redraw) this.draw();
         }
         this.locatorHandler.registerCallback(variable_name, callback);
-        if (track_diagram) this.locatorHandler.registerTrack(variable_name, track_diagram);
 
         // ============== Circle element
 
@@ -144,6 +143,33 @@ export class Interactive {
             (this.locatorHandler as LocatorHandler).startDrag(evt, variable_name, locator_svg);
         });
         control_svg.appendChild(locator_svg);
+
+        // =============== setter
+        let setter;
+        if (track_diagram) {
+            if (track_diagram.type != DiagramType.Polygon && track_diagram.type != DiagramType.Curve)
+                throw Error('Track diagram must be a polygon or curve');
+            if (track_diagram.path == undefined) throw Error(`diagram {diagtam.type} must have a path`);
+            let track = track_diagram.path.points;
+            setter = (pos : Vector2) => {
+                let coord = closest_point_from_points(pos, track);
+                locator_svg.setAttributeNS(null, "x", coord.x.toString());
+                locator_svg.setAttributeNS(null, "y", (-coord.y).toString());
+                return coord;
+            }
+        }
+        else{
+            setter = (pos : Vector2) => {
+                locator_svg.setAttributeNS(null, "x", pos.x.toString());
+                locator_svg.setAttributeNS(null, "y", (-pos.y).toString());
+                return pos;
+            }
+        }
+        this.locatorHandler.registerSetter(variable_name, setter);
+
+        // set initial position
+        let init_pos = setter(value);
+        callback(init_pos, false);
     }
 
     /**
@@ -332,7 +358,7 @@ class LocatorHandler {
     selectedElement  : SVGElement | null = null;
     selectedVariable : string | null = null;
     callbacks : {[key : string] : (pos : Vector2) => any} = {};
-    tracks    : {[key : string] : Vector2[]} = {};
+    setter    : {[key : string] : (pos : Vector2) => any} = {};
 
     constructor(public control_svg : SVGSVGElement){
     }
@@ -355,16 +381,14 @@ class LocatorHandler {
 
         if (evt instanceof MouseEvent) { evt.preventDefault(); }
         let coord = this.getMousePosition(evt);
-        if (this.tracks[this.selectedVariable] != undefined) {
-            coord = closest_point_from_points(V2(coord.x, coord.y), this.tracks[this.selectedVariable]);
-        }
-
-        // this.selectedElement.setAttributeNS(null, "cx", (coord.x).toString());
-        // this.selectedElement.setAttributeNS(null, "cy", (coord.y).toString());
-        this.selectedElement.setAttributeNS(null, "x", (coord.x).toString());
-        this.selectedElement.setAttributeNS(null, "y", (coord.y).toString());
 
         let pos = V2(coord.x, -coord.y);
+        // check if setter for this.selectedVariable exists
+        // if it does, call it
+        if (this.setter[this.selectedVariable] != undefined) {
+            pos = this.setter[this.selectedVariable](pos);
+        }
+
         // check if callback for this.selectedVariable exists
         // if it does, call it
         if (this.selectedVariable == null) return;
@@ -380,11 +404,7 @@ class LocatorHandler {
     registerCallback(name : string, callback : (pos : Vector2) => any){
         this.callbacks[name] = callback;
     }
-    registerTrack(name : string, diagram : Diagram){
-        if (diagram.type != DiagramType.Polygon && diagram.type != DiagramType.Curve)
-            throw Error('Track diagram must be a polygon or curve');
-        if (diagram.path == undefined) throw Error(`diagram {diagtam.type} must have a path`);
-        this.tracks[name] = diagram.path.points.map((p) => { return V2(p.x, -p.y); })
+    registerSetter(name : string, setter : (pos : Vector2) => any){
+        this.setter[name] = setter;
     }
-
 }
