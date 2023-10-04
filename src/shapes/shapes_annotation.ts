@@ -63,6 +63,8 @@ export function angle(p : [Vector2, Vector2, Vector2],
 
     let angle_a = va.angle();
     let angle_b = vb.angle();
+    // angle_b must be larger than angle_a
+    if (angle_b < angle_a){ angle_b += 2*Math.PI; }
 
     let angle_arc = arc(radius, angle_b-angle_a).rotate(angle_a)
         .add_points([V2(0,0)]).to_polygon();
@@ -73,4 +75,33 @@ export function angle(p : [Vector2, Vector2, Vector2],
         .translate(text_offset);
 
     return diagram_combine(angle_arc, angle_text).position(p2);
+}
+
+/**
+ * Create an annotation for angle (always be the smaller angle)
+ * @param p three points to define the angle
+ * @param str string to be annotated (will be converted to mathematical italic)
+ * @param radius radius of the arc
+ * @param text_offset position offset of the text
+ * if given as a number, the text will be placed at the angle bisector with the given distance from the vertex
+ * if given as a vector, the text will be placed at the given position offset
+ */
+export function angle_smaller(p : [Vector2, Vector2, Vector2],
+    str? : string, radius : number = 1 , text_offset? : Vector2 | number,
+) : Diagram {
+
+    let [p1, p2, p3] = p;
+    let va = p1.sub(p2);
+    let vb = p3.sub(p2);
+
+    let angle_a = va.angle();
+    let angle_b = vb.angle();
+    // angle_b must be larger than angle_a
+    if (angle_b < angle_a){ angle_b += 2*Math.PI; }
+    let dangle = angle_b - angle_a;
+
+
+    // if dangle is larger than 180 degree, swap the two vectors
+    let ps : typeof p = dangle > Math.PI ? [p3, p2, p1] : [p1, p2, p3];
+    return angle(ps, str, radius, text_offset);
 }
