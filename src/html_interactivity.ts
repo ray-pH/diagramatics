@@ -401,7 +401,7 @@ class LocatorHandler {
         if (this.callbacks[this.selectedVariable] != undefined) {
             this.callbacks[this.selectedVariable](pos);
         }
-        // this.setViewBox();
+        this.setViewBox();
 
     }
     setViewBox() {
