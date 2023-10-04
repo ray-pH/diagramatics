@@ -74,6 +74,10 @@ export class Interactive {
     }
 
 
+    public locator_draw(){
+        this.locatorHandler?.setViewBox();
+    }
+
     /**
      * Create a locator
      * Locator is a draggable object that contain 2D coordinate information
@@ -85,7 +89,6 @@ export class Interactive {
     public locator(variable_name : string, value : Vector2, radius : number, track_diagram? : Diagram){
         this.inp_variables[variable_name] = value;
 
-        this.draw();
         let diagram_svg : SVGSVGElement | undefined = undefined;
         // check if this.diagram_outer_svg has a child with meta=control_svg
         // if not, create one
@@ -101,7 +104,13 @@ export class Interactive {
             }
         }
 
-        if (diagram_svg == undefined) return;
+        if (diagram_svg == undefined) {
+            diagram_svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            diagram_svg.setAttribute("meta", "diagram_svg")
+            diagram_svg.setAttribute("width", "100%");
+            diagram_svg.setAttribute("height", "100%");
+            this.diagram_outer_svg.appendChild(diagram_svg);
+        }
 
         if (control_svg == undefined) {
             control_svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -113,7 +122,7 @@ export class Interactive {
 
         // if this is the fist time this function is called, create a locatorHandler
         if (this.locatorHandler == undefined) {
-            let locatorHandler = new LocatorHandler(control_svg);
+            let locatorHandler = new LocatorHandler(control_svg, diagram_svg);
             this.locatorHandler = locatorHandler;
             this.diagram_outer_svg.addEventListener('mousemove'  , (evt) => { locatorHandler.drag(evt);    });
             this.diagram_outer_svg.addEventListener('mouseup'    , (evt) => { locatorHandler.endDrag(evt); });
@@ -122,9 +131,6 @@ export class Interactive {
             this.diagram_outer_svg.addEventListener('touchcancel', (evt) => { locatorHandler.endDrag(evt); });
         }
 
-        // set viewBox and preserveAspectRatio of control_svg to be the same as diagram_svg
-        control_svg.setAttribute("viewBox", diagram_svg.getAttribute("viewBox") as string);
-        control_svg.setAttribute("preserveAspectRatio", diagram_svg.getAttribute("preserveAspectRatio") as string);
 
         // ============== callback
         const callback = (pos : Vector2, redraw : boolean = true) => {
@@ -360,7 +366,7 @@ class LocatorHandler {
     callbacks : {[key : string] : (pos : Vector2) => any} = {};
     setter    : {[key : string] : (pos : Vector2) => any} = {};
 
-    constructor(public control_svg : SVGSVGElement){
+    constructor(public control_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
     }
 
     getMousePosition(evt : LocatorEvent ) {
@@ -395,6 +401,13 @@ class LocatorHandler {
         if (this.callbacks[this.selectedVariable] != undefined) {
             this.callbacks[this.selectedVariable](pos);
         }
+        // this.setViewBox();
+
+    }
+    setViewBox() {
+        // set viewBox and preserveAspectRatio of control_svg to be the same as diagram_svg
+        this.control_svg.setAttribute("viewBox", this.diagram_svg.getAttribute("viewBox") as string);
+        this.control_svg.setAttribute("preserveAspectRatio", this.diagram_svg.getAttribute("preserveAspectRatio") as string);
     }
     endDrag(_ : LocatorEvent) {
         this.selectedElement = null;
