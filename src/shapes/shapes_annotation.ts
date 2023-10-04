@@ -44,23 +44,33 @@ export function vector_text(v : Vector2, str? : string, text_offset? : Vector2, 
  * @param str string to be annotated (will be converted to mathematical italic)
  * @param radius radius of the arc
  * @param text_offset position offset of the text
+ * if given as a number, the text will be placed at the angle bisector with the given distance from the vertex
+ * if given as a vector, the text will be placed at the given position offset
  */
 export function angle(p : [Vector2, Vector2, Vector2], 
-    str? : string, radius : number = 1 , text_offset? : Vector2) : Diagram {
+    str? : string, radius : number = 1 , text_offset? : Vector2 | number,
+) : Diagram {
 
-    if (text_offset == undefined){ text_offset = V2(0,0); } // default value
     let [p1, p2, p3] = p;
     let va = p1.sub(p2);
     let vb = p3.sub(p2);
 
+    if (text_offset == undefined){ text_offset = V2(0,0); } // default value
+    if (typeof text_offset == "number"){ 
+        let vd = va.normalize().add(vb.normalize()).normalize().scale(text_offset);
+        text_offset = vd;
+    } 
+
     let angle_a = va.angle();
     let angle_b = vb.angle();
 
-    let angle_arc = arc(radius, angle_b-angle_a).rotate(angle_a);
-    if (str == "" || str == undefined){ return angle_arc; } // if str is empty, return only the arc
+    let angle_arc = arc(radius, angle_b-angle_a).rotate(angle_a)
+        .add_points([V2(0,0)]).to_polygon();
+    if (str == "" || str == undefined){ return angle_arc.position(p2); } // if str is empty, return only the arc
 
     let angle_text = textvar(str_to_mathematical_italic(str))
         .position(Vdir((angle_a+angle_b)/2))
         .translate(text_offset);
-    return diagram_combine(angle_arc, angle_text);
+
+    return diagram_combine(angle_arc, angle_text).position(p2);
 }
