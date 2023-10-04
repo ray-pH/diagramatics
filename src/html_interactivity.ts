@@ -1,6 +1,7 @@
 import { Diagram, DiagramType } from './diagram.js';
 import { str_to_mathematical_italic } from './unicode_utils.js'
 import { Vector2, V2 } from './vector.js';
+import { get_color, tab_color } from './color_palette.js';
 
 function format_number(val : number, prec : number) {
     let fixed = val.toFixed(prec);
@@ -84,9 +85,10 @@ export class Interactive {
      * @param variable_name name of the variable
      * @param value initial value
      * @param radius radius of the locator draggable object
+     * @param color color of the locator
      * @param track_diagram if provided, the locator will snap to the closest point on the diagram
      */
-    public locator(variable_name : string, value : Vector2, radius : number, track_diagram? : Diagram){
+    public locator(variable_name : string, value : Vector2, radius : number, color : string = 'blue', track_diagram? : Diagram){
         this.inp_variables[variable_name] = value;
 
         let diagram_svg : SVGSVGElement | undefined = undefined;
@@ -141,7 +143,7 @@ export class Interactive {
 
         // ============== Circle element
 
-        let locator_svg = create_locator_pointer_svg(radius, value);
+        let locator_svg = create_locator_pointer_svg(radius, value, color);
         locator_svg.addEventListener('mousedown', (evt) => { 
             (this.locatorHandler as LocatorHandler).startDrag(evt, variable_name, locator_svg);
         });
@@ -313,7 +315,7 @@ function create_slider(callback : (val : number) => any, min : number = 0, max :
     return slider;
 }
 
-function create_locator_pointer_svg(radius : number, value : Vector2) : SVGSVGElement {
+function create_locator_pointer_svg(radius : number, value : Vector2, color : string) : SVGSVGElement {
     let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     // set svg overflow to visible
     svg.setAttribute("overflow", "visible");
@@ -326,12 +328,12 @@ function create_locator_pointer_svg(radius : number, value : Vector2) : SVGSVGEl
     let inner_radius    = radius * 0.4;
 
     circle_outer.setAttribute("r", radius.toString());
-    circle_outer.setAttribute("fill", "blue");
+    circle_outer.setAttribute("fill", get_color(color, tab_color));
     circle_outer.setAttribute("fill-opacity", "0.1");
     circle_outer.setAttribute("stroke", "none");
 
     circle_inner.setAttribute("r", inner_radius.toString());
-    circle_inner.setAttribute("fill", "blue");
+    circle_inner.setAttribute("fill", get_color(color, tab_color));
     circle_inner.setAttribute("stroke", "none");
 
     svg.appendChild(circle_outer);
