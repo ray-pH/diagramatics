@@ -25,9 +25,5 @@ export const tab_color : {[key : string]: string} = {
 }
 
 export function get_color(colorname : string, palette : {[key : string]: string}) : string {
-    if (colorname in palette) {
-        return palette[colorname];
-    } else {
-        return colorname;
-    }
+    return palette[colorname] ?? colorname;
 }
