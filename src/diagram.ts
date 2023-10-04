@@ -217,12 +217,14 @@ export class Diagram {
         return newd;
     }
 
-    private update_style(stylename : keyof Diagram['style'], stylevalue : string) : Diagram {
+    private update_style(stylename : keyof Diagram['style'], stylevalue : string, excludedType? : DiagramType[]) : Diagram {
         let newd : Diagram = this.copy();
-        if (newd.type == DiagramType.Polygon || newd.type == DiagramType.Curve || newd.type == DiagramType.Text) {
+        if (excludedType?.includes(newd.type)) { 
+            return newd; 
+        } else if (newd.type == DiagramType.Polygon || newd.type == DiagramType.Curve || newd.type == DiagramType.Text) {
             newd.style[stylename] = stylevalue;
         } else if (newd.type == DiagramType.Diagram) {
-            newd.children = newd.children.map(c => c.update_style(stylename, stylevalue));
+            newd.children = newd.children.map(c => c.update_style(stylename, stylevalue, excludedType));
         } else {
             throw new Error("Unreachable, unknown diagram type : " + newd.type);
         }
@@ -230,16 +232,16 @@ export class Diagram {
     }
 
     public fill(color : string) : Diagram { 
-        return this.update_style('fill', color);
+        return this.update_style('fill', color, [DiagramType.Text]);
     }
     public stroke(color : string) : Diagram { 
-        return this.update_style('stroke', color);
+        return this.update_style('stroke', color, [DiagramType.Text]);
     }
     public opacity(opacity : number) : Diagram {
         return this.update_style('opacity', opacity.toString());
     }
     public strokewidth(width : number) : Diagram { 
-        return this.update_style('stroke-width', width.toString());
+        return this.update_style('stroke-width', width.toString(), [DiagramType.Text]);
     }
     public strokelinecap(linecap : 'butt' | 'round' | 'square') : Diagram {
         return this.update_style('stroke-linecap', linecap);
@@ -253,6 +255,16 @@ export class Diagram {
     public vectoreffect(vectoreffect : 'none' | 'non-scaling-stroke' | 'non-scaling-size' | 'non-rotation' | 'fixed-position'
 ) : Diagram {
         return this.update_style('vector-effect', vectoreffect);
+    }
+
+    public filltext(color : string) : Diagram {
+        return this.update_style('fill', color, [DiagramType.Polygon, DiagramType.Curve]);
+    }
+    public stroketext(color : string) : Diagram {
+        return this.update_style('stroke', color, [DiagramType.Polygon, DiagramType.Curve]);
+    }
+    public strokewidthtext(width : number) : Diagram {
+        return this.update_style('stroke-width', width.toString(), [DiagramType.Polygon, DiagramType.Curve]);
     }
 
 
