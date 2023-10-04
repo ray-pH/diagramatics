@@ -81,9 +81,8 @@ export function arc(radius : number = 1, angle : number = from_degree(360)) : Di
 }
 
 /**
- * Create arrow from start to end
- * @param start start point of the arrow
- * @param end end point of the arrow
+ * Create an arrow from origin to a given point
+ * @param v the end point of the arrow
  * @param headsize size of the arrow head
  * @returns a Diagram object
  */
