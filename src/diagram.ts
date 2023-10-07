@@ -615,7 +615,7 @@ export class Diagram {
             return d.fill('none').stroke('red').strokedasharray([5,5])
         };
         let style_index = (d : Diagram) => {
-            let bg = d.fill('white').stroke('white').strokewidth(5);
+            let bg = d.filltext('white').stroketext('white').strokewidthtext(5);
             let dd = d.fill('black');
             return bg.combine(dd);
         };
