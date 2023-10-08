@@ -10,6 +10,9 @@ function format_number(val : number, prec : number) {
     return fixed.replace(/\.?0+$/, "");
 }
 
+/**
+ * Object that controls the interactivity of the diagram
+ */
 export class Interactive {
     public inp_variables : {[key : string] : any} = {};
     public inp_setter    : {[key : string] : (_ : any) => void } = {};
@@ -23,9 +26,16 @@ export class Interactive {
     public display_precision : undefined | number = 5;
     intervals : {[key : string] : any} = {};         
 
+    /**
+     * @param control_container_div the div that contains the control elements
+     * @param diagram_outer_svg the svg element that contains the diagram
+     * \* _only needed if you want to use the locator_
+     * @param inp_object_ the object that contains the variables
+     * \* _only needed if you want to use custom input object_
+     */
     constructor(
-        public diagram_outer_svg : SVGSVGElement,
         public control_container_div : HTMLElement, 
+        public diagram_outer_svg? : SVGSVGElement,
         inp_object_? : {[key : string] : any}
     ){
         if (inp_object_ != undefined){ this.inp_variables = inp_object_; }
@@ -89,6 +99,7 @@ export class Interactive {
      * @param track_diagram if provided, the locator will snap to the closest point on the diagram
      */
     public locator(variable_name : string, value : Vector2, radius : number, color : string = 'blue', track_diagram? : Diagram){
+        if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
         this.inp_variables[variable_name] = value;
 
         let diagram_svg : SVGSVGElement | undefined = undefined;
