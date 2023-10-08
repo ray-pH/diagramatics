@@ -30,7 +30,7 @@ export let default_axes_options : axes_options = {
     headsize: 0.05,
 }
 
-export function axes_transform(axes_options? : axes_options) : (v : Vector2) => Vector2 {
+export function axes_transform(axes_options? : Partial<axes_options>) : (v : Vector2) => Vector2 {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
     if (opt.bbox == undefined) {
         // get values from xrange and yrange
@@ -60,7 +60,7 @@ export let ax = axes_transform
  * }
  * @returns a Diagram object
  */
-export function axes_empty(axes_options? : axes_options) : Diagram {
+export function axes_empty(axes_options? : Partial<axes_options>) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
     if (opt.bbox == undefined) {
         // get values from xrange and yrange
@@ -154,7 +154,7 @@ function get_tick_numbers(min : number, max : number) : number[] {
 
 // ======= END utility to calculate ticks
 
-export function xticks(axes_options : axes_options) : Diagram {
+export function xticks(axes_options : Partial<axes_options>) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
     if (opt.xticks == undefined) {
         opt.xticks = get_tick_numbers(opt.xrange[0], opt.xrange[1]);
@@ -167,7 +167,7 @@ export function xticks(axes_options : axes_options) : Diagram {
     let xticks_diagrams = opt.xticks.map(x => xtickmark(x, x.toString()));
     return diagram_combine(...xticks_diagrams).transform(axes_transform(opt));
 }
-export function yticks(axes_options : axes_options) : Diagram {
+export function yticks(axes_options : Partial<axes_options>) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
     if (opt.yticks == undefined) {
         opt.yticks = get_tick_numbers(opt.yrange[0], opt.yrange[1]);
@@ -185,12 +185,12 @@ export function yticks(axes_options : axes_options) : Diagram {
  * Draw xy axes with ticks
  * @param axes_options options for the axes
  */
-export function xyaxes(axes_options? : axes_options) : Diagram {
+export function xyaxes(axes_options? : Partial<axes_options>) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
     return diagram_combine(axes_empty(opt), xticks(opt), yticks(opt));
 }
 
-export function xygrid(axes_options? : axes_options) : Diagram {
+export function xygrid(axes_options? : Partial<axes_options>) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
     if (opt.xticks == undefined) {
         opt.xticks = get_tick_numbers(opt.xrange[0], opt.xrange[1]);
@@ -213,7 +213,7 @@ export function xygrid(axes_options? : axes_options) : Diagram {
 
 
 // TODO : 
-// export function axes(axes_options? : axes_options) : Diagram {
+// export function axes(axes_options? : Partial<axes_options>) : Diagram {
 //     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
 // }
 
@@ -227,7 +227,7 @@ export function xygrid(axes_options? : axes_options) : Diagram {
  *  yrange : [-2, 2],
  * }
  */
-export function plotv(data : Vector2[], axes_options? : axes_options) : Diagram {
+export function plotv(data : Vector2[], axes_options? : Partial<axes_options>) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
     let [xmin, xmax] = opt.xrange;
     let [ymin, ymax] = opt.yrange;
@@ -270,7 +270,7 @@ export function plotv(data : Vector2[], axes_options? : axes_options) : Diagram 
  *   yrange : [-2, 2],
  * }
  */
-export function plot(xdata : number[], ydata : number[], axes_options? : axes_options) : Diagram {
+export function plot(xdata : number[], ydata : number[], axes_options? : Partial<axes_options>) : Diagram {
     if (xdata.length != ydata.length) throw new Error('xdata and ydata must have the same length');
     let vdata = xdata.map((x,i) => V2(x,ydata[i]));
     return plotv(vdata, axes_options);
@@ -282,14 +282,14 @@ export function plot(xdata : number[], ydata : number[], axes_options? : axes_op
  * @param n number of points to plot
  * @param axes_options options for the axes
  */
-export function plotf(f : (x:number)=>number, axes_options? : axes_options) : Diagram {
+export function plotf(f : (x:number)=>number, axes_options? : Partial<axes_options>) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
     let xdata = linspace(...opt.xrange, opt.n);
     let vdata = xdata.map(x => V2(x,f(x)));
     return plotv(vdata, axes_options);
 }
 
-export function under_curvef(f : (x:number)=>number, x_start : number, x_end : number,  axes_options? : axes_options ) : Diagram {
+export function under_curvef(f : (x:number)=>number, x_start : number, x_end : number,  axes_options? : Partial<axes_options> ) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
 
     let new_opt = {...opt}; // copy opt

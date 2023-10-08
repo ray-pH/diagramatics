@@ -45,6 +45,7 @@ export {
     ytickmark_empty, ytickmark, yticks,
     xyaxes, xygrid,
     plot, plotv, plotf, under_curvef,
+    axes_options,
 } from './shapes/shapes_graph.js'
 
 export * as annotation from './shapes/shapes_annotation.js'
