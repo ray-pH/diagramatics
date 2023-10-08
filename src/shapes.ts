@@ -93,6 +93,24 @@ export function arrow(v : Vector2, headsize : number = 3) : Diagram {
     return diagram_combine(line_diagram, head_triangle);
 }
 
+/**
+ * Create an arrow from a given point to another given point
+ * @param start the start point of the arrow
+ * @param end the end point of the arrow
+ * @param headsize size of the arrow head
+ * @returns a Diagram object
+ */
+export function arrow1(start : Vector2, end : Vector2, headsize : number = 3) : Diagram {
+    return arrow(end.sub(start), headsize).position(start);
+}
+
+/**
+ * Create a two-sided arrow from a given point to another given point
+ * @param start the start point of the arrow
+ * @param end the end point of the arrow
+ * @param headsize size of the arrow head
+ * @returns a Diagram object
+ */
 export function arrow2(start : Vector2, end : Vector2, headsize : number = 3) : Diagram {
     let line_diagram = line(start, end);
     let direction    = end.sub(start);
