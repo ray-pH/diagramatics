@@ -20,6 +20,20 @@ export function rectangle(width : number, height : number) : Diagram {
 }
 
 /**
+ * Create rectange with a given bottom left corner and top right corner
+ * @param bottomleft bottom left corner of the rectangle
+ * @param topright top right corner of the rectangle
+ * @returns a Diagram object
+ */
+export function rectangle_corner(bottomleft : Vector2, topright : Vector2) : Diagram {
+    let points = [
+        bottomleft, V2(bottomleft.x, topright.y), 
+        topright, V2(topright.x, bottomleft.y)
+    ];
+    return polygon(points);
+}
+
+/**
  * Create square centered at origin
  * @param side side length of the square
  * @returns a Diagram object

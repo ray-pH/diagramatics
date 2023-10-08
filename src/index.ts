@@ -19,7 +19,7 @@ export {
 export { 
     rectangle, square, regular_polygon, regular_polygon_side,
     circle, arc, 
-    arrow, arrow1, arrow2, textvar,
+    arrow, arrow1, arrow2, textvar, rectangle_corner,
 } from './shapes.js'
 
 export {
