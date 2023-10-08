@@ -13,17 +13,10 @@ export enum DiagramType {
     Diagram = 'diagram',
 }
 
-export enum Anchor {
-    TopLeft      = 'top-left',
-    TopCenter    = 'top-center',
-    TopRight     = 'top-right',
-    CenterLeft   = 'center-left',
-    CenterCenter = 'center-center',
-    CenterRight  = 'center-right',
-    BottomLeft   = 'bottom-left',
-    BottomCenter = 'bottom-center',
-    BottomRight  = 'bottom-right',
-}
+export type Anchor = 
+    'top-left'    | 'top-center'    | 'top-right'    | 
+    'center-left' | 'center-center' | 'center-right' | 
+    'bottom-left' | 'bottom-center' | 'bottom-right' ;
 
 /**
  * Make sure that every function return a new Diagram
@@ -61,15 +54,15 @@ function anchor_to_textdata(anchor : Anchor) : TextData {
     // hanging vs text-before-edge
     // ideographic vs text-after-edge
     switch (anchor) {
-        case Anchor.TopLeft      : return {"text-anchor" : "start" , "dominant-baseline" : "text-before-edge"};
-        case Anchor.TopCenter    : return {"text-anchor" : "middle", "dominant-baseline" : "text-before-edge"};
-        case Anchor.TopRight     : return {"text-anchor" : "end"   , "dominant-baseline" : "text-before-edge"};
-        case Anchor.CenterLeft   : return {"text-anchor" : "start" , "dominant-baseline" : "middle"};
-        case Anchor.CenterCenter : return {"text-anchor" : "middle", "dominant-baseline" : "middle"};
-        case Anchor.CenterRight  : return {"text-anchor" : "end"   , "dominant-baseline" : "middle"};
-        case Anchor.BottomLeft   : return {"text-anchor" : "start" , "dominant-baseline" : "text-after-edge"};
-        case Anchor.BottomCenter : return {"text-anchor" : "middle", "dominant-baseline" : "text-after-edge"};
-        case Anchor.BottomRight  : return {"text-anchor" : "end"   , "dominant-baseline" : "text-after-edge"};
+        case "top-left"      : return {"text-anchor" : "start" , "dominant-baseline" : "text-before-edge"};
+        case "top-center"    : return {"text-anchor" : "middle", "dominant-baseline" : "text-before-edge"};
+        case "top-right"     : return {"text-anchor" : "end"   , "dominant-baseline" : "text-before-edge"};
+        case "center-left"   : return {"text-anchor" : "start" , "dominant-baseline" : "middle"};
+        case "center-center" : return {"text-anchor" : "middle", "dominant-baseline" : "middle"};
+        case "center-right"  : return {"text-anchor" : "end"   , "dominant-baseline" : "middle"};
+        case "bottom-left"   : return {"text-anchor" : "start" , "dominant-baseline" : "text-after-edge"};
+        case "bottom-center" : return {"text-anchor" : "middle", "dominant-baseline" : "text-after-edge"};
+        case "bottom-right"  : return {"text-anchor" : "end"   , "dominant-baseline" : "text-after-edge"};
         default: throw new Error("Unknown anchor " + anchor);
     }
 }
@@ -461,15 +454,15 @@ export class Diagram {
         let midx = (minx + maxx) / 2;
         let midy = (miny + maxy) / 2;
         switch (anchor) {
-            case Anchor.TopLeft      : return new Vector2(minx, maxy);
-            case Anchor.TopCenter    : return new Vector2(midx, maxy);
-            case Anchor.TopRight     : return new Vector2(maxx, maxy);
-            case Anchor.CenterLeft   : return new Vector2(minx, midy);
-            case Anchor.CenterCenter : return new Vector2(midx, midy);
-            case Anchor.CenterRight  : return new Vector2(maxx, midy);
-            case Anchor.BottomLeft   : return new Vector2(minx, miny);
-            case Anchor.BottomCenter : return new Vector2(midx, miny);
-            case Anchor.BottomRight  : return new Vector2(maxx, miny);
+            case "top-left"      : return new Vector2(minx, maxy);
+            case "top-center"    : return new Vector2(midx, maxy);
+            case "top-right"     : return new Vector2(maxx, maxy);
+            case "center-left"   : return new Vector2(minx, midy);
+            case "center-center" : return new Vector2(midx, midy);
+            case "center-right"  : return new Vector2(maxx, midy);
+            case "bottom-left"   : return new Vector2(minx, miny);
+            case "bottom-center" : return new Vector2(midx, miny);
+            case "bottom-right"  : return new Vector2(maxx, miny);
             default: throw new Error("Unknown anchor " + anchor);
         }
     }

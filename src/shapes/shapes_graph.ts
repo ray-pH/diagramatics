@@ -91,7 +91,7 @@ export function xtickmark_empty(x : number, height : number = 0.1) : Diagram {
 
 export function xtickmark(x : number, str : string, height : number = 0.1) : Diagram {
     let tick = xtickmark_empty(x, height);
-    let label = textvar(str).move_origin_text(Anchor.TopCenter).translate(tick.get_anchor(Anchor.BottomCenter)).fill('gray');
+    let label = textvar(str).move_origin_text("top-center").translate(tick.get_anchor("bottom-center")).fill('gray');
     return diagram_combine(tick, label);
 }
 
@@ -100,7 +100,7 @@ export function ytickmark_empty(y : number, height : number = 0.1) : Diagram {
 }
 export function ytickmark(y : number, str : string, height : number = 0.1) : Diagram {
     let tick = ytickmark_empty(y, height);
-    let label = textvar(str).move_origin_text(Anchor.CenterRight).translate(tick.get_anchor(Anchor.CenterLeft)).fill('gray');
+    let label = textvar(str).move_origin_text("center-right").translate(tick.get_anchor("center-left")).fill('gray');
     return diagram_combine(tick, label);
 }
 
