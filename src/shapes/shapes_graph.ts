@@ -215,9 +215,12 @@ export function yticks(axes_options : Partial<axes_options>, x : number = 0) : D
 }
 
 
-// export function corneraxes(axes_options? : Partial<axes_options>) : Diagram {
-//     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
-// }
+export function xycorneraxes(axes_options? : Partial<axes_options>) : Diagram {
+    let opt = {...default_axes_options, ...axes_options}; // use default if not defined
+    let xmin = opt.xrange[0];
+    let ymin = opt.yrange[0];
+    return diagram_combine(axes_corner_empty(opt), xticks(opt, ymin), yticks(opt, xmin));
+}
 
 /**
  * Draw xy axes with ticks

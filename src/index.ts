@@ -43,7 +43,7 @@ export {
     axes_transform, ax, axes_empty, axes_corner_empty,
     xtickmark_empty, xtickmark, xticks,
     ytickmark_empty, ytickmark, yticks,
-    xyaxes, xygrid,
+    xyaxes, xygrid, xycorneraxes,
     plot, plotv, plotf, under_curvef,
     axes_options,
 } from './shapes/shapes_graph.js'
