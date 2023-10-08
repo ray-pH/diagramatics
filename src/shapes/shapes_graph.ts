@@ -1,7 +1,7 @@
 import { Diagram, Anchor, polygon, line, curve, text, diagram_combine } from '../diagram.js';
 import { Vector2, V2 } from '../vector.js';
 import { linspace, from_degree } from '../utils.js';
-import { arrow2, textvar } from '../shapes.js'
+import { rectangle, rectangle_corner, arrow1, arrow2, textvar } from '../shapes.js'
 
 /**
  * Options for axes
@@ -76,6 +76,32 @@ export function axes_empty(axes_options? : Partial<axes_options>) : Diagram {
 
     let xaxis = arrow2(V2(lowerleft.x,yorigin), V2(upperright.x,yorigin), opt.headsize);
     let yaxis = arrow2(V2(xorigin,lowerleft.y), V2(xorigin,upperright.y), opt.headsize);
+    return diagram_combine(xaxis, yaxis).stroke('gray').fill('gray');
+    // return xaxis;
+}
+
+/**
+ * Draw xy corner axes without ticks
+ * @param axes_options options for the axes
+ * example: opt = {
+ *    bbox   : [V2(-100,-100), V2(100,100)],
+ * }
+ * @returns a Diagram object
+ */
+export function axes_corner_empty(axes_options? : Partial<axes_options>) : Diagram {
+    let opt = {...default_axes_options, ...axes_options}; // use default if not defined
+    if (opt.bbox == undefined) {
+        // get values from xrange and yrange
+        let [xmin, xmax] = opt.xrange;
+        let [ymin, ymax] = opt.yrange;
+        opt.bbox = [V2(xmin,ymin), V2(xmax,ymax)];
+    }
+
+    let [lowerleft, upperright] = opt.bbox;
+    // get the intersection point
+
+    let xaxis = arrow1(lowerleft, V2(upperright.x,lowerleft.y), opt.headsize);
+    let yaxis = arrow1(lowerleft, V2(lowerleft.x,upperright.y), opt.headsize);
     return diagram_combine(xaxis, yaxis).stroke('gray').fill('gray');
     // return xaxis;
 }
@@ -180,6 +206,11 @@ export function yticks(axes_options : Partial<axes_options>) : Diagram {
     let yticks_diagrams = opt.yticks.map(y => ytickmark(y, y.toString()));
     return diagram_combine(...yticks_diagrams).transform(axes_transform(opt));
 }
+
+
+// export function corneraxes(axes_options? : Partial<axes_options>) : Diagram {
+//     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
+// }
 
 /**
  * Draw xy axes with ticks

@@ -40,7 +40,7 @@ export * as mod from './modifier.js'
 
 // Extra Shapes
 export { 
-    axes_transform, ax, axes_empty, 
+    axes_transform, ax, axes_empty, axes_corner_empty,
     xtickmark_empty, xtickmark, xticks,
     ytickmark_empty, ytickmark, yticks,
     xyaxes, xygrid,
