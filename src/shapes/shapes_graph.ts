@@ -177,8 +177,8 @@ function get_tick_numbers_aroundzero(neg : number, pos : number, nozero : boolea
         return linspace(new_min, new_max, new_count+1);
     }
 }
-function get_tick_numbers(min : number, max : number) : number[] {
-    if (min < 0 && max > 0) {
+function get_tick_numbers(min : number, max : number, exclude_zero : boolean = true) : number[] {
+    if (exclude_zero && min < 0 && max > 0) {
         return get_tick_numbers_aroundzero(min, max);
     } else {
         return get_tick_numbers_range(min, max);
@@ -190,7 +190,7 @@ function get_tick_numbers(min : number, max : number) : number[] {
 export function xticks(axes_options : Partial<axes_options>, y : number = 0) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
     if (opt.xticks == undefined) {
-        opt.xticks = get_tick_numbers(opt.xrange[0], opt.xrange[1]);
+        opt.xticks = get_tick_numbers(opt.xrange[0], opt.xrange[1], y == 0);
     }
 
     // remove ticks outside of the range
@@ -203,7 +203,7 @@ export function xticks(axes_options : Partial<axes_options>, y : number = 0) : D
 export function yticks(axes_options : Partial<axes_options>, x : number = 0) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
     if (opt.yticks == undefined) {
-        opt.yticks = get_tick_numbers(opt.yrange[0], opt.yrange[1]);
+        opt.yticks = get_tick_numbers(opt.yrange[0], opt.yrange[1], x == 0);
     }
 
     // remove ticks outside of the range
@@ -231,10 +231,10 @@ export function xyaxes(axes_options? : Partial<axes_options>) : Diagram {
 export function xygrid(axes_options? : Partial<axes_options>) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
     if (opt.xticks == undefined) {
-        opt.xticks = get_tick_numbers(opt.xrange[0], opt.xrange[1]);
+        opt.xticks = get_tick_numbers(opt.xrange[0], opt.xrange[1], false);
     }
     if (opt.yticks == undefined) {
-        opt.yticks = get_tick_numbers(opt.yrange[0], opt.yrange[1]);
+        opt.yticks = get_tick_numbers(opt.yrange[0], opt.yrange[1], false);
     }
 
     let xgrid_diagrams = opt.xticks.map(x => 
