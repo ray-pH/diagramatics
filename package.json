@@ -1,6 +1,6 @@
 {
   "name": "diagramatics",
-  "version": "0.0.3-alpha.8",
+  "version": "0.0.3-alpha.9",
   "type": "module",
   "description": "Interactive Diagram Maker",
   "main": "dist/index.js",
