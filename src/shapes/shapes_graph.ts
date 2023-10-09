@@ -159,7 +159,11 @@ function get_tick_numbers_range(min : number, max : number) : number[] {
     let new_min = Math.ceil(min/interval)*interval;
     let new_max = Math.floor(max/interval)*interval;
     let new_count = Math.floor((new_max-new_min)/interval);
-    return linspace(new_min, new_max, new_count+1);
+    let l = linspace(new_min, new_max, new_count+1);
+    // round l to the nearest interval
+    let interval_prec = -Math.floor(Math.log10(interval));
+    if (interval_prec >= 0) l = l.map(x => parseFloat(x.toFixed(interval_prec)));
+    return l;
 }
 function get_tick_numbers_aroundzero(neg : number, pos : number, nozero : boolean = true) : number[] {
     if (neg > 0) throw new Error('neg must be negative');
@@ -171,10 +175,16 @@ function get_tick_numbers_aroundzero(neg : number, pos : number, nozero : boolea
     let new_min = Math.ceil(neg/interval)*interval;
     let new_max = Math.floor(pos/interval)*interval;
     let new_count = Math.floor((new_max-new_min)/interval);
+
+    let l = linspace(new_min, new_max, new_count+1);
+    // round l to the nearest interval
+    let interval_prec = -Math.floor(Math.log10(interval));
+    if (interval_prec >= 0) l = l.map(x => parseFloat(x.toFixed(interval_prec)));
+
     if (nozero){
-        return linspace(new_min, new_max, new_count+1).filter(x => x != 0);
+        return l.filter(x => x != 0);
     }else{
-        return linspace(new_min, new_max, new_count+1);
+        return l;
     }
 }
 function get_tick_numbers(min : number, max : number, exclude_zero : boolean = true) : number[] {
