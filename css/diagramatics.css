@@ -1,11 +1,11 @@
 
 /* circular button */
 .diagramatics-slider-leftcontainer{
-  float: left;
+  display: inline-block;
 }
 
 .diagramatics-slider-rightcontainer{
-  float: left;
+  display: inline-block;
   padding-left: 10px;
 }
 
