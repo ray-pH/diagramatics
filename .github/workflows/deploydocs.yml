@@ -1,28 +1,24 @@
-# ci.yml file for GitHub Actions
-name: CI
+name: Deploy docs to Github Pages
 
-on: [push, pull_request]
+on: 
+  push:
+    branches: 'main'
 
 jobs:
-  build:
+  build_docs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
-
-      - name: Retrieve the cached "node_modules" directory (if present)
-        uses: actions/cache@v2
-        id: node-cache
+      - name: Install Node.js
+        uses: actions/setup-node@v3
         with:
-          path: node_modules
-          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          node-version: 18
+          cache: npm
 
-      - name: Install dependencies (if the cached directory was not found)
-        if: steps.node-cache.outputs.cache-hit != 'true'
-        run: npm ci
+      - name: Install dependencies
+        run: npm install
 
       - name: Test to see if the project compiles
         run: npm run build
@@ -30,8 +26,19 @@ jobs:
       - name: Create the docs directory locally in CI
         run: npm run docs
 
-      - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@4.1.4
-        with:
-          branch: gh-pages
-          folder: docs
+  deploy:
+    needs: build_docs
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v1
