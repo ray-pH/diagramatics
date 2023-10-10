@@ -26,6 +26,12 @@ jobs:
       - name: Create the docs directory locally in CI
         run: npm run docs
 
+      - name: Upload Artifacts
+        uses: actions/upload-pages-artifact@v1
+        with:
+          # this should match the `pages` option in your adapter-static options
+          path: 'docs/'
+
   deploy:
     needs: build_docs
     runs-on: ubuntu-latest
