@@ -8,6 +8,7 @@ export {
 
 export {
     from_degree, linspace, range, array_repeat,
+    linspace_exc, range_inc,
 } from './utils.js'
 
 export {
