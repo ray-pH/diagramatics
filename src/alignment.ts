@@ -1,17 +1,8 @@
 import { Diagram, DiagramType, diagram_combine, Anchor } from './diagram.js';
 import { Vector2, V2 } from './vector.js';
 
-
-enum VerticalAlignment {
-    Top    = 'top',
-    Center = 'center',
-    Bottom = 'bottom',
-}
-enum HorizontalAlignment {
-    Left   = 'left',
-    Center = 'center',
-    Right  = 'right',
-}
+type VerticalAlignment   = 'top'  | 'center' | 'bottom';
+type HorizontalAlignment = 'left' | 'center' | 'right';
 
 /**
  * Align diagrams vertically
@@ -20,19 +11,19 @@ enum HorizontalAlignment {
  * alignment can be 'top', 'center', or 'bottom'
  * @returns array of aligned diagrams
  */
-export function align_vertical(diagrams : Diagram[], alignment : VerticalAlignment = VerticalAlignment.Center) : Diagram[] {
+export function align_vertical(diagrams : Diagram[], alignment : VerticalAlignment = 'center') : Diagram[] {
     // align all the diagrams following the first diagram
     if (diagrams.length == 0) { return diagrams; }
 
-    if (alignment == VerticalAlignment.Top){
+    if (alignment == 'top'){
         let top_y = diagrams[0].get_anchor("top-left").y;
         return diagrams.map(d => d.translate(V2(0, top_y - d.get_anchor("top-left").y)));
     }
-    else if (alignment == VerticalAlignment.Center){
+    else if (alignment == 'center'){
         let center_y = diagrams[0].get_anchor("center-left").y;
         return diagrams.map(d => d.translate(V2(0, center_y - d.get_anchor("center-left").y)));
     }
-    else if (alignment == VerticalAlignment.Bottom){
+    else if (alignment == 'bottom'){
         let bottom_y = diagrams[0].get_anchor("bottom-left").y;
         return diagrams.map(d => d.translate(V2(0, bottom_y - d.get_anchor("bottom-left").y)));
     }
@@ -49,20 +40,20 @@ export function align_vertical(diagrams : Diagram[], alignment : VerticalAlignme
  * @returns array of aligned diagrams
  */
 export function align_horizontal(diagrams : Diagram[], 
-    alignment : HorizontalAlignment = HorizontalAlignment.Center) : Diagram[] {
+    alignment : HorizontalAlignment = 'center') : Diagram[] {
 
     // align all the diagrams following the first diagram
     if (diagrams.length == 0) { return diagrams; }
 
-    if (alignment == HorizontalAlignment.Left){
+    if (alignment == 'left'){
         let left_x = diagrams[0].get_anchor("top-left").x;
         return diagrams.map(d => d.translate(V2(left_x - d.get_anchor("top-left").x, 0)));
     }
-    else if (alignment == HorizontalAlignment.Center){
+    else if (alignment == 'center'){
         let center_x = diagrams[0].get_anchor("top-center").x;
         return diagrams.map(d => d.translate(V2(center_x - d.get_anchor("top-center").x, 0)));
     }
-    else if (alignment == HorizontalAlignment.Right){
+    else if (alignment == 'right'){
         let right_x = diagrams[0].get_anchor("top-right").x;
         return diagrams.map(d => d.translate(V2(right_x - d.get_anchor("top-right").x, 0)));
     }
@@ -122,7 +113,7 @@ export function distribute_vertical(diagrams : Diagram[], space : number = 0) : 
  * @returns array of distributed and aligned diagrams
  */
 export function distribute_horizontal_and_align(diagrams : Diagram[], horizontal_space : number = 0,
-    alignment : VerticalAlignment = VerticalAlignment.Center) : Diagram[] {
+    alignment : VerticalAlignment = 'center') : Diagram[] {
     return distribute_horizontal(align_vertical(diagrams, alignment), horizontal_space);
 }
 
@@ -135,6 +126,6 @@ export function distribute_horizontal_and_align(diagrams : Diagram[], horizontal
  * @returns array of distributed and aligned diagrams
  */
 export function distribute_vertical_and_align(diagrams : Diagram[], vertical_space : number = 0,
-    alignment : HorizontalAlignment = HorizontalAlignment.Center) : Diagram[] {
+    alignment : HorizontalAlignment = 'center') : Diagram[] {
     return distribute_vertical(align_horizontal(diagrams, alignment), vertical_space);
 }
