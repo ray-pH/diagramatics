@@ -340,7 +340,7 @@ function create_locator_pointer_svg(radius : number, value : Vector2, color : st
 
     circle_outer.setAttribute("r", radius.toString());
     circle_outer.setAttribute("fill", get_color(color, tab_color));
-    circle_outer.setAttribute("fill-opacity", "0.1");
+    circle_outer.setAttribute("fill-opacity", "0.3137");
     circle_outer.setAttribute("stroke", "none");
 
     circle_inner.setAttribute("r", inner_radius.toString());
