@@ -82,8 +82,9 @@ export class Diagram {
     children : Diagram[] = [];
     path : Path | undefined = undefined; // Polygon and Curve have a path
     origin : Vector2 = new Vector2(0, 0); // position of the origin of the diagram
-    style  : DiagramStyle = {}
-    textdata : TextData = {}
+    style  : DiagramStyle = {};
+    textdata : TextData = {};
+    tag : string = "";
 
     constructor(type_ : DiagramType, 
         args : { path? : Path, children? : Diagram[], textdata? : TextData } = {}
@@ -114,6 +115,13 @@ export class Diagram {
             Object.setPrototypeOf(newd.path, Path.prototype);
             newd.path = newd.path.copy();
         }
+        return newd;
+    }
+
+    public append_tag(tag : string) : Diagram {
+        let newd = this.copy();
+        if (newd.tag == "") newd.tag = tag;
+        else newd.tag += " " + tag;
         return newd;
     }
 
@@ -783,7 +791,7 @@ export function curve(points : Vector2[]) : Diagram {
  * @returns a line diagram
  */
 export function line(start : Vector2, end : Vector2) : Diagram {
-    return curve([start, end]);
+    return curve([start, end]).append_tag('line');
 }
 
 

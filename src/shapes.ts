@@ -76,7 +76,7 @@ export function regular_polygon_side(n : number, sidelength : number = 1) : Diag
  * @returns a Diagram object
  */
 export function circle(radius : number = 1) : Diagram {
-    return regular_polygon(50, radius);
+    return regular_polygon(50, radius).append_tag('circle');
 }
 
 /**
