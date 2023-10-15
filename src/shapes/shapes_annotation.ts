@@ -105,3 +105,31 @@ export function angle_smaller(p : [Vector2, Vector2, Vector2],
     let ps : typeof p = dangle > Math.PI ? [p3, p2, p1] : [p1, p2, p3];
     return angle(ps, str, radius, text_offset);
 }
+
+export function length(p1 : Vector2, p2 : Vector2, str : string, offset : number, 
+    tablength? : number, textoffset? : number, tabsymmetric : boolean = true
+) : Diagram {
+
+    // setup defaults
+    tablength = tablength ?? p2.sub(p1).length()/20;
+    textoffset = textoffset ?? offset * 2;
+
+    let v = p1.equals(p2) ? V2(0,0) : p2.sub(p1).normalize();
+    let n = V2(-v.y, v.x);
+    let pA = p1.add(n.scale(offset));
+    let pB = p2.add(n.scale(offset));
+
+    let tabA = tabsymmetric ?
+        line(pA.sub(n.scale(tablength/2)), pA.add(n.scale(tablength/2))) :
+        line(pA, pA.sub(n.scale(tablength)));
+    let tabB = tabsymmetric ?
+        line(pB.sub(n.scale(tablength/2)), pB.add(n.scale(tablength/2))) :
+        line(pB, pB.sub(n.scale(tablength)));
+    let lineAB = line(pA, pB);
+    let lines = diagram_combine(lineAB, tabA, tabB);
+
+    let pmid = p1.add(p2).scale(0.5);
+    let label = textvar(str).position(pmid.add(n.scale(textoffset)));
+
+    return diagram_combine(lines, label);
+}
