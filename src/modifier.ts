@@ -84,6 +84,34 @@ export function subdivide(n : number = 100) : modifierFunction {
     return function_handle_path_type(func);
 }
 
+/**
+ * Get a slice of a diagram from `t_start` to `t_end`
+ * @param t_start starting point of the slice
+ * @param t_end ending point of the slice
+ * @param n number of points in the slice
+ * @returns function that modifies a diagram
+ */
+export function slicepath(t_start : number, t_end : number, n : number = 100) : modifierFunction {
+    if (t_start > t_end) [t_start, t_end] = [t_end, t_start];
+    if (t_start < 0) t_start = 0;
+    if (t_end > 1) t_end = 1;
+
+    let n_total = Math.floor(n / (t_end - t_start));
+    function func(d : Diagram) : Diagram {
+        if (d.path == undefined) return d;
+        let dnew = d.apply(resample(n_total));
+        if (dnew.path == undefined) return d;
+        // take slice of the path
+        let new_points = dnew.path.points.slice(
+            Math.floor(t_start * n_total),
+            Math.floor(t_end * n_total) + 1
+        );
+        dnew.path = new Path(new_points);
+        return dnew;
+    }
+    return function_handle_path_type(func);
+}
+
 
 function get_round_corner_arc_points(radius : number, points : [Vector2,Vector2,Vector2]) : Vector2[] {
     let [p1, p2, p3] = points;
