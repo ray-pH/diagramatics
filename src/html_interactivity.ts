@@ -399,6 +399,8 @@ class LocatorHandler {
         if (this.selectedVariable == undefined) return;
 
         if (evt instanceof MouseEvent) { evt.preventDefault(); }
+        if (evt instanceof TouchEvent) { evt.preventDefault(); }
+
         let coord = this.getMousePosition(evt);
 
         let pos = V2(coord.x, -coord.y);
