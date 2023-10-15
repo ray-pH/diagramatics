@@ -258,13 +258,13 @@ export class Diagram {
         return this.update_style('vector-effect', vectoreffect);
     }
 
-    public filltext(color : string) : Diagram {
+    public textfill(color : string) : Diagram {
         return this.update_style('fill', color, [DiagramType.Polygon, DiagramType.Curve]);
     }
-    public stroketext(color : string) : Diagram {
+    public textstroke(color : string) : Diagram {
         return this.update_style('stroke', color, [DiagramType.Polygon, DiagramType.Curve]);
     }
-    public strokewidthtext(width : number) : Diagram {
+    public textstrokewidth(width : number) : Diagram {
         return this.update_style('stroke-width', width.toString(), [DiagramType.Polygon, DiagramType.Curve]);
     }
 
@@ -294,7 +294,7 @@ export class Diagram {
     public textanchor(textanchor : 'start' | 'middle' | 'end' ) : Diagram {
         return this.update_textdata('text-anchor', textanchor);
     }
-    public dominantbaseline(dominantbaseline : 'auto' | 'text-bottom' | 'alphabetic' | 'ideographic' | 'middle' | 'central' | 'mathematical' | 'hanging' | 'text-top' ) : Diagram {
+    public textdominantbaseline(dominantbaseline : 'auto' | 'text-bottom' | 'alphabetic' | 'ideographic' | 'middle' | 'central' | 'mathematical' | 'hanging' | 'text-top' ) : Diagram {
         return this.update_textdata('dominant-baseline', dominantbaseline);
     }
 
@@ -616,7 +616,7 @@ export class Diagram {
             return d.fill('none').stroke('red').strokedasharray([5,5])
         };
         let style_index = (d : Diagram) => {
-            let bg = d.filltext('white').stroketext('white').strokewidthtext(5);
+            let bg = d.textfill('white').textstroke('white').textstrokewidth(5);
             let dd = d.fill('black');
             return bg.combine(dd);
         };
