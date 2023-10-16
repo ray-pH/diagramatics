@@ -115,7 +115,7 @@ export function length(p1 : Vector2, p2 : Vector2, str : string, offset : number
     textoffset = textoffset ?? offset * 2;
 
     let v = p1.equals(p2) ? V2(0,0) : p2.sub(p1).normalize();
-    let n = V2(-v.y, v.x);
+    let n = V2(v.y, -v.x);
     let pA = p1.add(n.scale(offset));
     let pB = p2.add(n.scale(offset));
 
