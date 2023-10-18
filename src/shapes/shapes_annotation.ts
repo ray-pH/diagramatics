@@ -71,7 +71,6 @@ export function angle(p : [Vector2, Vector2, Vector2],
     if (str == "" || str == undefined){ return angle_arc.position(p2); } // if str is empty, return only the arc
 
     let angle_text = textvar(str_to_mathematical_italic(str))
-        .position(Vdir((angle_a+angle_b)/2))
         .translate(text_offset);
 
     return diagram_combine(angle_arc, angle_text).position(p2);
