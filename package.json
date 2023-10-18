@@ -17,6 +17,10 @@
   "author": "Rayhan Alghiffari Azizi",
   "license": "MIT",
   "devDependencies": {
+    "@types/chai": "^4.3.9",
+    "@types/mocha": "^10.0.2",
+    "chai": "^4.3.10",
+    "mocha": "^10.2.0",
     "typescript": "^5.2.2"
   }
 }
