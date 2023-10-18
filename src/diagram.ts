@@ -1,4 +1,5 @@
 import { Vector2, Transform } from './vector.js';
+import { str_latex_to_unicode, str_to_mathematical_italic, str_to_normal_from_mathematical_italic } from './unicode_utils.js'
 
 function assert(condition : boolean, message : string) : void {
     if (!condition) {
@@ -297,6 +298,27 @@ export class Diagram {
     public textdominantbaseline(dominantbaseline : 'auto' | 'text-bottom' | 'alphabetic' | 'ideographic' | 'middle' | 'central' | 'mathematical' | 'hanging' | 'text-top' ) : Diagram {
         return this.update_textdata('dominant-baseline', dominantbaseline);
     }
+    public text_tovar() : Diagram {
+        let newd : Diagram = this.copy();
+        if (newd.type == DiagramType.Text) {
+            if (newd.textdata.text)
+                newd.textdata.text = str_to_mathematical_italic(newd.textdata.text);
+        } else if (newd.type == DiagramType.Diagram) {
+            newd.children = newd.children.map(c => c.text_tovar());
+        }
+        return newd;
+    }
+    public text_totext() : Diagram {
+        let newd : Diagram = this.copy();
+        if (newd.type == DiagramType.Text) {
+            if (newd.textdata.text)
+                newd.textdata.text = str_to_normal_from_mathematical_italic(newd.textdata.text);
+        } else if (newd.type == DiagramType.Diagram) {
+            newd.children = newd.children.map(c => c.text_tovar());
+        }
+        return newd;
+    }
+            
 
 
     /**

@@ -23,6 +23,9 @@ const unicode_mathematical_italic = {
     'ϑ' : '𝜗', 'ϰ' : '𝜘', 'ϕ' : '𝜙', 'ϱ' : '𝜚', 'ϖ' : '𝜛',
     // '.' : '𝛻', '.' : '𝛳', '.' : '𝜕', '.' : '𝜖',
 }
+const reversed_unicode_mathematical_italic = Object.fromEntries(
+    Object.entries(unicode_mathematical_italic).map(([k,v]) => [v,k])
+);
 
 const latex_greek  = {
     '\\alpha'   : 'α', '\\beta'    : 'β', '\\gamma'   : 'γ', '\\delta'   : 'δ', '\\epsilon' : 'ε',
@@ -738,4 +741,8 @@ export function str_latex_to_unicode(str : string){
 export function str_to_mathematical_italic(str : string) {
     return [...str_latex_to_unicode(str)]
         .map(c => (unicode_mathematical_italic as any)[c] || c).join('');
+}
+export function str_to_normal_from_mathematical_italic(str : string) {
+    return [...str]
+        .map(c => reversed_unicode_mathematical_italic[c] || c).join('');
 }
