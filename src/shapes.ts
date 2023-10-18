@@ -100,7 +100,7 @@ export function arc(radius : number = 1, angle : number = from_degree(360)) : Di
  * @param headsize size of the arrow head
  * @returns a Diagram object
  */
-export function arrow(v : Vector2, headsize : number = 3) : Diagram {
+export function arrow(v : Vector2, headsize : number = 1) : Diagram {
     let line_diagram = line(V2(0,0), v);
     let raw_triangle = polygon([V2(0,0), V2(-headsize, headsize/2), V2(-headsize, -headsize/2)]);
     let head_triangle = raw_triangle.rotate(v.angle()).position(v);
@@ -114,7 +114,7 @@ export function arrow(v : Vector2, headsize : number = 3) : Diagram {
  * @param headsize size of the arrow head
  * @returns a Diagram object
  */
-export function arrow1(start : Vector2, end : Vector2, headsize : number = 3) : Diagram {
+export function arrow1(start : Vector2, end : Vector2, headsize : number = 1) : Diagram {
     return arrow(end.sub(start), headsize).position(start);
 }
 
@@ -125,7 +125,7 @@ export function arrow1(start : Vector2, end : Vector2, headsize : number = 3) : 
  * @param headsize size of the arrow head
  * @returns a Diagram object
  */
-export function arrow2(start : Vector2, end : Vector2, headsize : number = 3) : Diagram {
+export function arrow2(start : Vector2, end : Vector2, headsize : number = 1) : Diagram {
     let line_diagram = line(start, end);
     let direction    = end.sub(start);
     let raw_triangle = polygon([V2(0,0), V2(-headsize, headsize/2), V2(-headsize, -headsize/2)]);
