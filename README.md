@@ -6,9 +6,14 @@ Diagramatics is a JavaScript/TypeScript library that makes it easy to create int
 
 # Examples
 
-Here are some example of the Diagram that is made using Diagramatics
+Here are some example of the Interactive Diagram that is made using Diagramatics
+![Example Pulley](./assets/example1.png)
+![Example Spring](./assets/example2.png)
 
-...
+## Gifs
+![Example Pulley](./assets/example1.gif)
+![Example Spring](./assets/example2.gif)
+
 
 you can see more examples at [Diagramatics Website : Examples](https://photon-ray.xyz/diagramatics-site/examples/)
 
