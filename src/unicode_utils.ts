@@ -726,12 +726,12 @@ const latex_symbols = {
 
 
 export function str_latex_to_unicode(str : string){
-    str = str + ' ';
+    str = str;
     for (let key in latex_greek){
-        str = str.replaceAll(key+' ', (latex_greek as any)[key]);
+        str = str.replaceAll(key, (latex_greek as any)[key]);
     }
     for (let key in latex_symbols){
-        str = str.replaceAll('\\'+key+' ', (latex_symbols as any)[key]);
+        str = str.replaceAll('\\'+key, (latex_symbols as any)[key]);
     }
     return str;
 }
