@@ -49,6 +49,13 @@ export function circle_tangent_point_from_point(point : Vector2, circle : Diagra
 
 // ============================= shapes
 
+/**
+ * Extend a line by a length on both ends
+ * @param l a line Diagram
+ * @param len1 length to extend on the first end
+ * @param len2 length to extend on the second end
+ * @returns a new line Diagram
+ */
 export function line_extend(l : Diagram, len1 : number, len2 : number) : Diagram {
     let tags = l.tag.split(' ');
     if (!tags.includes('line')) return l;
