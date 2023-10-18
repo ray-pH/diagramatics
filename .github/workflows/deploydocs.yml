@@ -23,6 +23,9 @@ jobs:
       - name: Test to see if the project compiles
         run: npm run build
 
+      - name: Run unit test
+        run: npm run test
+
       - name: Create the docs directory locally in CI
         run: npm run docs
 
