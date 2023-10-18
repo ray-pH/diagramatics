@@ -382,8 +382,9 @@ export class Diagram {
      * @param scale scale to scale (x, y)
      * @param origin origin point, if left undefined, scale around the origin
      */
-    public scale(scale : Vector2, origin? : Vector2) : Diagram {
+    public scale(scale : Vector2 | number, origin? : Vector2) : Diagram {
         if (origin == undefined) { origin = this.origin; }
+        if (typeof scale == 'number') { scale = new Vector2(scale, scale); }
         return this.transform(Transform.scale(scale, origin));
     }
 
