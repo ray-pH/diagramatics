@@ -10,24 +10,26 @@ import { rectangle, rectangle_corner, arrow1, arrow2, textvar } from '../shapes.
  * setting for multiple objects.
  */
 export type axes_options = {
-    xrange  : [number, number],
-    yrange  : [number, number],
-    bbox?   : [Vector2, Vector2],
-    xticks? : number[],
-    yticks? : number[],
-    headsize: number,
+    xrange    : [number, number],
+    yrange    : [number, number],
+    bbox?     : [Vector2, Vector2],
+    xticks?   : number[],
+    yticks?   : number[],
     n_sample? : number,
+    ticksize  : number,
+    headsize  : number,
 }
 
 export let default_axes_options : axes_options = {
     // bbox   : [V2(-100,-100), V2(100,100)],
-    bbox   : undefined,
-    xrange : [-2, 2],
-    yrange : [-2, 2],
-    xticks : undefined,
-    yticks : undefined,
-    headsize: 0.05,
+    bbox     : undefined,
+    xrange   : [-2, 2],
+    yrange   : [-2, 2],
+    xticks   : undefined,
+    yticks   : undefined,
     n_sample : 100,
+    ticksize : 0.1,
+    headsize : 0.05,
 }
 
 export function axes_transform(axes_options? : Partial<axes_options>) : (v : Vector2) => Vector2 {
@@ -112,13 +114,16 @@ export function axes_corner_empty(axes_options? : Partial<axes_options>) : Diagr
  * @param y y coordinate of the tick mark
  * @param height height of the tick mark
  */
-export function xtickmark_empty(x : number, y : number, height : number = 0.1) : Diagram {
-    return line(V2(x,y+height/2), V2(x,y-height/2)).stroke('gray');
+export function xtickmark_empty(x : number, y : number, axes_options? : Partial<axes_options>) : Diagram {
+    let opt = {...default_axes_options, ...axes_options}; // use default if not defined
+    let height = opt.ticksize;
+    let pos = axes_transform(opt)(V2(x,y));
+    return line(V2(pos.x,pos.y+height/2), V2(pos.x,pos.y-height/2)).stroke('gray');
 }
 
-export function xtickmark(x : number, y : number, str : string, height : number = 0.1) : Diagram {
-    let tick = xtickmark_empty(x, y, height);
-    let label = textvar(str).move_origin_text("top-center").translate(tick.get_anchor("bottom-center")).fill('gray');
+export function xtickmark(x : number, y : number, str : string, axes_options? : Partial<axes_options>) : Diagram {
+    let tick = xtickmark_empty(x, y, axes_options);
+    let label = textvar(str).move_origin_text("top-center").translate(tick.get_anchor("bottom-center")).textfill('gray');
     return diagram_combine(tick, label);
 }
 
@@ -207,7 +212,7 @@ export function xticks(axes_options : Partial<axes_options>, y : number = 0) : D
     // opt.xticks = opt.xticks.filter(x => x >= opt.xrange[0] && x <= opt.xrange[1]);
     opt.xticks = opt.xticks.filter(x => x > opt.xrange[0] && x < opt.xrange[1]);
 
-    let xticks_diagrams = opt.xticks.map(x => xtickmark(x, y, x.toString()));
+    let xticks_diagrams = opt.xticks.map(x => xtickmark(x, y, x.toString(), opt));
     return diagram_combine(...xticks_diagrams).transform(axes_transform(opt));
 }
 export function yticks(axes_options : Partial<axes_options>, x : number = 0) : Diagram {
@@ -220,7 +225,7 @@ export function yticks(axes_options : Partial<axes_options>, x : number = 0) : D
     // opt.yticks = opt.yticks.filter(y => y >= opt.yrange[0] && y <= opt.yrange[1]);
     opt.yticks = opt.yticks.filter(y => y > opt.yrange[0] && y < opt.yrange[1]);
 
-    let yticks_diagrams = opt.yticks.map(y => ytickmark(y, x, y.toString()));
+    let yticks_diagrams = opt.yticks.map(y => ytickmark(y, x, y.toString(), opt.ticksize));
     return diagram_combine(...yticks_diagrams).transform(axes_transform(opt));
 }
 
