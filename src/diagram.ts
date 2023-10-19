@@ -525,7 +525,7 @@ export class Diagram {
      * 'center-left', 'center-center', 'center-right'
      * 'bottom-left', 'bottom-center', 'bottom-right'
      */
-    __move_origin_text(anchor : Anchor) : Diagram {
+    private __move_origin_text(anchor : Anchor) : Diagram {
         // for text, use text-anchor and dominant-baseline
         let newd = this.copy();
         let textdata = anchor_to_textdata(anchor);
