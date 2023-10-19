@@ -216,7 +216,7 @@ export function xticks(axes_options : Partial<axes_options>, y : number = 0) : D
     opt.xticks = opt.xticks.filter(x => x > opt.xrange[0] && x < opt.xrange[1]);
 
     let xticks_diagrams = opt.xticks.map(x => xtickmark(x, y, x.toString(), opt));
-    return diagram_combine(...xticks_diagrams).transform(axes_transform(opt));
+    return diagram_combine(...xticks_diagrams);
 }
 export function yticks(axes_options : Partial<axes_options>, x : number = 0) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
@@ -229,7 +229,7 @@ export function yticks(axes_options : Partial<axes_options>, x : number = 0) : D
     opt.yticks = opt.yticks.filter(y => y > opt.yrange[0] && y < opt.yrange[1]);
 
     let yticks_diagrams = opt.yticks.map(y => ytickmark(y, x, y.toString(), opt));
-    return diagram_combine(...yticks_diagrams).transform(axes_transform(opt));
+    return diagram_combine(...yticks_diagrams);
 }
 
 
