@@ -133,11 +133,14 @@ export function xtickmark(x : number, y : number, str : string, axes_options? : 
  * @param x x coordinate of the tick mark
  * @param height height of the tick mark
  */
-export function ytickmark_empty(y : number, x : number, height : number = 0.1) : Diagram {
-    return line(V2(x+height/2,y), V2(x-height/2,y)).stroke('gray');
+export function ytickmark_empty(y : number, x : number, axes_options? : Partial<axes_options>) : Diagram {
+    let opt = {...default_axes_options, ...axes_options}; // use default if not defined
+    let height = opt.ticksize;
+    let pos = axes_transform(opt)(V2(x,y));
+    return line(V2(pos.x+height/2,pos.y), V2(pos.x-height/2,pos.y)).stroke('gray');
 }
-export function ytickmark(y : number, x : number, str : string, height : number = 0.1) : Diagram {
-    let tick = ytickmark_empty(y, x, height);
+export function ytickmark(y : number, x : number, str : string, axes_options? : Partial<axes_options>) : Diagram {
+    let tick = ytickmark_empty(y, x, axes_options);
     let label = textvar(str).move_origin_text("center-right").translate(tick.get_anchor("center-left")).fill('gray');
     return diagram_combine(tick, label);
 }
@@ -225,7 +228,7 @@ export function yticks(axes_options : Partial<axes_options>, x : number = 0) : D
     // opt.yticks = opt.yticks.filter(y => y >= opt.yrange[0] && y <= opt.yrange[1]);
     opt.yticks = opt.yticks.filter(y => y > opt.yrange[0] && y < opt.yrange[1]);
 
-    let yticks_diagrams = opt.yticks.map(y => ytickmark(y, x, y.toString(), opt.ticksize));
+    let yticks_diagrams = opt.yticks.map(y => ytickmark(y, x, y.toString(), opt));
     return diagram_combine(...yticks_diagrams).transform(axes_transform(opt));
 }
 
