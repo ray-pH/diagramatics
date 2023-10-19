@@ -45,6 +45,9 @@ export class Vector2 {
     copy() : Vector2 {
         return new Vector2(this.x, this.y);
     }
+    apply(f : (v : Vector2) => Vector2) : Vector2 {
+        return f(this.copy());
+    }
 }
 
 /**
