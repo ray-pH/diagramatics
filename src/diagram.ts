@@ -85,7 +85,7 @@ export class Diagram {
     origin : Vector2 = new Vector2(0, 0); // position of the origin of the diagram
     style  : DiagramStyle = {};
     textdata : TextData = {};
-    tag : string = "";
+    tags : string[] = [];
 
     constructor(type_ : DiagramType, 
         args : { path? : Path, children? : Diagram[], textdata? : TextData } = {}
@@ -119,10 +119,28 @@ export class Diagram {
         return newd;
     }
 
+    /**
+     * Append a tag to the diagram
+     */
     public append_tag(tag : string) : Diagram {
         let newd = this.copy();
-        if (newd.tag == "") newd.tag = tag;
-        else newd.tag += " " + tag;
+        newd.tags.push(tag);
+        return newd;
+    }
+    /**
+     * Remove a tag from the diagram
+     */
+    public remove_tag(tag : string) : Diagram {
+        let newd = this.copy();
+        newd.tags = newd.tags.filter(t => t != tag);
+        return newd;
+    }
+    /**
+     * Reset all tags of the diagram
+     */
+    public reset_tag() : Diagram {
+        let newd = this.copy();
+        newd.tags = [];
         return newd;
     }
 

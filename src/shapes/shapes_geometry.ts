@@ -9,7 +9,7 @@ import { linspace, from_degree } from '../utils.js';
  * @returns radius of the circle
  */
 export function circle_radius(circle : Diagram) : number {
-    let tags = circle.tag.split(' ');
+    let tags = circle.tags;
     if (!tags.includes('circle')) return -1;
 
     let center = circle.get_anchor('center-center');
@@ -57,7 +57,7 @@ export function circle_tangent_point_from_point(point : Vector2, circle : Diagra
  * @returns a new line Diagram
  */
 export function line_extend(l : Diagram, len1 : number, len2 : number) : Diagram {
-    let tags = l.tag.split(' ');
+    let tags = l.tags;
     if (!tags.includes('line')) return l;
     if (l.path == undefined) return l;
 
