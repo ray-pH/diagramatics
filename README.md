@@ -7,12 +7,12 @@ Diagramatics is a JavaScript/TypeScript library that makes it easy to create int
 # Examples
 
 Here are some example of the Interactive Diagram that is made using Diagramatics
-![Example Pulley](./assets/example1.png)
-![Example Spring](./assets/example2.png)
+![Example Pulley](https://raw.githubusercontent.com/ray-pH/diagramatics/main/assets/example1.png)
+![Example Spring](https://raw.githubusercontent.com/ray-pH/diagramatics/main/assets/example2.png)
 
 ## Gifs
-![Example Pulley](./assets/example1.gif)
-![Example Spring](./assets/example2.gif)
+![Example Pulley](https://raw.githubusercontent.com/ray-pH/diagramatics/main/assets/example1.gif)
+![Example Spring](https://raw.githubusercontent.com/ray-pH/diagramatics/main/assets/example2.gif)
 
 
 you can see more examples at [Diagramatics Website : Examples](https://photon-ray.xyz/diagramatics-site/examples/)
@@ -22,4 +22,4 @@ you can see more examples at [Diagramatics Website : Examples](https://photon-ra
 You can try the online editor at [Diagramatics Website : Editor](https://photon-ray.xyz/diagramatics-site/editor/)
 
 
-or you can read at [Diagramatics Website : Guides](https://photon-ray.xyz/diagramatics-site/guides/) on how to use it in your own project.
+or you can read at [Diagramatics Website : Guides](https://photon-ray.xyz/diagramatics-site/guides/usage/) on how to use it in your own project.
