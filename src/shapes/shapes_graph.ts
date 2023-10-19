@@ -141,7 +141,7 @@ export function ytickmark_empty(y : number, x : number, axes_options? : Partial<
 }
 export function ytickmark(y : number, x : number, str : string, axes_options? : Partial<axes_options>) : Diagram {
     let tick = ytickmark_empty(y, x, axes_options);
-    let label = textvar(str).move_origin_text("center-right").translate(tick.get_anchor("center-left")).fill('gray');
+    let label = textvar(str).move_origin_text("center-right").translate(tick.get_anchor("center-left")).textfill('gray');
     return diagram_combine(tick, label);
 }
 
