@@ -15,8 +15,8 @@ export type axes_options = {
     bbox?   : [Vector2, Vector2],
     xticks? : number[],
     yticks? : number[],
-    n?      : number,
     headsize: number,
+    n_sample? : number,
 }
 
 export let default_axes_options : axes_options = {
@@ -26,8 +26,8 @@ export let default_axes_options : axes_options = {
     yrange : [-2, 2],
     xticks : undefined,
     yticks : undefined,
-    n      : 100,
     headsize: 0.05,
+    n_sample : 100,
 }
 
 export function axes_transform(axes_options? : Partial<axes_options>) : (v : Vector2) => Vector2 {
@@ -340,7 +340,7 @@ export function plot(xdata : number[], ydata : number[], axes_options? : Partial
  */
 export function plotf(f : (x:number)=>number, axes_options? : Partial<axes_options>) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
-    let xdata = linspace(...opt.xrange, opt.n);
+    let xdata = linspace(...opt.xrange, opt.n_sample);
     let vdata = xdata.map(x => V2(x,f(x)));
     return plotv(vdata, axes_options);
 }
