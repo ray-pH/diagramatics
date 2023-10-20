@@ -233,12 +233,23 @@ export function draw_to_svg(outer_svgelement : SVGSVGElement, diagram : Diagram,
 /**
  * Download the svg as svg file
  * @param outer_svgelement the outer svg element to download
- * @param download_locator whether to download the locator svg
  */
-export function download_svg_as_svg(outer_svgelement : SVGSVGElement, download_locator : boolean = false) : void {
-    let svgelement = download_locator ? 
-        outer_svgelement : outer_svgelement.querySelector("svg[meta=diagram_svg]") as SVGSVGElement | null;
-    if (svgelement == null) svgelement = outer_svgelement;
+export function download_svg_as_svg(outer_svgelement : SVGSVGElement) : void {
+    let inner_svgelement = outer_svgelement.querySelector("svg[meta=diagram_svg]") as SVGSVGElement | null;
+    if (inner_svgelement == null) { console.warn("Cannot find svg element"); return; }
+    let locator_svgelement = outer_svgelement.querySelector("svg[meta=control_svg]") as SVGSVGElement | null;
+
+    let svgelement = inner_svgelement;
+    // concat locator_svgelement to the copy of inner_svgelement
+    if (locator_svgelement != null) {  
+        let copy_inner_svgelement = inner_svgelement.cloneNode(true) as SVGSVGElement;
+        for (let i in locator_svgelement.children) {
+            let child = locator_svgelement.children[i];
+            if (!(child instanceof SVGSVGElement)) continue;
+            copy_inner_svgelement.appendChild(child.cloneNode(true));
+        }
+        svgelement = copy_inner_svgelement;
+    }
 
     // get svg string
     let svg_string = new XMLSerializer().serializeToString(svgelement);
@@ -253,21 +264,21 @@ export function download_svg_as_svg(outer_svgelement : SVGSVGElement, download_l
 /**
  * Download the svg as png file
  * @param outer_svgelement the outer svg element to download
- * @param download_locator whether to download the locator svg
  */
-export function download_svg_as_png(outer_svgelement : SVGSVGElement, download_locator : boolean = false) : void {
-    let svgelement = download_locator ? 
-        outer_svgelement : outer_svgelement.querySelector("svg[meta=diagram_svg]") as SVGSVGElement | null;
-    if (svgelement == null) svgelement = outer_svgelement;
-    let svg_string = new XMLSerializer().serializeToString(svgelement);
+export function download_svg_as_png(outer_svgelement : SVGSVGElement) : void {
+    let inner_svgelement = outer_svgelement.querySelector("svg[meta=diagram_svg]") as SVGSVGElement | null;
+    if (inner_svgelement == null) { console.warn("Cannot find svg element"); return; }
+
+
+    let svg_string = new XMLSerializer().serializeToString(outer_svgelement);
     let svg_blob = new Blob([svg_string], {type: "image/svg+xml"});
 
     const DOMURL = window.URL || window.webkitURL || window;
     const url = DOMURL.createObjectURL(svg_blob);
 
     const image = new Image();
-    image.width = svgelement.width.baseVal.value;
-    image.height = svgelement.height.baseVal.value;
+    image.width = outer_svgelement.width.baseVal.value;
+    image.height = outer_svgelement.height.baseVal.value;
     image.src = url;
     image.onload = function() {
         const canvas = document.createElement("canvas");
