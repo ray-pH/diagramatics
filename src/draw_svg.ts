@@ -174,7 +174,14 @@ function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, render_tex
     
 }
 
-
+/**
+ * Draw a diagram to an svg element
+ * @param outer_svgelement the outer svg element to draw to
+ * @param diagram the diagram to draw
+ * @param set_html_attribute whether to set the html attribute of the outer_svgelement
+ * @param render_text whether to render text
+ * @param clear_svg whether to clear the svg before drawing
+ */
 export function draw_to_svg(outer_svgelement : SVGSVGElement, diagram : Diagram,
     set_html_attribute : boolean = true, render_text : boolean = true, clear_svg : boolean = true) : void {
 
@@ -198,6 +205,7 @@ export function draw_to_svg(outer_svgelement : SVGSVGElement, diagram : Diagram,
         outer_svgelement.appendChild(svgelement);
     }
 
+    // TODO : for performance, do smart clearing of svg, and not just clear everything
     if (clear_svg) svgelement.innerHTML = "";
 
 
