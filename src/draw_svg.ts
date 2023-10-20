@@ -229,3 +229,23 @@ export function draw_to_svg(outer_svgelement : SVGSVGElement, diagram : Diagram,
         svgelement.setAttribute("preserveAspectRatio", "xMidYMid meet");
     }
 }
+
+/**
+ * Download the svg as svg file
+ * @param outer_svgelement the outer svg element to download
+ * @param download_locator whether to download the locator svg
+ */
+export function download_svg_as_svg(outer_svgelement : SVGSVGElement, download_locator : boolean = false) : void {
+    let svgelement = download_locator ? 
+        outer_svgelement : outer_svgelement.querySelector("svg[meta=diagram_svg]") as SVGSVGElement | null;
+    if (svgelement == null) svgelement = outer_svgelement;
+
+    // get svg string
+    let svg_string = new XMLSerializer().serializeToString(svgelement);
+    let blob = new Blob([svg_string], {type: "image/svg+xml"});
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement("a");
+    a.href = url;
+    a.download = "diagramatics.svg";
+    a.click();
+}
