@@ -249,3 +249,38 @@ export function download_svg_as_svg(outer_svgelement : SVGSVGElement, download_l
     a.download = "diagramatics.svg";
     a.click();
 }
+
+/**
+ * Download the svg as png file
+ * @param outer_svgelement the outer svg element to download
+ * @param download_locator whether to download the locator svg
+ */
+export function download_svg_as_png(outer_svgelement : SVGSVGElement, download_locator : boolean = false) : void {
+    let svgelement = download_locator ? 
+        outer_svgelement : outer_svgelement.querySelector("svg[meta=diagram_svg]") as SVGSVGElement | null;
+    if (svgelement == null) svgelement = outer_svgelement;
+    let svg_string = new XMLSerializer().serializeToString(svgelement);
+    let svg_blob = new Blob([svg_string], {type: "image/svg+xml"});
+
+    const DOMURL = window.URL || window.webkitURL || window;
+    const url = DOMURL.createObjectURL(svg_blob);
+
+    const image = new Image();
+    image.width = svgelement.width.baseVal.value;
+    image.height = svgelement.height.baseVal.value;
+    image.src = url;
+    image.onload = function() {
+        const canvas = document.createElement("canvas");
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(image, 0, 0);
+        DOMURL.revokeObjectURL(url);
+
+        const imgURI = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+        const a = document.createElement("a");
+        a.href = imgURI;
+        a.download = "diagramatics.png";
+        a.click();
+    }
+}
