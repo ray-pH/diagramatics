@@ -1,4 +1,4 @@
-import { Vector2, Transform } from './vector.js';
+import { Vector2, V2, Transform } from './vector.js';
 import { str_latex_to_unicode, str_to_mathematical_italic, str_to_normal_from_mathematical_italic } from './unicode_utils.js'
 
 function assert(condition : boolean, message : string) : void {
@@ -11,6 +11,7 @@ export enum DiagramType {
     Polygon = 'polygon',
     Curve   = 'curve',
     Text    = 'text',
+    Image   = 'image',
     Diagram = 'diagram',
 }
 
@@ -50,6 +51,12 @@ export type TextData = {
     // "writing-mode"?     : string,
 }
 
+export type ImageData = {
+    "src"?    : string,
+    "width"?  : number,
+    "height"? : number,
+}
+
 function anchor_to_textdata(anchor : Anchor) : TextData {
     // TODO : might want to look at
     // hanging vs text-before-edge
@@ -85,15 +92,17 @@ export class Diagram {
     origin : Vector2 = new Vector2(0, 0); // position of the origin of the diagram
     style  : DiagramStyle = {};
     textdata : TextData = {};
+    imgdata  : ImageData = {};
     tags : string[] = [];
 
     constructor(type_ : DiagramType, 
-        args : { path? : Path, children? : Diagram[], textdata? : TextData } = {}
+        args : { path? : Path, children? : Diagram[], textdata? : TextData, imgdata? : ImageData } = {}
     ) {
         this.type = type_;
         this.path = args.path;
         if (args.children) { this.children = args.children; }
         if (args.textdata) { this.textdata = args.textdata; }
+        if (args.imgdata)  { this.imgdata  = args.imgdata; }
     }
 
     /**
@@ -873,6 +882,27 @@ export function text(str : string) : Diagram {
     });
     return dtext;
 }
+
+/**
+ * Create an image diagram
+ * @param src image source
+ * @param width width of the image
+ * @param height height of the image
+ * @returns an image diagram
+ */
+export function image(src : string, width : number, height: number){
+    let imgdata : ImageData = { src : src, width : width, height : height }
+    // path: bottom-left, bottom-right, top-right, top-left
+    let path    : Path      = new Path([
+        V2(-width/2, -height/2), V2(width/2, -height/2),
+        V2(width/2, height/2), V2(-width/2, height/2),
+    ]);
+    let img = new Diagram(DiagramType.Image, {imgdata : imgdata, path : path});
+    return img;
+}
+
+
+// END primitives =============================
 
 export function diagram_from_jsonstring(str : string) : Diagram {
     try {

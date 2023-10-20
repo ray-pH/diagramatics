@@ -89,6 +89,30 @@ function draw_curve(svgelement : SVGSVGElement, diagram : Diagram) : void {
     }
 }
 
+function draw_image(svgelement : SVGSVGElement, diagram : Diagram) : void {
+    // draw image
+    let image = document.createElementNS("http://www.w3.org/2000/svg", "image");
+    if (diagram.imgdata.src == undefined) return;
+    // make sure path is defined and have 4 points
+    if (diagram.path == undefined) return;
+    if (diagram.path.points.length != 4) return;
+
+    // TODO : add support for rotation and maybe other transformations
+    
+    // path: bottom-left, bottom-right, top-right, top-left
+    let width  = diagram.path.points[2].x - diagram.path.points[0].x;
+    let height = diagram.path.points[2].y - diagram.path.points[0].y;
+
+    image.setAttribute("href", diagram.imgdata.src);
+    image.setAttribute("width", width.toString());
+    image.setAttribute("height", height.toString());
+    image.setAttribute("x", diagram.path.points[3].x.toString());
+    image.setAttribute("y", (-diagram.path.points[3].y).toString());
+    image.setAttribute("preserveAspectRatio", "none");
+
+    svgelement.appendChild(image);
+}
+
 /**
  * Collect all DiagramType.Text in the diagram
  * @param diagram the outer diagram
@@ -157,6 +181,8 @@ function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, render_tex
         draw_curve(svgelement, diagram);
     } else if (diagram.type == DiagramType.Text){
         // do nothing
+    } else if (diagram.type == DiagramType.Image){
+        draw_image(svgelement, diagram);
     } else if (diagram.type == DiagramType.Diagram){
         for (let d of diagram.children) {
             f_draw_to_svg(svgelement, d, false);
