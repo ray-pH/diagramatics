@@ -53,8 +53,6 @@ export type TextData = {
 
 export type ImageData = {
     "src"?    : string,
-    "width"?  : number,
-    "height"? : number,
 }
 
 function anchor_to_textdata(anchor : Anchor) : TextData {
@@ -891,7 +889,7 @@ export function text(str : string) : Diagram {
  * @returns an image diagram
  */
 export function image(src : string, width : number, height: number){
-    let imgdata : ImageData = { src : src, width : width, height : height }
+    let imgdata : ImageData = { src }
     // path: bottom-left, bottom-right, top-right, top-left
     let path    : Path      = new Path([
         V2(-width/2, -height/2), V2(width/2, -height/2),

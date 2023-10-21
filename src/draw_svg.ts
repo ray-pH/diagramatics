@@ -1,4 +1,4 @@
-import { Diagram, DiagramType, DiagramStyle, TextData } from "./diagram.js";
+import { Diagram, DiagramType, DiagramStyle, TextData, ImageData } from "./diagram.js";
 import { tab_color, get_color } from "./color_palette.js";
 
 // TODO : add guard for the dictionary key
@@ -89,9 +89,35 @@ function draw_curve(svgelement : SVGSVGElement, diagram : Diagram) : void {
     }
 }
 
+/**
+ * Convert image href to data url
+ * This is necessary so that the image diagram can be downloaded as png
+ */
+function set_image_href_dataURL(img : SVGImageElement, src : string) : void{
+    let canvas    = document.createElement("canvas");
+    let ctx       = canvas.getContext('2d');
+
+    let base_image = new Image();
+    base_image.onload = () => {
+        canvas.height = base_image.height;
+        canvas.width  = base_image.width;
+        ctx?.drawImage(base_image, 0, 0);
+
+        // NOTE : we need to set both href and xlink:href for compatibility reason
+        // most browser already deprecate xlink:href because of SVG 2.0
+        // but other browser and image viewer/editor still only support xlink:href
+        // might be removed in the future
+        img.setAttribute("href", canvas.toDataURL("image/png"));
+        img.setAttribute("xlink:href", canvas.toDataURL("image/png"));
+        canvas.remove();
+    }
+    base_image.src = src;
+
+}
+
 function draw_image(svgelement : SVGSVGElement, diagram : Diagram) : void {
-    // draw image
     let image = document.createElementNS("http://www.w3.org/2000/svg", "image");
+    image.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
     if (diagram.imgdata.src == undefined) return;
     // make sure path is defined and have 4 points
     if (diagram.path == undefined) return;
@@ -103,7 +129,8 @@ function draw_image(svgelement : SVGSVGElement, diagram : Diagram) : void {
     let width  = diagram.path.points[2].x - diagram.path.points[0].x;
     let height = diagram.path.points[2].y - diagram.path.points[0].y;
 
-    image.setAttribute("href", diagram.imgdata.src);
+    // image.setAttribute("href", diagram.imgdata.src);
+    set_image_href_dataURL(image, diagram.imgdata.src);
     image.setAttribute("width", width.toString());
     image.setAttribute("height", height.toString());
     image.setAttribute("x", diagram.path.points[3].x.toString());
@@ -291,20 +318,20 @@ export function download_svg_as_svg(outer_svgelement : SVGSVGElement) : void {
  * Download the svg as png file
  * @param outer_svgelement the outer svg element to download
  */
-export function download_svg_as_png(outer_svgelement : SVGSVGElement) : void {
+export function download_svg_as_png(outer_svgelement : SVGSVGElement) {
     let inner_svgelement = outer_svgelement.querySelector("svg[meta=diagram_svg]") as SVGSVGElement | null;
     if (inner_svgelement == null) { console.warn("Cannot find svg element"); return; }
+    let svgelem = outer_svgelement;
 
-
-    let svg_string = new XMLSerializer().serializeToString(outer_svgelement);
+    let svg_string = new XMLSerializer().serializeToString(svgelem);
     let svg_blob = new Blob([svg_string], {type: "image/svg+xml"});
 
     const DOMURL = window.URL || window.webkitURL || window;
     const url = DOMURL.createObjectURL(svg_blob);
 
     const image = new Image();
-    image.width = outer_svgelement.width.baseVal.value;
-    image.height = outer_svgelement.height.baseVal.value;
+    image.width = svgelem.width.baseVal.value;
+    image.height = svgelem.height.baseVal.value;
     image.src = url;
     image.onload = function() {
         const canvas = document.createElement("canvas");
