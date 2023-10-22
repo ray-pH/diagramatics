@@ -1,5 +1,6 @@
 import { Diagram, DiagramType, DiagramStyle, TextData, ImageData } from "./diagram.js";
 import { tab_color, get_color } from "./color_palette.js";
+import { to_degree } from "./utils.js";
 
 // TODO : add guard for the dictionary key
 // since the implementation is using `for (let stylename in style)` without checking
@@ -126,8 +127,11 @@ function draw_image(svgelement : SVGSVGElement, diagram : Diagram) : void {
     // TODO : add support for rotation and maybe other transformations
     
     // path: bottom-left, bottom-right, top-right, top-left
-    let width  = diagram.path.points[2].x - diagram.path.points[0].x;
-    let height = diagram.path.points[2].y - diagram.path.points[0].y;
+    // width  : 0-1
+    // height : 1-2
+    let width  = diagram.path.points[1].sub(diagram.path.points[0]).length();
+    let height = diagram.path.points[2].sub(diagram.path.points[1]).length();
+    let angle  = diagram.path.points[1].sub(diagram.path.points[0]).angle();
 
     // image.setAttribute("href", diagram.imgdata.src);
     set_image_href_dataURL(image, diagram.imgdata.src);
@@ -135,6 +139,7 @@ function draw_image(svgelement : SVGSVGElement, diagram : Diagram) : void {
     image.setAttribute("height", height.toString());
     image.setAttribute("x", diagram.path.points[3].x.toString());
     image.setAttribute("y", (-diagram.path.points[3].y).toString());
+    image.setAttribute("transform", `rotate(${-to_degree(angle)} ${diagram.path.points[3].x} ${-diagram.path.points[3].y})`);
     image.setAttribute("preserveAspectRatio", "none");
 
     svgelement.appendChild(image);

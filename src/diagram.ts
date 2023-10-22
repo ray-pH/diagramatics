@@ -364,7 +364,8 @@ export class Diagram {
                 }
                 return [new Vector2(minx, miny), new Vector2(maxx, maxy)];
         }
-        else if (this.type == DiagramType.Curve || this.type == DiagramType.Polygon){
+        else if (this.type == DiagramType.Curve || this.type == DiagramType.Polygon 
+            || this.type == DiagramType.Image){
                 if (this.path == undefined) { throw new Error(this.type + " must have a path"); }
                 for (let point of this.path.points) {
                     minx = Math.min(minx, point.x);
@@ -677,8 +678,9 @@ export class Diagram {
             // return empty at diagram origin
             return empty(this.origin);
         }
-        else if (this.type == DiagramType.Polygon || this.type == DiagramType.Curve){
-            let f_obj = this.type == DiagramType.Polygon ? polygon : curve;
+        else if (this.type == DiagramType.Polygon || this.type == DiagramType.Curve 
+            || this.type == DiagramType.Image){
+            let f_obj = this.type == DiagramType.Polygon || DiagramType.Image ? polygon : curve;
 
             let deb_bbox = this.debug_bbox();
 
