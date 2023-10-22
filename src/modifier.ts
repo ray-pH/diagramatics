@@ -113,7 +113,7 @@ export function slicepath(t_start : number, t_end : number, n : number = 100) : 
 }
 
 
-function get_round_corner_arc_points(radius : number, points : [Vector2,Vector2,Vector2]) : Vector2[] {
+function get_round_corner_arc_points(radius : number, points : [Vector2,Vector2,Vector2], count : number) : Vector2[] {
     let [p1, p2, p3] = points;
 
     let v1 = p1.sub(p2).normalize();
@@ -148,7 +148,7 @@ function get_round_corner_arc_points(radius : number, points : [Vector2,Vector2,
     if (angle_a_b_plus < angle_a_b)  angle_b = angle_b_plus;
     if (angle_a_b_minus < angle_a_b) angle_b = angle_b_minus;
 
-    let arc_points = linspace(angle_a, angle_b, 40).map(a => pc.add(Vdir(a).scale(radius)));
+    let arc_points = linspace(angle_a, angle_b, count).map(a => pc.add(Vdir(a).scale(radius)));
     return arc_points;
 }
 
@@ -163,7 +163,7 @@ function get_round_corner_arc_points(radius : number, points : [Vector2,Vector2,
  * let s = square(5).apply(mod.round_corner(2, [0,2]))
  * ```
  */
-export function round_corner(radius : number | number[] =  1, point_indices? : number[]) : modifierFunction {
+export function round_corner(radius : number | number[] =  1, point_indices? : number[], count : number = 40) : modifierFunction {
     // if radius is a number, create an array of length one
     if (typeof radius == "number") radius = [radius];
 
@@ -192,7 +192,7 @@ export function round_corner(radius : number | number[] =  1, point_indices? : n
             let curr_p = d.path.points[i];
             let next_p = d.path.points[next_i];
             let arc_points = get_round_corner_arc_points(
-                radius[point_indices.indexOf(curr_i)], [prev_p, curr_p, next_p]);
+                radius[point_indices.indexOf(curr_i)], [prev_p, curr_p, next_p], count);
             new_points = new_points.concat(arc_points);
         }
 
