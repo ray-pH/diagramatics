@@ -5,6 +5,14 @@ export function from_degree(angle: number) : number {
     return angle * Math.PI / 180;
 }
 
+/**
+ * Helper function to convert from radians to degrees
+ */
+export function from_radian(angle: number) : number {
+    return angle * 180 / Math.PI;
+}
+
+
 
 export function array_repeat<T>(arr : T[], len : number) : T[] {
     let new_arr : T[] = [];

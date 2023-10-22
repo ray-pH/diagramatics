@@ -7,7 +7,8 @@ export {
 } from './vector.js';
 
 export {
-    from_degree, linspace, range, array_repeat,
+    from_degree, from_radian,
+    linspace, range, array_repeat,
     linspace_exc, range_inc,
 } from './utils.js'
 
