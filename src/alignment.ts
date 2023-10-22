@@ -150,3 +150,23 @@ export function distribute_vertical_and_align_c(diagrams : Diagram[], vertical_s
     alignment : HorizontalAlignment = 'center') : Diagram {
     return diagram_combine(...distribute_vertical_and_align(diagrams, vertical_space, alignment));
 }
+
+/**
+ * Distribute diagrams in a grid
+ * @param diagrams diagrams to be distributed
+ * @param column_count number of columns
+ * @param vectical_space space between the diagrams vertically (default = 0)
+ * @param horizontal_space space between the diagrams horizontally (default = 0)
+ */
+export function distribute_grid_row_c(diagrams : Diagram[], column_count : number, 
+    vectical_space : number = 0, horizontal_space : number = 0,
+) : Diagram {
+    let row_count = Math.ceil(diagrams.length / column_count);
+    let rows : Diagram[][] = [];
+    for (let i = 0; i < row_count; i++) {
+        rows.push(diagrams.slice(i * column_count, (i+1) * column_count));
+    }
+    let distributed_rows = rows.map(row => distribute_horizontal_c(row, horizontal_space));
+    let distributed_diagrams = distribute_vertical_c(distributed_rows, vectical_space);
+    return distributed_diagrams;
+}
