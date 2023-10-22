@@ -124,22 +124,27 @@ function draw_image(svgelement : SVGSVGElement, diagram : Diagram) : void {
     if (diagram.path == undefined) return;
     if (diagram.path.points.length != 4) return;
 
-    // TODO : add support for rotation and maybe other transformations
-    
     // path: bottom-left, bottom-right, top-right, top-left
     // width  : 0-1
     // height : 1-2
     let width  = diagram.path.points[1].sub(diagram.path.points[0]).length();
     let height = diagram.path.points[2].sub(diagram.path.points[1]).length();
-    let angle  = diagram.path.points[1].sub(diagram.path.points[0]).angle();
+    
+    // calculate the linear transformation matrix
+    // [ a c ]
+    // [ b d ]
+    let ex = diagram.path.points[1].sub(diagram.path.points[0]).normalize();
+    let ey = diagram.path.points[3].sub(diagram.path.points[0]).normalize();
+    let a =  ex.x; let b = -ex.y;
+    let c = -ey.x; let d =  ey.y;
 
-    // image.setAttribute("href", diagram.imgdata.src);
+    let xpos = diagram.path.points[3].x;
+    let ypos = -diagram.path.points[3].y;
+
     set_image_href_dataURL(image, diagram.imgdata.src);
     image.setAttribute("width", width.toString());
     image.setAttribute("height", height.toString());
-    image.setAttribute("x", diagram.path.points[3].x.toString());
-    image.setAttribute("y", (-diagram.path.points[3].y).toString());
-    image.setAttribute("transform", `rotate(${-to_degree(angle)} ${diagram.path.points[3].x} ${-diagram.path.points[3].y})`);
+    image.setAttribute("transform", `matrix(${a} ${b} ${c} ${d} ${xpos} ${ypos})`);
     image.setAttribute("preserveAspectRatio", "none");
 
     svgelement.appendChild(image);
