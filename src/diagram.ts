@@ -45,6 +45,7 @@ export type TextData = {
     "font-style"?       : string,
     "text-anchor"?      : string,
     "dominant-baseline"?: string,
+    "angle"?            : string,
     // "letter-spacing"?   : string,
     // "word-spacing"?     : string,
     // "text-decoration"?  : string,
@@ -322,6 +323,9 @@ export class Diagram {
     }
     public textdominantbaseline(dominantbaseline : 'auto' | 'text-bottom' | 'alphabetic' | 'ideographic' | 'middle' | 'central' | 'mathematical' | 'hanging' | 'text-top' ) : Diagram {
         return this.update_textdata('dominant-baseline', dominantbaseline);
+    }
+    public textangle(angle : number){
+        return this.update_textdata('angle', angle.toString());
     }
     public text_tovar() : Diagram {
         let newd : Diagram = this.copy();

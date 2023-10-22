@@ -37,6 +37,7 @@ export const default_textdata : TextData = {
     "font-weight"      : "normal",
     "text-anchor"      : "middle",
     "dominant-baseline": "middle",
+    "angle"            : "0",
 }
 export const _init_default_textdata : TextData = {...default_textdata}
 
@@ -187,8 +188,11 @@ function draw_texts(svgelement : SVGSVGElement, diagrams : Diagram[]) : void {
         if (diagram.path == undefined) { throw new Error("Text must have a path"); }
         // draw svg of text
         let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        text.setAttribute("x", diagram.path.points[0].x.toString());
-        text.setAttribute("y", (-diagram.path.points[0].y).toString());
+        // text.setAttribute("x", diagram.path.points[0].x.toString());
+        // text.setAttribute("y", (-diagram.path.points[0].y).toString());
+        let xpos = diagram.path.points[0].x;
+        let ypos = -diagram.path.points[0].y;
+        let angle_deg = to_degree(parseFloat(textdata["angle"] as string));
 
         let font_size = parseFloat(textdata["font-size"] as string) * scale;
 
@@ -198,6 +202,7 @@ function draw_texts(svgelement : SVGSVGElement, diagrams : Diagram[]) : void {
         text.setAttribute("font-weight", textdata["font-weight"] as string);
         text.setAttribute("text-anchor", textdata["text-anchor"] as string);
         text.setAttribute("dominant-baseline", textdata["dominant-baseline"] as string);
+        text.setAttribute("transform", `translate(${xpos} ${ypos}) rotate(${angle_deg}) `);
         for (let stylename in style) {
             text.style[stylename as any] = (style as any)[stylename as any];
         }
