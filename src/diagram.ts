@@ -437,6 +437,26 @@ export class Diagram {
     }
 
     /**
+     * Skew the diagram in the x direction by an angle around a base
+     * @param angle angle to skew
+     * @param base base point, if left undefined, skew around the origin
+     */
+    public skewX(angle : number, base? : Vector2) : Diagram {
+        if (base == undefined) { base = this.origin; }
+        return this.transform(Transform.skewX(angle, base.y));
+    }
+
+    /**
+     * Skew the diagram in the y direction by an angle around a base
+     * @param angle angle to skew
+     * @param base base point, if left undefined, skew around the origin
+     */
+    public skewY(angle : number, base? : Vector2) : Diagram {
+        if (base == undefined) { base = this.origin; }
+        return this.transform(Transform.skewY(angle, base.x));
+    }
+
+    /**
      * Reflect the diagram over a point
      * @param p point to reflect over
      */

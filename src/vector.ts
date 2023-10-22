@@ -90,4 +90,16 @@ export class Transform {
             return p.sub(n.scale(2*d));
         }   
     }
+    static skewX(angle : number, ybase : number) : TransformFunc {
+        return (p : Vector2) => {
+            let x = p.x + (ybase - p.y) * Math.tan(angle);
+            return new Vector2(x, p.y);
+        }
+    }
+    static skewY(angle : number, xbase : number) : TransformFunc {
+        return (p : Vector2) => {
+            let y = p.y + (xbase - p.x) * Math.tan(angle);
+            return new Vector2(p.x, y);
+        }
+    }
 };
