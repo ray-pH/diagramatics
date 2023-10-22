@@ -39,8 +39,7 @@ export function align_vertical(diagrams : Diagram[], alignment : VerticalAlignme
  * alignment can be 'left', 'center', or 'right'
  * @returns array of aligned diagrams
  */
-export function align_horizontal(diagrams : Diagram[], 
-    alignment : HorizontalAlignment = 'center') : Diagram[] {
+export function align_horizontal(diagrams : Diagram[], alignment : HorizontalAlignment = 'center') : Diagram[] {
 
     // align all the diagrams following the first diagram
     if (diagrams.length == 0) { return diagrams; }
@@ -128,4 +127,26 @@ export function distribute_horizontal_and_align(diagrams : Diagram[], horizontal
 export function distribute_vertical_and_align(diagrams : Diagram[], vertical_space : number = 0,
     alignment : HorizontalAlignment = 'center') : Diagram[] {
     return distribute_vertical(align_horizontal(diagrams, alignment), vertical_space);
+}
+
+// ============ function that also combine the diagram afterwards
+export function align_vertical_c(diagrams : Diagram[], alignment : VerticalAlignment = 'center') : Diagram {
+    return diagram_combine(...align_vertical(diagrams, alignment));
+}
+export function align_horizontal_c(diagrams : Diagram[], alignment : HorizontalAlignment = 'center') : Diagram {
+    return diagram_combine(...align_horizontal(diagrams, alignment));
+}
+export function distribute_horizontal_c(diagrams : Diagram[], space : number = 0) : Diagram {
+    return diagram_combine(...distribute_horizontal(diagrams, space));
+}
+export function distribute_vertical_c(diagrams : Diagram[], space : number = 0) : Diagram {
+    return diagram_combine(...distribute_vertical(diagrams, space));
+}
+export function distribute_horizontal_and_align_c(diagrams : Diagram[], horizontal_space : number = 0,
+    alignment : VerticalAlignment = 'center') : Diagram {
+    return diagram_combine(...distribute_horizontal_and_align(diagrams, horizontal_space, alignment));
+}
+export function distribute_vertical_and_align_c(diagrams : Diagram[], vertical_space : number = 0,
+    alignment : HorizontalAlignment = 'center') : Diagram {
+    return diagram_combine(...distribute_vertical_and_align(diagrams, vertical_space, alignment));
 }
