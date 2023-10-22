@@ -57,6 +57,7 @@ export {
 export * as geometry from './shapes/shapes_geometry.js'
 export * as annotation from './shapes/shapes_annotation.js'
 export * as mechanics from './shapes/shapes_mechanics.js'
+export * as bar from './shapes/shapes_bar.js'
 
 // Mics
 export * as encoding from './encoding.js'
