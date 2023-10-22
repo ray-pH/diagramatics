@@ -13,8 +13,8 @@ import { str_to_mathematical_italic } from './unicode_utils.js'
  */
 export function rectangle(width : number, height : number) : Diagram {
     let points = [
-        V2(-width/2,-height/2), V2(-width/2, height/2), 
-        V2( width/2, height/2), V2( width/2,-height/2)
+        V2(-width/2,-height/2), V2( width/2,-height/2), 
+        V2( width/2, height/2), V2(-width/2, height/2)
     ];
     return polygon(points);
 }
@@ -27,8 +27,8 @@ export function rectangle(width : number, height : number) : Diagram {
  */
 export function rectangle_corner(bottomleft : Vector2, topright : Vector2) : Diagram {
     let points = [
-        bottomleft, V2(bottomleft.x, topright.y), 
-        topright, V2(topright.x, bottomleft.y)
+        bottomleft, V2(topright.x, bottomleft.y),
+        topright, V2(bottomleft.x, topright.y),
     ];
     return polygon(points);
 }
