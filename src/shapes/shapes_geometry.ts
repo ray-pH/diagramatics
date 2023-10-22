@@ -1,6 +1,6 @@
 import { Diagram, polygon, line, diagram_combine, curve } from '../diagram.js';
 import { Vector2, V2 } from '../vector.js';
-import { linspace, from_degree } from '../utils.js';
+import { linspace } from '../utils.js';
 
 // ============================= utilities
 /**

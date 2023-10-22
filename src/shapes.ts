@@ -1,6 +1,6 @@
 import { Diagram, polygon, line, curve, text, diagram_combine } from './diagram.js';
 import { Vector2, V2 } from './vector.js';
-import { linspace, from_degree } from './utils.js';
+import { linspace, to_radian } from './utils.js';
 import { str_to_mathematical_italic } from './unicode_utils.js'
 
 // function helpers to create common shapes
@@ -85,7 +85,7 @@ export function circle(radius : number = 1) : Diagram {
  * @param angle angle of the arc
  * @returns a Diagram object
  */
-export function arc(radius : number = 1, angle : number = from_degree(360)) : Diagram {
+export function arc(radius : number = 1, angle : number = to_radian(360)) : Diagram {
     let n = 100;
     let points : Vector2[] = [];
     for (let i = 0; i < n; i++) {
