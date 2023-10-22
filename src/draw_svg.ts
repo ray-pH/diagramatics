@@ -99,6 +99,7 @@ function set_image_href_dataURL(img : SVGImageElement, src : string) : void{
     let ctx       = canvas.getContext('2d');
 
     let base_image = new Image();
+    base_image.crossOrigin = "anonymous";
     base_image.onload = () => {
         canvas.height = base_image.height;
         canvas.width  = base_image.width;
