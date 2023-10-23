@@ -115,6 +115,11 @@ export class Diagram {
         return this;
     }
 
+    public mut_parent_only() : Diagram {
+        this.mutable = true;
+        return this;
+    }
+
     /**
      * Create a copy of the diagram that is immutable
      */
@@ -886,7 +891,19 @@ export class Path {
  */
 export function diagram_combine(...diagrams : Diagram[]) : Diagram {
     let newdiagrams = diagrams.map(d => d.copy_if_not_mutable());
+
+    // check if all children is mutable
+    // if they are, then set the new diagram to be mutable
+    let all_children_mutable = true;
+    for (let i = 0; i < newdiagrams.length; i++) {
+        if (!newdiagrams[i].mutable) { 
+            all_children_mutable = false; 
+            break; 
+        }
+    }
+
     let newd = new Diagram(DiagramType.Diagram, {children : newdiagrams});
+    newd.mutable = all_children_mutable;
     return newd.move_origin(diagrams[0].origin);
     // return newd.move_origin(Anchor.CenterCenter);
     // i think it's better to keep the origin at the origin of the first diagram
