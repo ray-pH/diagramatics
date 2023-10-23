@@ -110,6 +110,8 @@ export class Diagram {
      */
     public mut() : Diagram {
         this.mutable = true;
+        // make path mutable
+        if (this.path != undefined) this.path.mutable = true;
         // make all of the children mutable
         for (let i = 0; i < this.children.length; i++) this.children[i].mut();
         return this;
@@ -117,6 +119,8 @@ export class Diagram {
 
     public mut_parent_only() : Diagram {
         this.mutable = true;
+        // make path mutable
+        if (this.path != undefined) this.path.mutable = true;
         return this;
     }
 
@@ -126,6 +130,8 @@ export class Diagram {
     public immut() : Diagram {
         let newd : Diagram = this.copy();
         newd.mutable = false;
+        // make path immutable
+        if (this.path != undefined) this.path.mutable = false;
         // make all of the children immutable
         for (let i = 0; i < newd.children.length; i++) newd.children[i].immut();
         return newd;
