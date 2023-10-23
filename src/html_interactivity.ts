@@ -9,6 +9,11 @@ function format_number(val : number, prec : number) {
     // and if the last character is a dot, remove it
     return fixed.replace(/\.?0+$/, "");
 }
+export type formatFunction = (name : string, value : any, prec? : number) => string;
+const defaultFormat_f : formatFunction = (name : string, val : any, prec? : number) => {
+    let val_str = (typeof val == 'number' && prec != undefined) ? format_number(val,prec) : val.toString();
+    return `${str_to_mathematical_italic(name)} = ${val_str}`;
+}
 
 /**
  * Object that controls the interactivity of the diagram
@@ -52,21 +57,18 @@ export class Interactive {
         return this.inp_variables[variable_name];
     }
 
-    public label(variable_name : string, value : any){
-        let varstyle_variable_name = str_to_mathematical_italic(variable_name);
+    public label(variable_name : string, value : any, display_format_func : formatFunction = defaultFormat_f){
 
         let labeldiv = document.createElement('div');
         labeldiv.classList.add("diagramatics-label");
-        labeldiv.innerHTML = `${varstyle_variable_name} = ${value}`;
+        labeldiv.innerHTML = display_format_func(variable_name, value, this.display_precision);
 
         this.inp_variables[variable_name] = value;
 
         // setter ==========================
         const setter = (val : any) => {
             this.inp_variables[variable_name] = val;
-            let val_str = this.display_precision == undefined ?
-                val.toString() : format_number(val, this.display_precision);
-            labeldiv.innerHTML = `${varstyle_variable_name} = ${val_str}`;
+            labeldiv.innerHTML = display_format_func(variable_name, val, this.display_precision);
         }
         this.inp_setter[variable_name] = setter;
 
@@ -199,32 +201,27 @@ export class Interactive {
      * @param value initial value
      * @param step step size
      * @param time time of the animation in milliseconds
+     * @param display_format_func function to format the display of the value
     */
     public slider(variable_name : string, min : number = 0, max : number = 100, value : number = 50, step : number = -1, 
-        time : number = 1.5){
+        time : number = 1.5, display_format_func : formatFunction = defaultFormat_f){
         // if the step is -1, then it is automatically calculated
         if (step == -1){ step = (max - min) / 100; }
 
         // initialize the variable
         this.inp_variables[variable_name] = value;
 
-        let varstyle_variable_name = str_to_mathematical_italic(variable_name);
-
         // =========== label =============
         let labeldiv = document.createElement('div');
         labeldiv.classList.add("diagramatics-label");
-        labeldiv.innerHTML = `${varstyle_variable_name} = ${value}`;
+        labeldiv.innerHTML = display_format_func(variable_name, value, this.display_precision);
 
         // =========== slider ===========
 
         // create the callback function
         const callback = (val : number, redraw : boolean = true) => {
             this.inp_variables[variable_name] = val;
-
-            let val_str = this.display_precision == undefined ? 
-                val.toString() : format_number(val, this.display_precision);
-            labeldiv.innerHTML = `${varstyle_variable_name} = ${val_str}`;
-            
+            labeldiv.innerHTML = display_format_func(variable_name, val, this.display_precision);
             if (redraw) this.draw();
         }
         let slider = create_slider(callback, min, max, value, step);
