@@ -18,6 +18,12 @@ export let default_bar_options : bar_options = {
     bbox: [V2(0,0), V2(10,10)],
 }
 
+/**
+ * Plot a bar chart
+ * @param datavalues the data values to plot
+ * @param bar_options options for the bar chart
+ * @returns a diagram of the bar chart
+ */
 export function plot(datavalues : number[], bar_options : Partial<bar_options> = {}){
     let opt = {...default_bar_options, ...bar_options}; // use default if not defined
     let n = datavalues.length;
@@ -42,7 +48,12 @@ export function plot(datavalues : number[], bar_options : Partial<bar_options> =
     return diagram_combine(...bar_arr);
 }
 
-
+/**
+ * x-axes with label for bar chart
+ * @param datanames the data names
+ * @param bar_options options for the bar chart
+ * @returns a diagram of the x-axes
+ */
 export function xaxes(datanames : string[], bar_options : Partial<bar_options> = {}){
     let opt = {...default_bar_options, ...bar_options}; // use default if not defined
     let n = datanames.length;
@@ -64,6 +75,11 @@ export function xaxes(datanames : string[], bar_options : Partial<bar_options> =
     return diagram_combine(l, ...label_arr);
 }
 
+/**
+ * y-axes with label for bar chart
+ * @param datavalues the data values
+ * @param bar_options options for the bar chart
+ */
 export function yaxes(datavalues : number[], bar_options : Partial<bar_options> = {}){
     let opt = {...default_bar_options, ...bar_options}; // use default if not defined
     let n = datavalues.length;
