@@ -111,7 +111,7 @@ export class Diagram {
     public mut() : Diagram {
         this.mutable = true;
         // make all of the children mutable
-        for (let i in this.children) this.children[i].mut();
+        for (let i = 0; i < this.children.length; i++) this.children[i].mut();
         return this;
     }
 
@@ -122,7 +122,7 @@ export class Diagram {
         let newd : Diagram = this.copy();
         newd.mutable = false;
         // make all of the children immutable
-        for (let i in newd.children) newd.children[i].immut();
+        for (let i = 0; i < newd.children.length; i++) newd.children[i].immut();
         return newd;
     }
 
@@ -233,7 +233,8 @@ export class Diagram {
             newd.type = DiagramType.Curve;
         } else if (newd.type == DiagramType.Diagram) {
             // newd.children = newd.children.map(c => c.to_curve());
-            for (let i in newd.children) newd.children[i] = newd.children[i].to_curve();
+            for (let i = 0; i < newd.children.length; i++) 
+                newd.children[i] = newd.children[i].to_curve();
         }
         return newd;
     }
@@ -249,7 +250,8 @@ export class Diagram {
             newd.type = DiagramType.Polygon;
         } else if (newd.type == DiagramType.Diagram) {
             // newd.children = newd.children.map(c => c.to_polygon());
-            for (let i in newd.children) newd.children[i] = newd.children[i].to_polygon();
+            for (let i = 0; i < newd.children.length; i++)
+                newd.children[i] = newd.children[i].to_polygon();
         }
         return newd;
     }
@@ -281,7 +283,7 @@ export class Diagram {
             newd.style[stylename] = stylevalue;
         } else if (newd.type == DiagramType.Diagram) {
             // newd.children = newd.children.map(c => c.update_style(stylename, stylevalue, excludedType));
-            for (let i in newd.children) 
+            for (let i = 0; i < newd.children.length; i++)
                 newd.children[i] = newd.children[i].update_style(stylename, stylevalue, excludedType);
         } else {
             throw new Error("Unreachable, unknown diagram type : " + newd.type);
@@ -332,7 +334,7 @@ export class Diagram {
             newd.textdata[textdataname] = textdatavalue;
         } else if (newd.type == DiagramType.Diagram) {
             // newd.children = newd.children.map(c => c.update_textdata(textdataname, textdatavalue));
-            for (let i in newd.children)
+            for (let i = 0; i < newd.children.length; i++)
                 newd.children[i] = newd.children[i].update_textdata(textdataname, textdatavalue);
         } else if (newd.type == DiagramType.Polygon || newd.type == DiagramType.Curve) {
             // do nothing
@@ -366,7 +368,8 @@ export class Diagram {
                 newd.textdata.text = str_to_mathematical_italic(newd.textdata.text);
         } else if (newd.type == DiagramType.Diagram) {
             // newd.children = newd.children.map(c => c.text_tovar());
-            for (let i in newd.children) newd.children[i] = newd.children[i].text_tovar();
+            for (let i = 0; i < newd.children.length; i++)
+                newd.children[i] = newd.children[i].text_tovar();
         }
         return newd;
     }
@@ -377,7 +380,8 @@ export class Diagram {
                 newd.textdata.text = str_to_normal_from_mathematical_italic(newd.textdata.text);
         } else if (newd.type == DiagramType.Diagram) {
             // newd.children = newd.children.map(c => c.text_totext());
-            for (let i in newd.children) newd.children[i] = newd.children[i].text_totext();
+            for (let i = 0; i < newd.children.length; i++)
+                newd.children[i] = newd.children[i].text_totext();
         }
         return newd;
     }
@@ -392,7 +396,7 @@ export class Diagram {
         let minx = Infinity, miny = Infinity;
         let maxx = -Infinity, maxy = -Infinity;
         if (this.type == DiagramType.Diagram){
-                for (let c in this.children) {
+                for (let c = 0; c < this.children.length; c++){
                     let child = this.children[c];
                     let [min, max] = child.bounding_box();
                     minx = Math.min(minx, min.x);
@@ -405,7 +409,8 @@ export class Diagram {
         else if (this.type == DiagramType.Curve || this.type == DiagramType.Polygon 
             || this.type == DiagramType.Image){
                 if (this.path == undefined) { throw new Error(this.type + " must have a path"); }
-                for (let point of this.path.points) {
+                for (let p = 0; p < this.path.points.length; p++) {
+                    let point = this.path.points[p];
                     minx = Math.min(minx, point.x);
                     miny = Math.min(miny, point.y);
                     maxx = Math.max(maxx, point.x);
@@ -429,7 +434,8 @@ export class Diagram {
         let newd : Diagram = this.copy_if_not_mutable();
         // transform all children
         // newd.children = newd.children.map(c => c.transform(transform_function));
-        for (let i in newd.children) newd.children[i] = newd.children[i].transform(transform_function);
+        for (let i = 0; i < newd.children.length; i++)
+            newd.children[i] = newd.children[i].transform(transform_function);
         // transform path
         if (newd.path != undefined) newd.path = newd.path.transform(transform_function);
         // transform origin
@@ -634,7 +640,7 @@ export class Diagram {
             newd = newd.__move_origin_text(anchor);
         } else if (this.type == DiagramType.Diagram) {
             //newd.children = newd.children.map(c => c.move_origin_text(anchor));
-            for (let i in newd.children) 
+            for (let i = 0; i < newd.children.length; i++)
                 newd.children[i] = newd.children[i].move_origin_text(anchor);
         } else if (this.type == DiagramType.Polygon || this.type == DiagramType.Curve) {
             // do nothing
@@ -645,7 +651,7 @@ export class Diagram {
     public path_length() : number {
         if (this.type == DiagramType.Diagram) {
             let length = 0;
-            for (let c in this.children) {
+            for (let c = 0; c < this.children.length; c++) {
                 length += this.children[c].path_length();
             }
             return length;
@@ -672,7 +678,7 @@ export class Diagram {
             // use entire length, use the childrens
             let cumuative_length = [];
             let length   = 0.0;
-            for (let c in this.children) {
+            for (let c = 0; c < this.children.length; c++) {
                 length += this.children[c].path_length();
                 cumuative_length.push(length);
             }
@@ -868,7 +874,7 @@ export class Path {
         let newp : Path = this.copy_if_not_mutable();
         // transform all the points
         // newp.points = newp.points.map(p => transform_function(p));
-        for (let i in newp.points) newp.points[i] = transform_function(newp.points[i]);
+        for (let i = 0; i < newp.points.length; i++) newp.points[i] = transform_function(newp.points[i]);
         return newp;
     }
 }
