@@ -889,7 +889,7 @@ export function polygon(points: Vector2[]) : Diagram {
  * @param v position of the point
  * @returns an empty diagram
  */
-export function empty(v : Vector2) : Diagram {
+export function empty(v : Vector2 = V2(0,0)) : Diagram {
     let emp = curve([v])
     return emp;
 }
