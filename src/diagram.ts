@@ -131,6 +131,22 @@ export class Diagram {
         return newd;
     }
 
+    private static deep_setPrototypeOf(obj : any) : void {
+        Object.setPrototypeOf(obj, Diagram.prototype);
+        let objd : Diagram = obj;
+        // convert position and origin_offset to Vector2
+        objd.origin = Object.setPrototypeOf(objd.origin, Vector2.prototype);
+        // make sure all of the children are Diagram
+        for (let c = 0; c < objd.children.length; c++)
+            Diagram.deep_setPrototypeOf(objd.children[c]);
+
+        // set path to Path
+        if (objd.path != undefined) {
+            Object.setPrototypeOf(objd.path, Path.prototype);
+            objd.path = objd.path.copy();
+        }
+    }
+
     /**
      * Copy the diagram
      */
@@ -138,19 +154,7 @@ export class Diagram {
         // do deepcopy with JSON
         let newd : Diagram = JSON.parse(JSON.stringify(this));
         // turn newd into Diagram
-        Object.setPrototypeOf(newd, Diagram.prototype);
-        // convert position and origin_offset to Vector2
-        newd.origin = Object.setPrototypeOf(newd.origin, Vector2.prototype);
-        // make sure all of the children are Diagram
-        for (let c = 0; c < newd.children.length; c++) {
-            Object.setPrototypeOf(newd.children[c], Diagram.prototype);
-            newd.children[c] = newd.children[c].copy();
-        }
-        // set path to Path
-        if (newd.path != undefined) {
-            Object.setPrototypeOf(newd.path, Path.prototype);
-            newd.path = newd.path.copy();
-        }
+        Diagram.deep_setPrototypeOf(newd);
         return newd;
     }
 
