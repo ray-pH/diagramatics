@@ -64,8 +64,8 @@ export function subdivide(n : number = 100) : modifierFunction {
         if (d.path == undefined) return d;
 
         let new_points : Vector2[] = [];
-        for (let i in d.path.points){
-            let curr_i = parseInt(i);
+        for (let i = 0; i < d.path.points.length; i++){
+            let curr_i = i;
             let next_i = (curr_i + 1) % d.path.points.length;
             let curr_p = d.path.points[i];
             let next_p = d.path.points[next_i];
@@ -180,8 +180,8 @@ export function round_corner(radius : number | number[] =  1, point_indices? : n
         radius = array_repeat(radius as number[], point_indices.length);
 
         let new_points : Vector2[] = [];
-        for (let i in d.path.points){
-            let curr_i = parseInt(i);
+        for (let i = 0; i < d.path.points.length; i++){
+            let curr_i = i;
             if (!point_indices.includes(curr_i)) {
                 new_points.push(d.path.points[i]);
                 continue;

@@ -92,6 +92,7 @@ export class Diagram {
     style  : DiagramStyle = {};
     textdata : TextData = {};
     imgdata  : ImageData = {};
+    mutable  : boolean   = false;
     tags : string[] = [];
 
     constructor(type_ : DiagramType, 
@@ -105,33 +106,73 @@ export class Diagram {
     }
 
     /**
+     * Turn the diagram into a mutable diagram
+     */
+    public mut() : Diagram {
+        this.mutable = true;
+        // make path mutable
+        if (this.path != undefined) this.path.mutable = true;
+        // make all of the children mutable
+        for (let i = 0; i < this.children.length; i++) this.children[i].mut();
+        return this;
+    }
+
+    public mut_parent_only() : Diagram {
+        this.mutable = true;
+        // make path mutable
+        if (this.path != undefined) this.path.mutable = true;
+        return this;
+    }
+
+    /**
+     * Create a copy of the diagram that is immutable
+     */
+    public immut() : Diagram {
+        let newd : Diagram = this.copy();
+        newd.mutable = false;
+        // make path immutable
+        if (this.path != undefined) this.path.mutable = false;
+        // make all of the children immutable
+        for (let i = 0; i < newd.children.length; i++) newd.children[i].immut();
+        return newd;
+    }
+
+    private static deep_setPrototypeOf(obj : any) : void {
+        Object.setPrototypeOf(obj, Diagram.prototype);
+        let objd : Diagram = obj;
+        // convert position and origin_offset to Vector2
+        objd.origin = Object.setPrototypeOf(objd.origin, Vector2.prototype);
+        // make sure all of the children are Diagram
+        for (let c = 0; c < objd.children.length; c++)
+            Diagram.deep_setPrototypeOf(objd.children[c]);
+
+        // set path to Path
+        if (objd.path != undefined) {
+            Object.setPrototypeOf(objd.path, Path.prototype);
+            objd.path = objd.path.copy();
+        }
+    }
+
+    /**
      * Copy the diagram
      */
     public copy() : Diagram {
         // do deepcopy with JSON
         let newd : Diagram = JSON.parse(JSON.stringify(this));
         // turn newd into Diagram
-        Object.setPrototypeOf(newd, Diagram.prototype);
-        // convert position and origin_offset to Vector2
-        newd.origin = Object.setPrototypeOf(newd.origin, Vector2.prototype);
-        // make sure all of the children are Diagram
-        for (let c in newd.children) {
-            Object.setPrototypeOf(newd.children[c], Diagram.prototype);
-            newd.children[c] = newd.children[c].copy();
-        }
-        // set path to Path
-        if (newd.path != undefined) {
-            Object.setPrototypeOf(newd.path, Path.prototype);
-            newd.path = newd.path.copy();
-        }
+        Diagram.deep_setPrototypeOf(newd);
         return newd;
+    }
+
+    public copy_if_not_mutable() : Diagram {
+        return this.mutable ? this : this.copy();
     }
 
     /**
      * Append a tag to the diagram
      */
     public append_tag(tag : string) : Diagram {
-        let newd = this.copy();
+        let newd = this.copy_if_not_mutable();
         newd.tags.push(tag);
         return newd;
     }
@@ -139,7 +180,7 @@ export class Diagram {
      * Remove a tag from the diagram
      */
     public remove_tag(tag : string) : Diagram {
-        let newd = this.copy();
+        let newd = this.copy_if_not_mutable();
         newd.tags = newd.tags.filter(t => t != tag);
         return newd;
     }
@@ -147,7 +188,7 @@ export class Diagram {
      * Reset all tags of the diagram
      */
     public reset_tag() : Diagram {
-        let newd = this.copy();
+        let newd = this.copy_if_not_mutable();
         newd.tags = [];
         return newd;
     }
@@ -174,7 +215,7 @@ export class Diagram {
      * \* implemented for performance reason
      */
     public flatten() : Diagram {
-        let newd : Diagram = this.copy();
+        let newd : Diagram = this.copy_if_not_mutable();
         newd.children = newd.collect_children();
         return newd;
     }
@@ -185,7 +226,7 @@ export class Diagram {
      * func takes in a diagram and returns a diagram
      */
     public apply(func : (d : Diagram) => Diagram) : Diagram {
-        return func(this.copy());
+        return func(this.copy_if_not_mutable());
     }
 
     /**
@@ -202,11 +243,13 @@ export class Diagram {
      * If the diagram is a Diagram, convert all of the children to curves
      */
     public to_curve() : Diagram {
-        let newd : Diagram = this.copy();
+        let newd : Diagram = this.copy_if_not_mutable();
         if (newd.type == DiagramType.Polygon) {
             newd.type = DiagramType.Curve;
         } else if (newd.type == DiagramType.Diagram) {
-            newd.children = newd.children.map(c => c.to_curve());
+            // newd.children = newd.children.map(c => c.to_curve());
+            for (let i = 0; i < newd.children.length; i++) 
+                newd.children[i] = newd.children[i].to_curve();
         }
         return newd;
     }
@@ -217,11 +260,13 @@ export class Diagram {
      * If the diagram is a Diagram, convert all of the children to polygons
      */
     public to_polygon() : Diagram {
-        let newd : Diagram = this.copy();
+        let newd : Diagram = this.copy_if_not_mutable();
         if (newd.type == DiagramType.Curve) {
             newd.type = DiagramType.Polygon;
         } else if (newd.type == DiagramType.Diagram) {
-            newd.children = newd.children.map(c => c.to_polygon());
+            // newd.children = newd.children.map(c => c.to_polygon());
+            for (let i = 0; i < newd.children.length; i++)
+                newd.children[i] = newd.children[i].to_polygon();
         }
         return newd;
     }
@@ -233,7 +278,7 @@ export class Diagram {
      * @param points points to add
      */
     public add_points(points : Vector2[]) : Diagram {
-        let newd : Diagram = this.copy();
+        let newd : Diagram = this.copy_if_not_mutable();
         if (newd.type == DiagramType.Polygon || newd.type == DiagramType.Curve) {
             if (newd.path == undefined) { throw new Error(this.type + " must have a path"); }
             newd.path = newd.path.add_points(points);
@@ -246,13 +291,15 @@ export class Diagram {
     }
 
     private update_style(stylename : keyof Diagram['style'], stylevalue : string, excludedType? : DiagramType[]) : Diagram {
-        let newd : Diagram = this.copy();
+        let newd : Diagram = this.copy_if_not_mutable();
         if (excludedType?.includes(newd.type)) { 
             return newd; 
         } else if (newd.type == DiagramType.Polygon || newd.type == DiagramType.Curve || newd.type == DiagramType.Text) {
             newd.style[stylename] = stylevalue;
         } else if (newd.type == DiagramType.Diagram) {
-            newd.children = newd.children.map(c => c.update_style(stylename, stylevalue, excludedType));
+            // newd.children = newd.children.map(c => c.update_style(stylename, stylevalue, excludedType));
+            for (let i = 0; i < newd.children.length; i++)
+                newd.children[i] = newd.children[i].update_style(stylename, stylevalue, excludedType);
         } else {
             throw new Error("Unreachable, unknown diagram type : " + newd.type);
         }
@@ -297,11 +344,13 @@ export class Diagram {
 
 
     private update_textdata(textdataname : keyof Diagram['textdata'], textdatavalue : string) : Diagram {
-        let newd : Diagram = this.copy();
+        let newd : Diagram = this.copy_if_not_mutable();
         if (newd.type == DiagramType.Text) {
             newd.textdata[textdataname] = textdatavalue;
         } else if (newd.type == DiagramType.Diagram) {
-            newd.children = newd.children.map(c => c.update_textdata(textdataname, textdatavalue));
+            // newd.children = newd.children.map(c => c.update_textdata(textdataname, textdatavalue));
+            for (let i = 0; i < newd.children.length; i++)
+                newd.children[i] = newd.children[i].update_textdata(textdataname, textdatavalue);
         } else if (newd.type == DiagramType.Polygon || newd.type == DiagramType.Curve) {
             // do nothing
         } else {
@@ -328,22 +377,26 @@ export class Diagram {
         return this.update_textdata('angle', angle.toString());
     }
     public text_tovar() : Diagram {
-        let newd : Diagram = this.copy();
+        let newd : Diagram = this.copy_if_not_mutable();
         if (newd.type == DiagramType.Text) {
             if (newd.textdata.text)
                 newd.textdata.text = str_to_mathematical_italic(newd.textdata.text);
         } else if (newd.type == DiagramType.Diagram) {
-            newd.children = newd.children.map(c => c.text_tovar());
+            // newd.children = newd.children.map(c => c.text_tovar());
+            for (let i = 0; i < newd.children.length; i++)
+                newd.children[i] = newd.children[i].text_tovar();
         }
         return newd;
     }
     public text_totext() : Diagram {
-        let newd : Diagram = this.copy();
+        let newd : Diagram = this.copy_if_not_mutable();
         if (newd.type == DiagramType.Text) {
             if (newd.textdata.text)
                 newd.textdata.text = str_to_normal_from_mathematical_italic(newd.textdata.text);
         } else if (newd.type == DiagramType.Diagram) {
-            newd.children = newd.children.map(c => c.text_tovar());
+            // newd.children = newd.children.map(c => c.text_totext());
+            for (let i = 0; i < newd.children.length; i++)
+                newd.children[i] = newd.children[i].text_totext();
         }
         return newd;
     }
@@ -358,7 +411,7 @@ export class Diagram {
         let minx = Infinity, miny = Infinity;
         let maxx = -Infinity, maxy = -Infinity;
         if (this.type == DiagramType.Diagram){
-                for (let c in this.children) {
+                for (let c = 0; c < this.children.length; c++){
                     let child = this.children[c];
                     let [min, max] = child.bounding_box();
                     minx = Math.min(minx, min.x);
@@ -371,7 +424,8 @@ export class Diagram {
         else if (this.type == DiagramType.Curve || this.type == DiagramType.Polygon 
             || this.type == DiagramType.Image){
                 if (this.path == undefined) { throw new Error(this.type + " must have a path"); }
-                for (let point of this.path.points) {
+                for (let p = 0; p < this.path.points.length; p++) {
+                    let point = this.path.points[p];
                     minx = Math.min(minx, point.x);
                     miny = Math.min(miny, point.y);
                     maxx = Math.max(maxx, point.x);
@@ -392,9 +446,11 @@ export class Diagram {
      * @param transform_function function to transform the diagram
      */
     public transform(transform_function : (p : Vector2) => Vector2) : Diagram {
-        let newd : Diagram = this.copy();
+        let newd : Diagram = this.copy_if_not_mutable();
         // transform all children
-        newd.children = newd.children.map(c => c.transform(transform_function));
+        // newd.children = newd.children.map(c => c.transform(transform_function));
+        for (let i = 0; i < newd.children.length; i++)
+            newd.children[i] = newd.children[i].transform(transform_function);
         // transform path
         if (newd.path != undefined) newd.path = newd.path.transform(transform_function);
         // transform origin
@@ -558,7 +614,7 @@ export class Diagram {
      * * for texts, use `move_origin_text()`
      */
     public move_origin(pos : Vector2 | Anchor) : Diagram {
-        let newd : Diagram = this.copy();
+        let newd : Diagram = this.copy_if_not_mutable();
         if (pos instanceof Vector2) {
             newd.origin = pos;
         } else {
@@ -577,7 +633,7 @@ export class Diagram {
      */
     private __move_origin_text(anchor : Anchor) : Diagram {
         // for text, use text-anchor and dominant-baseline
-        let newd = this.copy();
+        let newd = this.copy_if_not_mutable();
         let textdata = anchor_to_textdata(anchor);
         newd.textdata['text-anchor'] = textdata['text-anchor'];
         newd.textdata['dominant-baseline'] = textdata['dominant-baseline'];
@@ -594,11 +650,13 @@ export class Diagram {
      *
      */
     public move_origin_text(anchor : Anchor) : Diagram {
-        let newd = this.copy();
+        let newd = this.copy_if_not_mutable();
         if (this.type == DiagramType.Text) {
             newd = newd.__move_origin_text(anchor);
         } else if (this.type == DiagramType.Diagram) {
-            newd.children = newd.children.map(c => c.move_origin_text(anchor));
+            //newd.children = newd.children.map(c => c.move_origin_text(anchor));
+            for (let i = 0; i < newd.children.length; i++)
+                newd.children[i] = newd.children[i].move_origin_text(anchor);
         } else if (this.type == DiagramType.Polygon || this.type == DiagramType.Curve) {
             // do nothing
         }
@@ -608,7 +666,7 @@ export class Diagram {
     public path_length() : number {
         if (this.type == DiagramType.Diagram) {
             let length = 0;
-            for (let c in this.children) {
+            for (let c = 0; c < this.children.length; c++) {
                 length += this.children[c].path_length();
             }
             return length;
@@ -635,7 +693,7 @@ export class Diagram {
             // use entire length, use the childrens
             let cumuative_length = [];
             let length   = 0.0;
-            for (let c in this.children) {
+            for (let c = 0; c < this.children.length; c++) {
                 length += this.children[c].path_length();
                 cumuative_length.push(length);
             }
@@ -740,11 +798,15 @@ export class Diagram {
 }
 
 export class Path {
+    mutable : boolean = false;
     constructor(public points : Vector2[]) { }
 
     copy() : Path {
         let newpoints = this.points.map(p => new Vector2(p.x,p.y));
         return new Path(newpoints);
+    }
+    copy_if_not_mutable() : Path {
+        return this.mutable ? this : this.copy();
     }
 
     /**
@@ -763,7 +825,7 @@ export class Path {
      * @param points points to add
      */
     public add_points(points : Vector2[]) : Path {
-        let newp : Path = this.copy();
+        let newp : Path = this.copy_if_not_mutable();
         newp.points = newp.points.concat(points);
         return newp;
     }
@@ -824,9 +886,10 @@ export class Path {
      * @param transform_function function to transform the path
      */
     public transform(transform_function : (p : Vector2) => Vector2) : Path {
-        let newp : Path = this.copy();
+        let newp : Path = this.copy_if_not_mutable();
         // transform all the points
-        newp.points = newp.points.map(p => transform_function(p));
+        // newp.points = newp.points.map(p => transform_function(p));
+        for (let i = 0; i < newp.points.length; i++) newp.points[i] = transform_function(newp.points[i]);
         return newp;
     }
 }
@@ -837,8 +900,20 @@ export class Path {
  * @returns a diagram
  */
 export function diagram_combine(...diagrams : Diagram[]) : Diagram {
-    let newdiagrams = diagrams.map(d => d.copy());
+    let newdiagrams = diagrams.map(d => d.copy_if_not_mutable());
+
+    // check if all children is mutable
+    // if they are, then set the new diagram to be mutable
+    let all_children_mutable = true;
+    for (let i = 0; i < newdiagrams.length; i++) {
+        if (!newdiagrams[i].mutable) { 
+            all_children_mutable = false; 
+            break; 
+        }
+    }
+
     let newd = new Diagram(DiagramType.Diagram, {children : newdiagrams});
+    newd.mutable = all_children_mutable;
     return newd.move_origin(diagrams[0].origin);
     // return newd.move_origin(Anchor.CenterCenter);
     // i think it's better to keep the origin at the origin of the first diagram
