@@ -18,14 +18,9 @@ export let default_bar_options : bar_options = {
     bbox: [V2(0,0), V2(10,10)],
 }
 
-/**
- * Plot a bar chart
- * @param datavalues the data values to plot
- * @param bar_options options for the bar chart
- * @returns a diagram of the bar chart
- */
-export function plot(datavalues : number[], bar_options : Partial<bar_options> = {}){
-    let opt = {...default_bar_options, ...bar_options}; // use default if not defined
+
+function to_ax_options(datavalues : number[], baropt : Partial<bar_options>) : axes_options {
+    let opt = {...default_bar_options, ...baropt}; // use default if not defined
     let n = datavalues.length;
 
     let ymax = Math.max(...datavalues);
@@ -39,6 +34,19 @@ export function plot(datavalues : number[], bar_options : Partial<bar_options> =
         ticksize : opt.ticksize,
         bbox     : bbox,
     }
+    return ax_opt;
+}
+
+/**
+ * Plot a bar chart
+ * @param datavalues the data values to plot
+ * @param bar_options options for the bar chart
+ * @returns a diagram of the bar chart
+ */
+export function plot(datavalues : number[], bar_options : Partial<bar_options> = {}){
+    let opt = {...default_bar_options, ...bar_options}; // use default if not defined
+
+    let ax_opt = to_ax_options(datavalues, opt);
     let ax_f = axes_transform(ax_opt);
 
     let bar_arr = datavalues.map((y,i) => 
@@ -58,13 +66,7 @@ export function xaxes(datanames : string[], bar_options : Partial<bar_options> =
     let opt = {...default_bar_options, ...bar_options}; // use default if not defined
     let n = datanames.length;
 
-    let ax_opt : axes_options = {
-        xrange   : [0, n+1],
-        yrange   : [0, 1],
-        headsize : 0,
-        ticksize : opt.ticksize,
-        bbox     : opt.bbox,
-    }
+    let ax_opt = to_ax_options(datanames.map(() => 1), opt);
     let ax_f = axes_transform(ax_opt);
 
     let l = line(V2(0,0), V2(n+1,0)).transform(ax_f).stroke('gray');
@@ -82,20 +84,20 @@ export function xaxes(datanames : string[], bar_options : Partial<bar_options> =
  */
 export function yaxes(datavalues : number[], bar_options : Partial<bar_options> = {}){
     let opt = {...default_bar_options, ...bar_options}; // use default if not defined
-    let n = datavalues.length;
 
-    let ymax = Math.max(...datavalues);
+    let ax_opt = to_ax_options(datavalues, opt);
+
+    let ymax   = ax_opt.yrange[1];
     let yrange = opt.yrange ?? [0, ymax];
-    let bbox = opt.bbox ?? [V2(0,0), V2(10,ymax)];
 
-    let ax_opt : axes_options = {
-        xrange   : [0, n+1],
-        yrange   : yrange,
-        headsize : 0,
-        ticksize : opt.ticksize,
-        bbox     : bbox,
-    }
+    let ax_f = axes_transform(ax_opt);
 
-    let l = line(V2(0,0), V2(0,yrange[1])).transform(axes_transform(ax_opt)).stroke('gray');
+    let l = line(V2(0,0), V2(0,yrange[1])).transform(ax_f).stroke('gray');
     return yticks(ax_opt).combine(l);
+}
+
+export function axes_tansform(datavalues : number[], bar_options : Partial<bar_options> = {}) : (v : Vector2) => Vector2 {
+    let opt = {...default_bar_options, ...bar_options}; // use default if not defined
+    let ax_opt = to_ax_options(datavalues, opt);
+    return axes_transform(ax_opt);
 }
