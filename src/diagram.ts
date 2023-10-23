@@ -137,7 +137,7 @@ export class Diagram {
         // convert position and origin_offset to Vector2
         newd.origin = Object.setPrototypeOf(newd.origin, Vector2.prototype);
         // make sure all of the children are Diagram
-        for (let c in newd.children) {
+        for (let c = 0; c < newd.children.length; c++) {
             Object.setPrototypeOf(newd.children[c], Diagram.prototype);
             newd.children[c] = newd.children[c].copy();
         }

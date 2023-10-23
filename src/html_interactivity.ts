@@ -358,7 +358,7 @@ function closest_point_from_points(p : Vector2, points : Vector2[]) : Vector2 {
     if (points.length == 0) return p;
     let closest_d2 = Infinity;
     let closest_p = points[0];
-    for (let i in points) {
+    for (let i = 0; i < points.length; i++) {
         let d2 = points[i].sub(p).length_sq();
         if (d2 < closest_d2) {
             closest_d2 = d2;
