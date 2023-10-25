@@ -9,24 +9,6 @@
   padding-left: 10px;
 }
 
-.diagramatics-slider-moreplaybutton {
-  width:  30px;
-  height: 15px;
-  background-color: #DDD;
-  border-radius: 5px;
-  border: none;
-  color: #000;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 12px;
-  /* margin: 4px 2px; */
-  cursor: pointer;
-}
-.diagramatics-slider-moreplaybutton:hover {
-  background-color: #EEE;
-}
-
 .diagramatics-slider-playbutton {
   width:  30px;
   height: 30px;

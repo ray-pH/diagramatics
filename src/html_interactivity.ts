@@ -264,22 +264,12 @@ export class Interactive {
             }
         }
 
-        // =========== morebutton ========
-        let morebutton = document.createElement('button');
-        morebutton.classList.add("diagramatics-slider-moreplaybutton");
-        morebutton.innerHTML = '⋯';
-        morebutton.onclick = () => {
-            // alert not implementer
-            alert("Not implemented yet");
-        }
-        
         // ==============================
         // add components to div
         //
         // <div class="diagramatics-slider-leftcontainer">
         //     <button class="diagramatics-slider-playbutton"></button>
         //     <br>
-        //     <button class="diagramatics-slider-moreplaybutton"></button>
         // </div>
         // <div class="diagramatics-slider-rightcontainer">
         //     <div class="diagramatics-label"></div>
@@ -289,8 +279,6 @@ export class Interactive {
         let leftcontainer = document.createElement('div');
         leftcontainer.classList.add("diagramatics-slider-leftcontainer");
         leftcontainer.appendChild(playbutton);
-        leftcontainer.appendChild(document.createElement('br'));
-        leftcontainer.appendChild(morebutton);
 
         let rightcontainer = document.createElement('div');
         rightcontainer.classList.add("diagramatics-slider-rightcontainer");
