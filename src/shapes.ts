@@ -1,6 +1,6 @@
 import { Diagram, polygon, line, curve, text, diagram_combine } from './diagram.js';
 import { Vector2, V2 } from './vector.js';
-import { linspace, to_radian } from './utils.js';
+import { to_radian } from './utils.js';
 import { str_to_mathematical_italic } from './unicode_utils.js'
 
 // function helpers to create common shapes

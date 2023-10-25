@@ -1,4 +1,4 @@
-import { Diagram, DiagramType, DiagramStyle, TextData, ImageData } from "./diagram.js";
+import { Diagram, DiagramType, DiagramStyle, TextData } from "./diagram.js";
 import { tab_color, get_color } from "./color_palette.js";
 import { to_degree } from "./utils.js";
 

@@ -1,8 +1,7 @@
-import { Diagram, Anchor, polygon, line, curve, text, diagram_combine } from '../diagram.js';
+import { line, text, diagram_combine } from '../diagram.js';
 import { Vector2, V2 } from '../vector.js';
-import { linspace } from '../utils.js';
-import { rectangle, rectangle_corner, arrow1, arrow2, textvar } from '../shapes.js'
-import { axes_options, yticks, xticks, axes_transform } from './shapes_graph.js'
+import { rectangle, } from '../shapes.js'
+import { axes_options, yticks, axes_transform } from './shapes_graph.js'
 
 export type bar_options = {
     gap : number,

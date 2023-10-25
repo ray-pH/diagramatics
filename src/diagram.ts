@@ -1,5 +1,5 @@
 import { Vector2, V2, Transform } from './vector.js';
-import { str_latex_to_unicode, str_to_mathematical_italic, str_to_normal_from_mathematical_italic } from './unicode_utils.js'
+import { str_to_mathematical_italic, str_to_normal_from_mathematical_italic } from './unicode_utils.js'
 
 function assert(condition : boolean, message : string) : void {
     if (!condition) {
@@ -79,7 +79,7 @@ function anchor_to_textdata(anchor : Anchor) : TextData {
 * Diagram Class 
 *
 * Diagram is a tree structure
-* Diagram can be a polygon, a curve, or a diagram
+* Diagram can be a polygon, curve, text, image, or diagram
 * Polygon is a closed path
 * Curve is an open path
 * Diagram is a tree of Diagrams

@@ -1,5 +1,5 @@
-import { Diagram, DiagramType, diagram_combine, Anchor, empty } from './diagram.js';
-import { Vector2, V2 } from './vector.js';
+import { Diagram, diagram_combine, empty } from './diagram.js';
+import { V2 } from './vector.js';
 
 type VerticalAlignment   = 'top'  | 'center' | 'bottom';
 type HorizontalAlignment = 'left' | 'center' | 'right';

@@ -1,4 +1,4 @@
-import { Diagram, polygon, line, diagram_combine, curve } from '../diagram.js';
+import { Diagram, polygon, curve } from '../diagram.js';
 import { Vector2, V2 } from '../vector.js';
 import { linspace } from '../utils.js';
 
