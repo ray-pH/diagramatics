@@ -1,11 +1,14 @@
-
-/* circular button */
+.diagramatics-slider-container{
+  display: flex;
+}
 .diagramatics-slider-leftcontainer{
-  display: inline-block;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .diagramatics-slider-rightcontainer{
-  display: inline-block;
+  /* display: inline-block; */
   padding-left: 10px;
 }
 
@@ -61,6 +64,7 @@
   
   /* New additions */
   height: 5px;
+  margin-bottom: 12.5px;
   background: #ccc;
   /* background: linear-gradient(to right, #1f77b4 0%, #1f77b4 90%, #0000 90%, #0000 100%); */
   /* create a backround color that has padding of 5px on both side */

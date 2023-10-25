@@ -268,8 +268,8 @@ export class Interactive {
         // add components to div
         //
         // <div class="diagramatics-slider-leftcontainer">
-        //     <button class="diagramatics-slider-playbutton"></button>
         //     <br>
+        //     <button class="diagramatics-slider-playbutton"></button>
         // </div>
         // <div class="diagramatics-slider-rightcontainer">
         //     <div class="diagramatics-label"></div>
@@ -278,6 +278,7 @@ export class Interactive {
         //
         let leftcontainer = document.createElement('div');
         leftcontainer.classList.add("diagramatics-slider-leftcontainer");
+        leftcontainer.appendChild(document.createElement('br'));
         leftcontainer.appendChild(playbutton);
 
         let rightcontainer = document.createElement('div');
