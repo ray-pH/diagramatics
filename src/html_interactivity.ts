@@ -239,12 +239,14 @@ export class Interactive {
         const interval_time = 1000 * time / nstep;
 
         let playbutton = document.createElement('button');
+        let symboldiv  = document.createElement('div');
+        symboldiv.classList.add("diagramatics-slider-playbutton-symbol");
+        playbutton.appendChild(symboldiv);
         playbutton.classList.add("diagramatics-slider-playbutton");
-        playbutton.innerHTML = '>';
         playbutton.onclick = () => {
             if (this.intervals[variable_name] == undefined){
                 // if is not playing
-                playbutton.innerHTML = 'o';
+                playbutton.classList.add("paused");
                 this.intervals[variable_name] = setInterval(() => {
                     let val = parseFloat(slider.value);
                     val += step;
@@ -256,7 +258,7 @@ export class Interactive {
                 }, interval_time);
             } else {
                 // if is playing
-                playbutton.innerHTML = '>';
+                playbutton.classList.remove("paused");
                 clearInterval(this.intervals[variable_name]);
                 this.intervals[variable_name] = undefined;
             }
