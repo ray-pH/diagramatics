@@ -100,7 +100,7 @@ export class Interactive {
      * @param color color of the locator
      * @param track_diagram if provided, the locator will snap to the closest point on the diagram
      */
-    public locator(variable_name : string, value : Vector2, radius : number, color : string = 'blue', track_diagram? : Diagram){
+    public locator(variable_name : string, value : Vector2, radius : number, color : string = 'blue', track_diagram? : Diagram, blink : boolean = true){
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
         this.inp_variables[variable_name] = value;
 
@@ -156,7 +156,13 @@ export class Interactive {
 
         // ============== Circle element
 
-        let locator_svg = create_locator_pointer_svg(radius, value, color);
+        let locator_svg = create_locator_pointer_svg(radius, value, color, blink);
+        if(blink){
+            // store the circle_outer into the LocatorHandler so that we can turn it off later
+            let blinking_outers = locator_svg.getElementsByClassName("diagramatics-locator-blink");
+            for (let i = 0; i < blinking_outers.length; i++)
+                (this.locatorHandler as LocatorHandler).addBlinkingCircleOuter(blinking_outers[i])
+        }
         locator_svg.addEventListener('mousedown', (evt) => { 
             (this.locatorHandler as LocatorHandler).startDrag(evt, variable_name, locator_svg);
         });
@@ -314,7 +320,7 @@ function create_slider(callback : (val : number) => any, min : number = 0, max :
     return slider;
 }
 
-function create_locator_pointer_svg(radius : number, value : Vector2, color : string) : SVGSVGElement {
+function create_locator_pointer_svg(radius : number, value : Vector2, color : string, blink : boolean) : SVGSVGElement {
     let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     // set svg overflow to visible
     svg.setAttribute("overflow", "visible");
@@ -330,10 +336,13 @@ function create_locator_pointer_svg(radius : number, value : Vector2, color : st
     circle_outer.setAttribute("fill", get_color(color, tab_color));
     circle_outer.setAttribute("fill-opacity", "0.3137");
     circle_outer.setAttribute("stroke", "none");
+    circle_outer.classList.add("diagramatics-locator-outer");
+    if (blink) circle_outer.classList.add("diagramatics-locator-blink");
 
     circle_inner.setAttribute("r", inner_radius.toString());
     circle_inner.setAttribute("fill", get_color(color, tab_color));
     circle_inner.setAttribute("stroke", "none");
+    circle_inner.classList.add("diagramatics-locator-inner");
 
     svg.appendChild(circle_outer);
     svg.appendChild(circle_inner);
@@ -366,6 +375,9 @@ class LocatorHandler {
     selectedVariable : string | null = null;
     callbacks : {[key : string] : (pos : Vector2) => any} = {};
     setter    : {[key : string] : (pos : Vector2) => any} = {};
+    // store blinking circle_outer so that we can turn it off
+    blinking_circle_outers : Element[] = [];
+    first_touch_callback : Function | null = null;
 
     constructor(public control_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
     }
@@ -381,6 +393,7 @@ class LocatorHandler {
     startDrag(_ : LocatorEvent, variable_name : string, selectedElement : SVGElement) {
         this.selectedElement  = selectedElement;
         this.selectedVariable = variable_name;
+        this.handleBlinking();
     }
     drag(evt : LocatorEvent) {
         if (this.selectedElement == undefined) return;
@@ -422,5 +435,17 @@ class LocatorHandler {
     }
     registerSetter(name : string, setter : (pos : Vector2) => any){
         this.setter[name] = setter;
+    }
+    addBlinkingCircleOuter(circle_outer : Element){
+        this.blinking_circle_outers.push(circle_outer);
+    }
+    handleBlinking(){
+        // turn off all blinking_circle_outers after the first touch
+        if (this.blinking_circle_outers.length == 0) return;
+        for (let i = 0; i < this.blinking_circle_outers.length; i++) {
+            this.blinking_circle_outers[i].classList.remove("diagramatics-locator-blink");
+        }
+        this.blinking_circle_outers = [];
+        if (this.first_touch_callback != null) this.first_touch_callback();
     }
 }
