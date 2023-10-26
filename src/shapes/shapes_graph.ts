@@ -1,6 +1,6 @@
 import { Diagram, line, curve, diagram_combine } from '../diagram.js';
 import { Vector2, V2 } from '../vector.js';
-import { linspace } from '../utils.js';
+import { linspace, range_inc } from '../utils.js';
 import { arrow1, arrow2, textvar } from '../shapes.js'
 
 /**
@@ -164,12 +164,12 @@ function get_tick_interval(min : number, max : number) : number {
 function get_tick_numbers_range(min : number, max : number) : number[] {
     let interval = get_tick_interval(min, max);
     // round min and max to the nearest interval
-    let new_min = Math.ceil(min/interval)*interval;
-    let new_max = Math.floor(max/interval)*interval;
-    let new_count = Math.floor((new_max-new_min)/interval);
-    let l = linspace(new_min, new_max, new_count+1);
+    let new_min = Math.round(min/interval)*interval;
+    let new_max = Math.round(max/interval)*interval;
+    let new_count = Math.round((new_max-new_min)/interval);
+    let l = range_inc(0, new_count).map(x => new_min + x*interval);
     // round l to the nearest interval
-    let interval_prec = -Math.floor(Math.log10(interval));
+    let interval_prec = -Math.floor(Math.log10(interval)-1);
     if (interval_prec >= 0) l = l.map(x => parseFloat(x.toFixed(interval_prec)));
     return l;
 }
@@ -195,7 +195,7 @@ function get_tick_numbers_aroundzero(neg : number, pos : number, nozero : boolea
         return l;
     }
 }
-function get_tick_numbers(min : number, max : number, exclude_zero : boolean = true) : number[] {
+export function get_tick_numbers(min : number, max : number, exclude_zero : boolean = true) : number[] {
     if (exclude_zero && min < 0 && max > 0) {
         return get_tick_numbers_aroundzero(min, max);
     } else {
