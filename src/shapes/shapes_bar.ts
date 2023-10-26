@@ -27,7 +27,7 @@ function to_ax_options(datavalues : number[], baropt : Partial<bar_options>) : a
     let bbox = opt.bbox ?? [V2(0,0), V2(10,ymax)];
 
     let ax_opt : axes_options = {
-        xrange   : [0, n+1],
+        xrange   : [-1, n],
         yrange   : yrange,
         headsize : 0,
         ticksize : opt.ticksize,
@@ -50,7 +50,7 @@ export function plot(datavalues : number[], bar_options : Partial<bar_options> =
 
     let bar_arr = datavalues.map((y,i) => 
         rectangle(1.0-opt.gap, y).move_origin('bottom-center')
-            .position(V2(Number(i)+1, 0)).transform(ax_f)
+            .position(V2(Number(i), 0)).transform(ax_f)
     );
     return diagram_combine(...bar_arr);
 }
@@ -68,7 +68,7 @@ export function xaxes(datanames : string[], bar_options : Partial<bar_options> =
     let ax_opt = to_ax_options(datanames.map(() => 1), opt);
     let ax_f = axes_transform(ax_opt);
 
-    let l = line(V2(0,0), V2(n+1,0)).transform(ax_f).stroke('gray');
+    let l = line(V2(-1,0), V2(n,0)).transform(ax_f).stroke('gray');
     let label_arr = datanames.map((name,i) => 
         text(name).move_origin_text('top-center').position(V2(Number(i)+1, 0)).transform(ax_f)
             .translate(V2(0,-opt.ticksize/2)).textfill('gray')
@@ -91,8 +91,8 @@ export function yaxes(datavalues : number[], bar_options : Partial<bar_options> 
 
     let ax_f = axes_transform(ax_opt);
 
-    let l = line(V2(0,0), V2(0,yrange[1])).transform(ax_f).stroke('gray');
-    return yticks(ax_opt).combine(l);
+    let l = line(V2(-1,0), V2(-1,yrange[1])).transform(ax_f).stroke('gray');
+    return yticks(ax_opt, -1).combine(l);
 }
 
 export function axes_tansform(datavalues : number[], bar_options : Partial<bar_options> = {}) : (v : Vector2) => Vector2 {
