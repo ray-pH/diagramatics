@@ -26,37 +26,37 @@ export type Anchor =
  */
 
 export type DiagramStyle = {
-    "stroke"?           : string,
-    "fill"?             : string,
-    "opacity"?          : string,
-    "stroke-width"?     : string, // number
-    "stroke-linecap"?   : string,
-    "stroke-dasharray"? : string, // number[]
-    "stroke-linejoin"?  : string,
-    "vector-effect"?    : string,
+    "stroke"           : string,
+    "fill"             : string,
+    "opacity"          : string,
+    "stroke-width"     : string, // number
+    "stroke-linecap"   : string,
+    "stroke-dasharray" : string, // number[]
+    "stroke-linejoin"  : string,
+    "vector-effect"    : string,
     // TODO : add more style
 }
 
 export type TextData = {
-    "text"?             : string,
-    "font-family"?      : string,
-    "font-size"?        : string,
-    "font-weight"?      : string,
-    "font-style"?       : string,
-    "text-anchor"?      : string,
-    "dominant-baseline"?: string,
-    "angle"?            : string,
-    // "letter-spacing"?   : string,
-    // "word-spacing"?     : string,
-    // "text-decoration"?  : string,
-    // "writing-mode"?     : string,
+    "text"             : string,
+    "font-family"      : string,
+    "font-size"        : string,
+    "font-weight"      : string,
+    "font-style"       : string,
+    "text-anchor"      : string,
+    "dominant-baseline": string,
+    "angle"            : string,
+    // "letter-spacing"   : string,
+    // "word-spacing"     : string,
+    // "text-decoration"  : string,
+    // "writing-mode"     : string,
 }
 
 export type ImageData = {
-    "src"?    : string,
+    "src"    : string,
 }
 
-function anchor_to_textdata(anchor : Anchor) : TextData {
+function anchor_to_textdata(anchor : Anchor) : Partial<TextData> {
     // TODO : might want to look at
     // hanging vs text-before-edge
     // ideographic vs text-after-edge
@@ -89,14 +89,19 @@ export class Diagram {
     children : Diagram[] = [];
     path : Path | undefined = undefined; // Polygon and Curve have a path
     origin : Vector2 = new Vector2(0, 0); // position of the origin of the diagram
-    style  : DiagramStyle = {};
-    textdata : TextData = {};
-    imgdata  : ImageData = {};
+    style    : Partial<DiagramStyle> = {};
+    textdata : Partial<TextData>     = {};
+    imgdata  : Partial<ImageData>    = {};
     mutable  : boolean   = false;
     tags : string[] = [];
 
     constructor(type_ : DiagramType, 
-        args : { path? : Path, children? : Diagram[], textdata? : TextData, imgdata? : ImageData } = {}
+        args : { 
+            path?     : Path, 
+            children? : Diagram[], 
+            textdata? : Partial<TextData>, 
+            imgdata?  : Partial<ImageData> 
+        } = {}
     ) {
         this.type = type_;
         this.path = args.path;

@@ -16,6 +16,7 @@ export const default_diagram_style : DiagramStyle = {
     "stroke-dasharray" : "none",
     "stroke-linejoin"  : "round",
     "vector-effect"    : "non-scaling-stroke",
+    "opacity"          : "1",
 }
 export const _init_default_diagram_style : DiagramStyle = {...default_diagram_style}
 
@@ -27,6 +28,7 @@ export const default_text_diagram_style : DiagramStyle = {
     "stroke-dasharray" : "none",
     "stroke-linejoin"  : "round",
     "vector-effect"    : "non-scaling-stroke",
+    "opacity"          : "1",
 }
 export const _init_default_text_diagram_style : DiagramStyle = {...default_text_diagram_style}
 
@@ -38,6 +40,7 @@ export const default_textdata : TextData = {
     "text-anchor"      : "middle",
     "dominant-baseline": "middle",
     "angle"            : "0",
+    "font-style"       : "normal",
 }
 export const _init_default_textdata : TextData = {...default_textdata}
 
