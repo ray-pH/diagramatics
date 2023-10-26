@@ -1,4 +1,4 @@
-import { line, text, diagram_combine } from '../diagram.js';
+import { Diagram, line, text, diagram_combine } from '../diagram.js';
 import { Vector2, V2 } from '../vector.js';
 import { rectangle, } from '../shapes.js'
 import { axes_options, yticks, axes_transform } from './shapes_graph.js'
@@ -42,7 +42,7 @@ function to_ax_options(datavalues : number[], baropt : Partial<bar_options>) : a
  * @param bar_options options for the bar chart
  * @returns a diagram of the bar chart
  */
-export function plot(datavalues : number[], bar_options : Partial<bar_options> = {}){
+export function plot(datavalues : number[], bar_options : Partial<bar_options> = {}) : Diagram {
     let opt = {...default_bar_options, ...bar_options}; // use default if not defined
 
     let ax_opt = to_ax_options(datavalues, opt);
@@ -61,7 +61,7 @@ export function plot(datavalues : number[], bar_options : Partial<bar_options> =
  * @param bar_options options for the bar chart
  * @returns a diagram of the x-axes
  */
-export function xaxes(datanames : string[], bar_options : Partial<bar_options> = {}){
+export function xaxes(datanames : string[], bar_options : Partial<bar_options> = {}) : Diagram {
     let opt = {...default_bar_options, ...bar_options}; // use default if not defined
     let n = datanames.length;
 
@@ -81,7 +81,7 @@ export function xaxes(datanames : string[], bar_options : Partial<bar_options> =
  * @param datavalues the data values
  * @param bar_options options for the bar chart
  */
-export function yaxes(datavalues : number[], bar_options : Partial<bar_options> = {}){
+export function yaxes(datavalues : number[], bar_options : Partial<bar_options> = {}) : Diagram {
     let opt = {...default_bar_options, ...bar_options}; // use default if not defined
 
     let ax_opt = to_ax_options(datavalues, opt);
