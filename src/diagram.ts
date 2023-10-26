@@ -46,6 +46,7 @@ export type TextData = {
     "text-anchor"      : string,
     "dominant-baseline": string,
     "angle"            : string,
+    "font-scale"       : string, // this is a custom attribute that is not present in SVG
     // "letter-spacing"   : string,
     // "word-spacing"     : string,
     // "text-decoration"  : string,
@@ -371,6 +372,9 @@ export class Diagram {
     }
     public fontweight(fontweight : 'normal' | 'bold' | 'bolder' | 'lighter' | number ) : Diagram {
         return this.update_textdata('font-weight', fontweight.toString());
+    }
+    public fontscale(fontscale : number | 'auto') : Diagram {
+        return this.update_textdata('font-scale', fontscale.toString());
     }
     public textanchor(textanchor : 'start' | 'middle' | 'end' ) : Diagram {
         return this.update_textdata('text-anchor', textanchor);

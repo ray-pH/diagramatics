@@ -41,6 +41,7 @@ export const default_textdata : TextData = {
     "dominant-baseline": "middle",
     "angle"            : "0",
     "font-style"       : "normal",
+    "font-scale"       : "auto",
 }
 export const _init_default_textdata : TextData = {...default_textdata}
 
@@ -182,7 +183,7 @@ function draw_texts(svgelement : SVGSVGElement, diagrams : Diagram[]) : void {
     let bbox = svgelement.getBBox();
     let svgelement_width = svgelement.width.baseVal.value;
     let svgelement_height = svgelement.height.baseVal.value;
-    let scale = Math.max(bbox.width / svgelement_width, bbox.height / svgelement_height)
+    let calculated_scale = Math.max(bbox.width / svgelement_width, bbox.height / svgelement_height)
 
     for (let diagram of diagrams) {
         let style = {...default_text_diagram_style, ...diagram.style}; // use default if not defined
@@ -199,6 +200,8 @@ function draw_texts(svgelement : SVGSVGElement, diagrams : Diagram[]) : void {
         let ypos = -diagram.path.points[0].y;
         let angle_deg = to_degree(parseFloat(textdata["angle"] as string));
 
+        let scale = textdata["font-scale"] == "auto" ? 
+            calculated_scale : parseFloat(textdata["font-scale"] as string);
         let font_size = parseFloat(textdata["font-size"] as string) * scale;
 
         // set font styles (font-family, font-size, font-weight)
