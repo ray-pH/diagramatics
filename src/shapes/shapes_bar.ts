@@ -70,7 +70,7 @@ export function xaxes(datanames : string[], bar_options : Partial<bar_options> =
 
     let l = line(V2(-1,0), V2(n,0)).transform(ax_f).stroke('gray');
     let label_arr = datanames.map((name,i) => 
-        text(name).move_origin_text('top-center').position(V2(Number(i)+1, 0)).transform(ax_f)
+        text(name).move_origin_text('top-center').position(V2(Number(i), 0)).transform(ax_f)
             .translate(V2(0,-opt.ticksize/2)).textfill('gray')
     );
     return diagram_combine(l, ...label_arr);
