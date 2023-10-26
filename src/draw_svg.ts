@@ -45,6 +45,15 @@ export const default_textdata : TextData = {
 }
 export const _init_default_textdata : TextData = {...default_textdata}
 
+export function reset_default_styles() : void {
+    for (let s in default_diagram_style) 
+        (default_diagram_style as any)[s] = (_init_default_diagram_style as any)[s];
+    for (let s in default_text_diagram_style)
+        (default_text_diagram_style as any)[s] = (_init_default_text_diagram_style as any)[s];
+    for (let s in default_textdata)
+        (default_textdata as any)[s] = (_init_default_textdata as any)[s];
+}
+
 function draw_polygon(svgelement : SVGSVGElement, diagram : Diagram) : void {
     // get properties
     let style = {...default_diagram_style, ...diagram.style}; // use default if not defined

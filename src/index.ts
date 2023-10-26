@@ -16,6 +16,7 @@ export {
     draw_to_svg, download_svg_as_svg, download_svg_as_png,
     default_diagram_style, default_text_diagram_style, default_textdata,
     _init_default_diagram_style, _init_default_text_diagram_style, _init_default_textdata,
+    reset_default_styles,
 } from './draw_svg.js';
 
 export { 
