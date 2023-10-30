@@ -368,6 +368,25 @@ function closest_point_from_points(p : Vector2, points : Vector2[]) : Vector2 {
     return closest_p;
 }
 
+// helper to calculate CTM in firefox
+// there's a well known bug in firefox about `getScreenCTM()`
+function firefox_calcCTM(svgelem : SVGSVGElement) : DOMMatrix {
+    let ctm = svgelem.getScreenCTM() as DOMMatrix;
+    // get screen width and height of the element
+    let screenWidth  = svgelem.width.baseVal.value;
+    let screenHeight = svgelem.height.baseVal.value;
+    let viewBox      = svgelem.viewBox.baseVal;
+    let scalex       = screenWidth/viewBox.width;
+    let scaley       = screenHeight/viewBox.height;
+    let scale        = Math.min(scalex, scaley);
+
+    // let translateX = (screenWidth/2  + ctm.e) - (viewBox.width/2  + viewBox.x) * scale;
+    // let translateY = (screenHeight/2 + ctm.f) - (viewBox.height/2 + viewBox.y) * scale;
+    let translateX = (screenWidth/2 ) - (viewBox.width/2  + viewBox.x) * scale;
+    let translateY = (screenHeight/2) - (viewBox.height/2 + viewBox.y) * scale;
+    return DOMMatrix.fromMatrix(ctm).translate(translateX, translateY).scale(scale);
+}
+
 type LocatorEvent = TouchEvent | Touch | MouseEvent
 class LocatorHandler {
 
@@ -383,11 +402,22 @@ class LocatorHandler {
     }
 
     getMousePosition(evt : LocatorEvent ) {
-        var CTM = this.control_svg.getScreenCTM() as DOMMatrix;
-        if (evt instanceof TouchEvent) { evt = evt.touches[0]; }
+        // var CTM = this.control_svg.getScreenCTM() as DOMMatrix;
+        // NOTE: there's a well known bug in firefox about `getScreenCTM()`
+        // check if the browser is firefox
+        let CTM : DOMMatrix;
+        if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
+            CTM = firefox_calcCTM(this.control_svg);
+        } else {
+            CTM = this.control_svg.getScreenCTM() as DOMMatrix;
+        }
+        console.log(CTM);
+
+        // firefox doesn't support `TouchEvent`, we need to check for it
+        if (window.TouchEvent && evt instanceof TouchEvent) { evt = evt.touches[0]; }
         return {
-            x: (evt.clientX - CTM.e) / CTM.a,
-            y: (evt.clientY - CTM.f) / CTM.d
+            x: ((evt as Touch | MouseEvent).clientX - CTM.e) / CTM.a,
+            y: ((evt as Touch | MouseEvent).clientY - CTM.f) / CTM.d
         };
     }
     startDrag(_ : LocatorEvent, variable_name : string, selectedElement : SVGElement) {
@@ -400,7 +430,7 @@ class LocatorHandler {
         if (this.selectedVariable == undefined) return;
 
         if (evt instanceof MouseEvent) { evt.preventDefault(); }
-        if (evt instanceof TouchEvent) { evt.preventDefault(); }
+        if (window.TouchEvent && evt instanceof TouchEvent) { evt.preventDefault(); }
 
         let coord = this.getMousePosition(evt);
 
