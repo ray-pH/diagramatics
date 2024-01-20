@@ -1,5 +1,4 @@
 import { Vector2, V2, Transform } from './vector.js';
-import { str_to_mathematical_italic, str_to_normal_from_mathematical_italic } from './unicode_utils.js'
 
 function assert(condition : boolean, message : string) : void {
     if (!condition) {
@@ -179,6 +178,7 @@ export class Diagram {
      */
     public append_tag(tag : string) : Diagram {
         let newd = this.copy_if_not_mutable();
+        if(newd.tags.includes(tag)) return newd;
         newd.tags.push(tag);
         return newd;
     }
@@ -388,8 +388,7 @@ export class Diagram {
     public text_tovar() : Diagram {
         let newd : Diagram = this.copy_if_not_mutable();
         if (newd.type == DiagramType.Text) {
-            if (newd.textdata.text)
-                newd.textdata.text = str_to_mathematical_italic(newd.textdata.text);
+            newd = newd.append_tag('textvar');
         } else if (newd.type == DiagramType.Diagram) {
             // newd.children = newd.children.map(c => c.text_tovar());
             for (let i = 0; i < newd.children.length; i++)
@@ -400,8 +399,7 @@ export class Diagram {
     public text_totext() : Diagram {
         let newd : Diagram = this.copy_if_not_mutable();
         if (newd.type == DiagramType.Text) {
-            if (newd.textdata.text)
-                newd.textdata.text = str_to_normal_from_mathematical_italic(newd.textdata.text);
+            newd = newd.remove_tag('textvar');
         } else if (newd.type == DiagramType.Diagram) {
             // newd.children = newd.children.map(c => c.text_totext());
             for (let i = 0; i < newd.children.length; i++)

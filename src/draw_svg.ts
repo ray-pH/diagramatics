@@ -1,6 +1,7 @@
 import { Diagram, DiagramType, DiagramStyle, TextData } from "./diagram.js";
 import { tab_color, get_color } from "./color_palette.js";
 import { to_degree } from "./utils.js";
+import { str_to_mathematical_italic, str_to_normal_from_mathematical_italic } from './unicode_utils.js'
 
 // TODO : add guard for the dictionary key
 // since the implementation is using `for (let stylename in style)` without checking
@@ -225,7 +226,9 @@ function draw_texts(svgelement : SVGSVGElement, diagrams : Diagram[]) : void {
         }
 
         // set the content of the text
-        text.innerHTML = textdata["text"] as string;
+        let text_content = textdata["text"];
+        if (diagram.tags.includes('textvar')) text_content = str_to_mathematical_italic(text_content);
+        text.innerHTML = text_content;
 
         // add to svgelement
         svgelement.appendChild(text);
