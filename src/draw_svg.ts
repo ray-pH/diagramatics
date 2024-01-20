@@ -370,9 +370,15 @@ export function handle_tex_in_svg(svg : SVGElement, texhandler : texhadler_funct
             // let angstr = child.getAttribute('_angle');
             if (xstr == null || ystr == null) continue;
 
+            let textanchor = child.getAttribute('text-anchor');
+            let dominantbaseline = child.getAttribute('dominant-baseline');
+            if (textanchor == null || dominantbaseline == null) continue;
+
             child.outerHTML = svgstr;
             child = svg.children[i]; // update child
 
+
+            
             // HACK: scaling for mathjax tex2svg, for other option think about it later
             const default_fontsize = 18;
             let scale = parseFloat(fontsize) / default_fontsize;
@@ -383,10 +389,27 @@ export function handle_tex_in_svg(svg : SVGElement, texhandler : texhadler_funct
             if (heightex == null) continue;
             let height = parseFloat(heightex.substring(0, heightex.length-2)) * scale;
 
+            let xval = parseFloat(xstr);
+            let yval = parseFloat(ystr);
+            switch (textanchor) {
+                case "start": break; // left
+                case "middle":       // center
+                    xval -= width/2; break;
+                case "end":          // right
+                    xval -= width; break;
+            }
+            switch (dominantbaseline) {
+                case "text-before-edge": break; // top
+                case "middle":                  // center
+                    yval -= height/2; break;
+                case "text-after-edge":         // bottom
+                    yval -= height; break;
+            }
+
             child.setAttribute('width', `${width}ex`);
             child.setAttribute('height', `${height}ex`);
-            child.setAttribute('x', `${-width/2 + parseFloat(xstr)}ex`);
-            child.setAttribute('y', `${-height/2 + parseFloat(ystr)}ex`);
+            child.setAttribute('x', `${xval}ex`);
+            child.setAttribute('y', `${yval}ex`);
         } else if (child instanceof SVGElement) {
             handle_tex_in_svg(child, texhandler);
         }
