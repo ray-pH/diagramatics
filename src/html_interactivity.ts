@@ -411,7 +411,7 @@ class LocatorHandler {
         } else {
             CTM = this.control_svg.getScreenCTM() as DOMMatrix;
         }
-        console.log(CTM);
+        // console.log(CTM);
 
         // firefox doesn't support `TouchEvent`, we need to check for it
         if (window.TouchEvent && evt instanceof TouchEvent) { evt = evt.touches[0]; }
