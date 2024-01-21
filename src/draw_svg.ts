@@ -233,7 +233,8 @@ function draw_texts(svgelement : SVGSVGElement, diagrams : Diagram[]) : void {
 
         // set the content of the text
         let text_content = textdata["text"];
-        if (diagram.tags.includes('textvar')) text_content = str_to_mathematical_italic(text_content);
+        if (diagram.tags.includes('textvar') && !is_texstr(text_content)) 
+            text_content = str_to_mathematical_italic(text_content);
         text.innerHTML = text_content;
 
         // add to svgelement
