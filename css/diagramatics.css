@@ -105,3 +105,12 @@
 .diagramatics-locator-outer.diagramatics-locator-blink{
   animation: blink-locator 0.5s infinite alternate;
 }
+
+/*---------------------- Drag and Drop --------------*/
+.diagramatics-draggable-container:hover{
+    fill-opacity: 0.2;
+}
+.diagramatics-draggable:hover{
+    cursor: pointer;
+    fill-opacity: 0.2;
+}

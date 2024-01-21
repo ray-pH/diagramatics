@@ -26,6 +26,7 @@ export class Interactive {
     public display_mode  : "svg" | "canvas" = "svg";
 
     private locatorHandler? : LocatorHandler = undefined;
+    private dragAndDropHandler? : DragAndDropHandler = undefined;
     // no support for canvas yet
 
     public draw_function : (inp_object : inpVariables_t, setter_object? : inpSetter_t) => any 
@@ -91,6 +92,9 @@ export class Interactive {
 
     public locator_draw(){
         this.locatorHandler?.setViewBox();
+    }
+    public drag_and_drop_draw(){
+        this.dragAndDropHandler?.setViewBox();
     }
 
     /**
@@ -301,6 +305,55 @@ export class Interactive {
 
         this.control_container_div.appendChild(container);
     }
+
+    public drag_and_drop() : DragAndDropHandler {
+        if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
+
+        let diagram_svg : SVGSVGElement | undefined = undefined;
+        // check if this.diagram_outer_svg has a child with meta=dnd_svg
+        // if not, create one
+        let dnd_svg : SVGSVGElement | undefined = undefined;
+        for (let i in this.diagram_outer_svg.children) {
+            let child = this.diagram_outer_svg.children[i];
+            if (child instanceof SVGSVGElement && child.getAttribute("meta") == "dnd_svg") {
+                dnd_svg = child;
+            }
+            // while looping, also find the diagram_svg
+            if (child instanceof SVGSVGElement && child.getAttribute("meta") == "diagram_svg") {
+                diagram_svg = child;
+            }
+        }
+
+        if (diagram_svg == undefined) {
+            diagram_svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            diagram_svg.setAttribute("meta", "diagram_svg")
+            diagram_svg.setAttribute("width", "100%");
+            diagram_svg.setAttribute("height", "100%");
+            this.diagram_outer_svg.appendChild(diagram_svg);
+        }
+
+        if (dnd_svg == undefined) {
+            dnd_svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            dnd_svg.setAttribute("meta", "dnd_svg");
+            dnd_svg.setAttribute("width", "100%");
+            dnd_svg.setAttribute("height", "100%");
+            this.diagram_outer_svg.appendChild(dnd_svg);
+        }
+
+        // if this is the fist time this function is called, create a dragAndDropHandler
+        if (this.dragAndDropHandler == undefined) {
+            let dragAndDropHandler = new DragAndDropHandler(dnd_svg, diagram_svg);
+            this.dragAndDropHandler = dragAndDropHandler;
+            // this.diagram_outer_svg.addEventListener('mousemove'  , (evt) => { dragAndDropHandler.drag(evt);    });
+            this.diagram_outer_svg.addEventListener('mouseup'    , (evt) => { dragAndDropHandler.endDrag(evt); });
+            // this.diagram_outer_svg.addEventListener('touchmove'  , (evt) => { dragAndDropHandler.drag(evt);    });
+            this.diagram_outer_svg.addEventListener('touchend'   , (evt) => { dragAndDropHandler.endDrag(evt); });
+            this.diagram_outer_svg.addEventListener('touchcancel', (evt) => { dragAndDropHandler.endDrag(evt); });
+        }
+
+        return this.dragAndDropHandler;
+    }
+
 }
 
 // ========== functions
@@ -390,6 +443,28 @@ function firefox_calcCTM(svgelem : SVGSVGElement) : DOMMatrix {
 }
 
 type LocatorEvent = TouchEvent | Touch | MouseEvent
+type DnDEvent = TouchEvent | Touch | MouseEvent
+
+function getMousePosition(evt : LocatorEvent, svgelem : SVGSVGElement) : {x : number, y : number} {
+    // var CTM = this.control_svg.getScreenCTM() as DOMMatrix;
+    // NOTE: there's a well known bug in firefox about `getScreenCTM()`
+    // check if the browser is firefox
+    let CTM : DOMMatrix;
+    if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
+        CTM = firefox_calcCTM(svgelem);
+    } else {
+        CTM = svgelem.getScreenCTM() as DOMMatrix;
+    }
+    // console.log(CTM);
+
+    // firefox doesn't support `TouchEvent`, we need to check for it
+    if (window.TouchEvent && evt instanceof TouchEvent) { evt = evt.touches[0]; }
+    return {
+        x: ((evt as Touch | MouseEvent).clientX - CTM.e) / CTM.a,
+        y: ((evt as Touch | MouseEvent).clientY - CTM.f) / CTM.d
+    };
+}
+
 class LocatorHandler {
 
     selectedElement  : SVGElement | null = null;
@@ -403,25 +478,6 @@ class LocatorHandler {
     constructor(public control_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
     }
 
-    getMousePosition(evt : LocatorEvent ) {
-        // var CTM = this.control_svg.getScreenCTM() as DOMMatrix;
-        // NOTE: there's a well known bug in firefox about `getScreenCTM()`
-        // check if the browser is firefox
-        let CTM : DOMMatrix;
-        if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
-            CTM = firefox_calcCTM(this.control_svg);
-        } else {
-            CTM = this.control_svg.getScreenCTM() as DOMMatrix;
-        }
-        // console.log(CTM);
-
-        // firefox doesn't support `TouchEvent`, we need to check for it
-        if (window.TouchEvent && evt instanceof TouchEvent) { evt = evt.touches[0]; }
-        return {
-            x: ((evt as Touch | MouseEvent).clientX - CTM.e) / CTM.a,
-            y: ((evt as Touch | MouseEvent).clientY - CTM.f) / CTM.d
-        };
-    }
     startDrag(_ : LocatorEvent, variable_name : string, selectedElement : SVGElement) {
         this.selectedElement  = selectedElement;
         this.selectedVariable = variable_name;
@@ -434,7 +490,7 @@ class LocatorHandler {
         if (evt instanceof MouseEvent) { evt.preventDefault(); }
         if (window.TouchEvent && evt instanceof TouchEvent) { evt.preventDefault(); }
 
-        let coord = this.getMousePosition(evt);
+        let coord = getMousePosition(evt, this.control_svg);
 
         let pos = V2(coord.x, -coord.y);
         // check if setter for this.selectedVariable exists
@@ -480,4 +536,141 @@ class LocatorHandler {
         this.blinking_circle_outers = [];
         if (this.first_touch_callback != null) this.first_touch_callback();
     }
+}
+
+type bbox_t = [Vector2, Vector2];
+type DragAndDropContainerData = {
+    name : string,
+    bbox : bbox_t,
+    position : Vector2,
+    svgelement : SVGElement,
+    content : string[]
+}
+type DragAndDropDraggableData = {
+    name : string,
+    bbox : bbox_t,
+    position : Vector2,
+    svgelement : SVGElement,
+    container : string,
+}
+
+class DragAndDropHandler {
+    containers : {[key : string] : DragAndDropContainerData} = {};
+    draggables : {[key : string] : DragAndDropDraggableData} = {};
+    hoveredContainerName : string | null = null;
+    draggedElementName : string | null = null;
+
+    constructor(public dnd_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
+    }
+
+    public add_container(name : string, diagram : Diagram) {
+        this.add_container_bbox(name, diagram.bounding_box());
+    }
+    public add_draggable(name : string, diagram : Diagram) {
+        this.add_draggable_bbox(name, diagram.bounding_box());
+    }
+
+    setViewBox() {
+        // set viewBox and preserveAspectRatio of control_svg to be the same as diagram_svg
+        this.dnd_svg.setAttribute("viewBox", this.diagram_svg.getAttribute("viewBox") as string);
+        this.dnd_svg.setAttribute("preserveAspectRatio", this.diagram_svg.getAttribute("preserveAspectRatio") as string);
+    }
+
+
+    public add_container_bbox(name : string, bbox : bbox_t) {
+        if (this.containers[name] != undefined) throw Error(`container with name ${name} already exists`);
+        let position = bbox[0].add(bbox[1]).scale(0.5);
+        let svgelement = this.add_container_svg(name, bbox);
+        this.containers[name] = {name, bbox, position, svgelement, content : []};
+    }
+
+    public add_draggable_bbox(name : string, bbox : bbox_t) {
+        if (this.draggables[name] != undefined) throw Error(`draggable with name ${name} already exists`);
+        // add a container as initial container for the draggable
+        let initial_container_name = `_container0_${name}`;
+        this.add_container_bbox(initial_container_name, bbox);
+        this.containers[initial_container_name].content.push(name);
+        let position = bbox[0].add(bbox[1]).scale(0.5);
+        let svgelement = this.add_draggable_svg(name, bbox);
+        this.draggables[name] = {name, bbox, position, svgelement, container : initial_container_name};
+    }
+
+    add_container_svg(name : string, bbox : bbox_t) : SVGElement {
+        let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute("x", bbox[0].x.toString());
+        rect.setAttribute("y", (-bbox[1].y).toString());
+        rect.setAttribute("width", (bbox[1].x - bbox[0].x).toString());
+        rect.setAttribute("height", (bbox[1].y - bbox[0].y).toString());
+        rect.setAttribute("fill", "red");
+        rect.setAttribute("fill-opacity", "0.5");
+        rect.setAttribute("class", "diagramatics-draggable-container");
+        rect.setAttribute("id", name);
+        this.dnd_svg.appendChild(rect);
+
+        rect.onmouseover = (_evt) => { this.hoveredContainerName = name; }
+        return rect;
+    }
+
+    add_draggable_svg(name : string, bbox : bbox_t) : SVGElement {
+        let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute("x", bbox[0].x.toString());
+        rect.setAttribute("y", (-bbox[1].y).toString());
+        rect.setAttribute("width", (bbox[1].x - bbox[0].x).toString());
+        rect.setAttribute("height", (bbox[1].y - bbox[0].y).toString());
+        rect.setAttribute("fill", "blue");
+        rect.setAttribute("fill-opacity", "0.5");
+        rect.setAttribute("class", "diagramatics-draggable");
+        rect.setAttribute("id", name);
+        rect.setAttribute("draggable", "true");
+
+        rect.addEventListener('mousedown', (evt) => { 
+            this.draggedElementName = name;
+            this.startDrag(evt);
+        });
+        rect.addEventListener('touchstart', (evt) => { 
+            this.draggedElementName = name;
+            this.startDrag(evt);
+        });
+
+        this.dnd_svg.appendChild(rect);
+        return rect;
+    }
+
+    remove_draggable_from_container(draggable_name : string, container_name : string) {
+        this.containers[container_name].content = 
+            this.containers[container_name].content.filter((name) => name != draggable_name);
+    }
+    move_draggable_to_container(draggable_name : string, container_name : string) {
+        let draggable = this.draggables[draggable_name];
+        let container = this.containers[container_name];
+        let original_container_name = draggable.container;
+        let draggable_size = draggable.bbox[1].sub(draggable.bbox[0]);
+        let target_position  = container.position;
+        let newbbox = [target_position.sub(draggable_size.scale(0.5)), 
+            target_position.add(draggable_size.scale(0.5))] as bbox_t;
+        draggable.svgelement.setAttribute("x", newbbox[0].x.toString());
+        draggable.svgelement.setAttribute("y", (-newbbox[1].y).toString());
+
+        this.remove_draggable_from_container(draggable_name, original_container_name);
+        draggable.container = container_name;
+        draggable.bbox = newbbox;
+        draggable.position = target_position;
+        container.content.push(draggable_name);
+
+    }
+
+    startDrag(evt : DnDEvent) {
+        this.hoveredContainerName = null;
+        // console.log(evt);
+    }
+
+    endDrag(_evt : DnDEvent) {
+        if (this.hoveredContainerName != null && this.draggedElementName != null){
+            this.move_draggable_to_container(this.draggedElementName, this.hoveredContainerName);
+        }
+        this.draggedElementName = null;
+        this.hoveredContainerName = null;
+    }
+
+
 }
