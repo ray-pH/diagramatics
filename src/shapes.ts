@@ -1,7 +1,6 @@
 import { Diagram, polygon, line, curve, text, diagram_combine } from './diagram.js';
 import { Vector2, V2 } from './vector.js';
 import { to_radian } from './utils.js';
-import { str_to_mathematical_italic } from './unicode_utils.js'
 
 // function helpers to create common shapes
 
@@ -140,5 +139,5 @@ export function arrow2(start : Vector2, end : Vector2, headsize : number = 1) : 
  * @returns a Diagram object
  */
 export function textvar(str : string) : Diagram {
-    return text(str_to_mathematical_italic(str));
+    return text(str).append_tag('textvar');
 }

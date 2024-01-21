@@ -1,6 +1,7 @@
 import { Diagram, DiagramType, DiagramStyle, TextData } from "./diagram.js";
 import { tab_color, get_color } from "./color_palette.js";
 import { to_degree } from "./utils.js";
+import { str_to_mathematical_italic, str_to_normal_from_mathematical_italic } from './unicode_utils.js'
 
 // TODO : add guard for the dictionary key
 // since the implementation is using `for (let stylename in style)` without checking
@@ -220,12 +221,20 @@ function draw_texts(svgelement : SVGSVGElement, diagrams : Diagram[]) : void {
         text.setAttribute("text-anchor", textdata["text-anchor"] as string);
         text.setAttribute("dominant-baseline", textdata["dominant-baseline"] as string);
         text.setAttribute("transform", `translate(${xpos} ${ypos}) rotate(${angle_deg}) `);
+
+        // custom attribute for tex display
+        text.setAttribute("_x", xpos.toString());
+        text.setAttribute("_y", ypos.toString());
+        text.setAttribute("_angle", angle_deg.toString());
+        
         for (let stylename in style) {
             text.style[stylename as any] = (style as any)[stylename as any];
         }
 
         // set the content of the text
-        text.innerHTML = textdata["text"] as string;
+        let text_content = textdata["text"];
+        if (diagram.tags.includes('textvar')) text_content = str_to_mathematical_italic(text_content);
+        text.innerHTML = text_content;
 
         // add to svgelement
         svgelement.appendChild(text);
@@ -313,6 +322,97 @@ export function draw_to_svg(outer_svgelement : SVGSVGElement, diagram : Diagram,
         svgelement.setAttribute("viewBox", `${bbox.x} ${bbox.y} ${bbox.width} ${bbox.height}`);
         // set preserveAspectRatio to xMidYMid meet
         svgelement.setAttribute("preserveAspectRatio", "xMidYMid meet");
+    }
+}
+
+function is_texstr(s : string) : boolean {
+    return s.startsWith("$") && s.endsWith("$");
+}
+function is_texdisplaystr(s : string) : boolean {
+    return s.startsWith("$$") && s.endsWith("$$");
+}
+function strip_texstr(s : string) : string {
+    if (is_texdisplaystr(s)) return s.substring(2, s.length-2);
+    if (is_texstr(s)) return s.substring(1, s.length-1);
+    return s;
+}
+
+type texhandler_config = {
+    display : boolean,
+    // fontsize : number,
+}
+type texhadler_function = (texstr : string, config : texhandler_config) => string; // return SVG string
+
+/**
+ * Recursively handle tex in svg
+ * @param svg the svg element to handle
+ * @param texhandler the tex handler function
+ */
+export function handle_tex_in_svg(svg : SVGElement, texhandler : texhadler_function) : void {
+    // recurse through all children of svg until we find text
+    // then replace the text with the svg returned by texhandler
+    for (let i = 0; i < svg.children.length; i++) {
+        let child = svg.children[i];
+        if (child instanceof SVGTextElement) {
+            let str = child.innerHTML;
+            if (!is_texstr(str)) continue;
+
+            let fontsize = child.getAttribute('font-size');
+            if (fontsize == null) continue;
+
+            let svgstr = texhandler(strip_texstr(str), {
+                display : is_texdisplaystr(str),
+                // fontsize : parseFloat(fontsize),
+            });
+
+            let xstr = child.getAttribute('_x');
+            let ystr = child.getAttribute('_y');
+            // let angstr = child.getAttribute('_angle');
+            if (xstr == null || ystr == null) continue;
+
+            let textanchor = child.getAttribute('text-anchor');
+            let dominantbaseline = child.getAttribute('dominant-baseline');
+            if (textanchor == null || dominantbaseline == null) continue;
+
+            child.outerHTML = svgstr;
+            child = svg.children[i]; // update child
+
+
+            
+            // HACK: scaling for mathjax tex2svg, for other option think about it later
+            const default_fontsize = 18;
+            let scale = parseFloat(fontsize) / default_fontsize;
+            let widthex = child.getAttribute('width');   // ###ex
+            if (widthex == null) continue;
+            let width = parseFloat(widthex.substring(0, widthex.length-2)) * scale;
+            let heightex = child.getAttribute('height'); // ###ex
+            if (heightex == null) continue;
+            let height = parseFloat(heightex.substring(0, heightex.length-2)) * scale;
+
+            let xval = parseFloat(xstr);
+            let yval = parseFloat(ystr);
+            switch (textanchor) {
+                case "start": break; // left
+                case "middle":       // center
+                    xval -= width/2; break;
+                case "end":          // right
+                    xval -= width; break;
+            }
+            switch (dominantbaseline) {
+                case "text-before-edge": break; // top
+                case "middle":                  // center
+                    yval -= height/2; break;
+                case "text-after-edge":         // bottom
+                    yval -= height; break;
+            }
+
+            child.setAttribute('width', `${width}ex`);
+            child.setAttribute('height', `${height}ex`);
+            child.setAttribute('x', `${xval}ex`);
+            child.setAttribute('y', `${yval}ex`);
+        } else if (child instanceof SVGElement) {
+            handle_tex_in_svg(child, texhandler);
+        }
     }
 }
 
