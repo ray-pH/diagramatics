@@ -254,6 +254,44 @@ export function xyaxes(axes_options? : Partial<axes_options>) : Diagram {
     return diagram_combine(axes_empty(opt), xticks(opt), yticks(opt));
 }
 
+/**
+ * Draw x axis with ticks
+ * @param axes_options options for the axis
+ */
+export function xaxis(axes_options? : Partial<axes_options>) : Diagram {
+    let opt = {...default_axes_options, ...axes_options}; // use default if not defined
+    if (opt.bbox == undefined) {
+        // get values from xrange and yrange
+        let [xmin, xmax] = opt.xrange;
+        let [ymin, ymax] = opt.yrange;
+        opt.bbox = [V2(xmin,ymin), V2(xmax,ymax)];
+    }
+
+    let ax_origin = axes_transform(opt)(V2(0,0));
+    let xaxis = arrow2(V2(opt.bbox[0].x, ax_origin.y), V2(opt.bbox[1].x, ax_origin.y), opt.headsize);
+    let xtickmarks = xticks(opt, 0);
+    return diagram_combine(xaxis, xtickmarks);
+}
+
+/**
+ * Draw y axis with ticks
+ * @param axes_options options for the axis
+ */
+export function yaxis(axes_options? : Partial<axes_options>) : Diagram {
+    let opt = {...default_axes_options, ...axes_options}; // use default if not defined
+    if (opt.bbox == undefined) {
+        // get values from xrange and yrange
+        let [xmin, xmax] = opt.xrange;
+        let [ymin, ymax] = opt.yrange;
+        opt.bbox = [V2(xmin,ymin), V2(xmax,ymax)];
+    }
+
+    let ax_origin = axes_transform(opt)(V2(0,0));
+    let yaxis = arrow2(V2(ax_origin.x, opt.bbox[0].y), V2(ax_origin.x, opt.bbox[1].y), opt.headsize);
+    let ytickmarks = yticks(opt, 0);
+    return diagram_combine(yaxis, ytickmarks);
+}
+
 export function xygrid(axes_options? : Partial<axes_options>) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
     if (opt.xticks == undefined) {
