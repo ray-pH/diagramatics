@@ -673,6 +673,8 @@ class DragAndDropHandler {
     }
 
     startDrag(evt : DnDEvent) {
+        if (evt instanceof MouseEvent) { evt.preventDefault(); }
+        if (window.TouchEvent && evt instanceof TouchEvent) { evt.preventDefault(); }
         this.hoveredContainerName = null;
         // console.log(evt);
     }
