@@ -320,9 +320,9 @@ export class Interactive {
         if (this.dragAndDropHandler == undefined) {
             let dragAndDropHandler = new DragAndDropHandler(dnd_svg, diagram_svg);
             this.dragAndDropHandler = dragAndDropHandler;
-            // this.diagram_outer_svg.addEventListener('mousemove'  , (evt) => { dragAndDropHandler.drag(evt);    });
+            this.diagram_outer_svg.addEventListener('mousemove'  , (evt) => { dragAndDropHandler.drag(evt);    });
             this.diagram_outer_svg.addEventListener('mouseup'    , (evt) => { dragAndDropHandler.endDrag(evt); });
-            // this.diagram_outer_svg.addEventListener('touchmove'  , (evt) => { dragAndDropHandler.drag(evt);    });
+            this.diagram_outer_svg.addEventListener('touchmove'  , (evt) => { dragAndDropHandler.drag(evt);    });
             this.diagram_outer_svg.addEventListener('touchend'   , (evt) => { dragAndDropHandler.endDrag(evt); });
             this.diagram_outer_svg.addEventListener('touchcancel', (evt) => { dragAndDropHandler.endDrag(evt); });
         }
@@ -558,6 +558,7 @@ class DragAndDropHandler {
     callbacks : {[key : string] : (pos : Vector2) => any} = {};
     hoveredContainerName : string | null = null;
     draggedElementName : string | null = null;
+    draggedElementGhost : SVGElement | null = null;
 
     constructor(public dnd_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
     }
@@ -699,6 +700,26 @@ class DragAndDropHandler {
         if (window.TouchEvent && evt instanceof TouchEvent) { evt.preventDefault(); }
         this.hoveredContainerName = null;
         // console.log(evt);
+        
+        // create a clone of the dragged element
+        if (this.draggedElementName == null) return;
+        this.draggedElementGhost = this.draggables[this.draggedElementName].svgelement.cloneNode(true) as SVGElement;
+        // set pointer-events : none
+        this.draggedElementGhost.style.pointerEvents = "none";
+        this.draggedElementGhost.setAttribute("fill", "black");
+        this.draggedElementGhost.setAttribute("fill-opacity", "0.2");
+        this.dnd_svg.prepend(this.draggedElementGhost);
+    }
+
+    drag(evt : DnDEvent) {
+        if (this.draggedElementName == null) return;
+        if (this.draggedElementGhost == null) return;
+        if (evt instanceof MouseEvent) { evt.preventDefault(); }
+        if (window.TouchEvent && evt instanceof TouchEvent) { evt.preventDefault(); }
+
+        let coord = getMousePosition(evt, this.dnd_svg);
+        this.draggedElementGhost.setAttribute("x", coord.x.toString());
+        this.draggedElementGhost.setAttribute("y", coord.y.toString());
     }
 
     endDrag(_evt : DnDEvent) {
@@ -707,6 +728,11 @@ class DragAndDropHandler {
         }
         this.draggedElementName = null;
         this.hoveredContainerName = null;
+
+        if (this.draggedElementGhost != null){
+            this.draggedElementGhost.remove();
+            this.draggedElementGhost = null;
+        }
     }
 
 
