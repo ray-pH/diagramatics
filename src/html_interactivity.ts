@@ -346,7 +346,10 @@ export class Interactive {
         }
         this.dragAndDropHandler.registerCallback(name, callback);
     }
-        
+
+    public get_dnd_data() : DragAndDropData {
+        return this.dragAndDropHandler?.getData() ?? [];
+    }
 
 }
 
@@ -547,6 +550,7 @@ type DragAndDropDraggableData = {
     svgelement : SVGElement,
     container : string,
 }
+type DragAndDropData = {container:string, content:string[]}[]
 
 class DragAndDropHandler {
     containers : {[key : string] : DragAndDropContainerData} = {};
@@ -575,6 +579,13 @@ class DragAndDropHandler {
         this.dnd_svg.setAttribute("preserveAspectRatio", this.diagram_svg.getAttribute("preserveAspectRatio") as string);
     }
 
+    getData() : DragAndDropData {
+        let data : DragAndDropData = []
+        for (let name in this.containers){
+            data.push({container : name, content : this.containers[name].content});
+        }
+        return data;
+    }
 
     public add_container_bbox(name : string, bbox : bbox_t) {
         if (this.containers[name] != undefined) throw Error(`container with name ${name} already exists`);
@@ -616,8 +627,8 @@ class DragAndDropHandler {
         rect.setAttribute("y", (-bbox[1].y).toString());
         rect.setAttribute("width", (bbox[1].x - bbox[0].x).toString());
         rect.setAttribute("height", (bbox[1].y - bbox[0].y).toString());
-        rect.setAttribute("fill", "blue");
-        rect.setAttribute("fill-opacity", "0.5");
+        rect.setAttribute("fill", "white");
+        rect.setAttribute("fill-opacity", "0.0");
         rect.setAttribute("class", "diagramatics-draggable");
         rect.setAttribute("id", name);
         rect.setAttribute("draggable", "true");
