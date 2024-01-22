@@ -622,14 +622,14 @@ class DragAndDropHandler {
         rect.setAttribute("id", name);
         rect.setAttribute("draggable", "true");
 
-        rect.addEventListener('mousedown', (evt) => { 
+        rect.onmousedown = (evt) => {
             this.draggedElementName = name;
             this.startDrag(evt);
-        });
-        rect.addEventListener('touchstart', (evt) => { 
+        }
+        rect.ontouchstart = (evt) => {
             this.draggedElementName = name;
             this.startDrag(evt);
-        });
+        }
         rect.onmouseover = (_evt) => { 
             if (this.draggables[name].container){
                 this.hoveredContainerName = this.draggables[name].container;
