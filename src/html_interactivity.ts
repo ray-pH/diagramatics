@@ -655,7 +655,21 @@ class DragAndDropHandler {
         draggable.bbox = newbbox;
         draggable.position = target_position;
         container.content.push(draggable_name);
+    }
 
+    try_move_draggable_to_container(draggable_name : string, container_name : string) {
+        let draggable = this.draggables[draggable_name];
+        let container = this.containers[container_name];
+        if (container.content.length == 0) {
+            this.move_draggable_to_container(draggable_name, container_name);
+            return;
+        } else {
+            // swap
+            let original_container_name = draggable.container;
+            let other_draggable_name = container.content[0];
+            this.move_draggable_to_container(other_draggable_name, original_container_name);
+            this.move_draggable_to_container(draggable_name, container_name);
+        }
     }
 
     startDrag(evt : DnDEvent) {
@@ -665,7 +679,7 @@ class DragAndDropHandler {
 
     endDrag(_evt : DnDEvent) {
         if (this.hoveredContainerName != null && this.draggedElementName != null){
-            this.move_draggable_to_container(this.draggedElementName, this.hoveredContainerName);
+            this.try_move_draggable_to_container(this.draggedElementName, this.hoveredContainerName);
             let draggedElement = this.draggables[this.draggedElementName];
             this.callbacks[draggedElement.name](draggedElement.position);
         }
