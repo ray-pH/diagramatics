@@ -604,7 +604,7 @@ class DragAndDropHandler {
         rect.setAttribute("fill-opacity", "0.5");
         rect.setAttribute("class", "diagramatics-draggable-container");
         rect.setAttribute("id", name);
-        this.dnd_svg.appendChild(rect);
+        this.dnd_svg.prepend(rect);
 
         rect.onmouseover = (_evt) => { this.hoveredContainerName = name; }
         return rect;
@@ -631,7 +631,7 @@ class DragAndDropHandler {
             this.startDrag(evt);
         });
 
-        this.dnd_svg.appendChild(rect);
+        this.dnd_svg.append(rect);
         return rect;
     }
 
