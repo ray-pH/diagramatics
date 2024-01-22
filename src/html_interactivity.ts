@@ -335,7 +335,16 @@ export class Interactive {
 
     public dnd_draggable(name : string, diagram : Diagram) {
         this.init_drag_and_drop();
-        this.dragAndDropHandler?.add_draggable(name, diagram);
+        if (this.dragAndDropHandler == undefined) throw Error("dragAndDropHandler in Interactive class is undefined");
+
+        this.inp_variables[name] = diagram.origin;
+        this.dragAndDropHandler.add_draggable(name, diagram);
+
+        const callback = (pos : Vector2, redraw : boolean = true) => {
+            this.inp_variables[name] = pos;
+            if (redraw) this.draw();
+        }
+        this.dragAndDropHandler.registerCallback(name, callback);
     }
         
 
@@ -542,6 +551,7 @@ type DragAndDropDraggableData = {
 class DragAndDropHandler {
     containers : {[key : string] : DragAndDropContainerData} = {};
     draggables : {[key : string] : DragAndDropDraggableData} = {};
+    callbacks : {[key : string] : (pos : Vector2) => any} = {};
     hoveredContainerName : string | null = null;
     draggedElementName : string | null = null;
 
@@ -553,6 +563,10 @@ class DragAndDropHandler {
     }
     public add_draggable(name : string, diagram : Diagram) {
         this.add_draggable_bbox(name, diagram.bounding_box());
+    }
+
+    registerCallback(name : string, callback : (pos : Vector2) => any){
+        this.callbacks[name] = callback;
     }
 
     setViewBox() {
@@ -652,6 +666,8 @@ class DragAndDropHandler {
     endDrag(_evt : DnDEvent) {
         if (this.hoveredContainerName != null && this.draggedElementName != null){
             this.move_draggable_to_container(this.draggedElementName, this.hoveredContainerName);
+            let draggedElement = this.draggables[this.draggedElementName];
+            this.callbacks[draggedElement.name](draggedElement.position);
         }
         this.draggedElementName = null;
         this.hoveredContainerName = null;
