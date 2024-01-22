@@ -664,6 +664,9 @@ class DragAndDropHandler {
         draggable.bbox = newbbox;
         draggable.position = target_position;
         container.content.push(draggable_name);
+
+        let draggedElement = this.draggables[draggable_name];
+        this.callbacks[draggedElement.name](draggedElement.position);
     }
 
     try_move_draggable_to_container(draggable_name : string, container_name : string) {
@@ -690,8 +693,6 @@ class DragAndDropHandler {
     endDrag(_evt : DnDEvent) {
         if (this.hoveredContainerName != null && this.draggedElementName != null){
             this.try_move_draggable_to_container(this.draggedElementName, this.hoveredContainerName);
-            let draggedElement = this.draggables[this.draggedElementName];
-            this.callbacks[draggedElement.name](draggedElement.position);
         }
         this.draggedElementName = null;
         this.hoveredContainerName = null;
