@@ -97,19 +97,8 @@ export class Interactive {
         this.dragAndDropHandler?.setViewBox();
     }
 
-    /**
-     * Create a locator
-     * Locator is a draggable object that contain 2D coordinate information
-     * @param variable_name name of the variable
-     * @param value initial value
-     * @param radius radius of the locator draggable object
-     * @param color color of the locator
-     * @param track_diagram if provided, the locator will snap to the closest point on the diagram
-     */
-    public locator(variable_name : string, value : Vector2, radius : number, color : string = 'blue', track_diagram? : Diagram, blink : boolean = true){
+    generate_svg_component(element : 'locator' | 'dnd') : [SVGSVGElement, SVGSVGElement] {
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
-        this.inp_variables[variable_name] = value;
-
         let diagram_svg : SVGSVGElement | undefined = undefined;
         // check if this.diagram_outer_svg has a child with meta=control_svg
         // if not, create one
@@ -141,6 +130,23 @@ export class Interactive {
             this.diagram_outer_svg.appendChild(control_svg);
         }
 
+        return [diagram_svg, control_svg];
+    }
+
+    /**
+     * Create a locator
+     * Locator is a draggable object that contain 2D coordinate information
+     * @param variable_name name of the variable
+     * @param value initial value
+     * @param radius radius of the locator draggable object
+     * @param color color of the locator
+     * @param track_diagram if provided, the locator will snap to the closest point on the diagram
+     */
+    public locator(variable_name : string, value : Vector2, radius : number, color : string = 'blue', track_diagram? : Diagram, blink : boolean = true){
+        if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
+        this.inp_variables[variable_name] = value;
+
+        let [diagram_svg, control_svg] = this.generate_svg_component('locator');
         // if this is the fist time this function is called, create a locatorHandler
         if (this.locatorHandler == undefined) {
             let locatorHandler = new LocatorHandler(control_svg, diagram_svg);
@@ -308,37 +314,7 @@ export class Interactive {
 
     public drag_and_drop() : DragAndDropHandler {
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
-
-        let diagram_svg : SVGSVGElement | undefined = undefined;
-        // check if this.diagram_outer_svg has a child with meta=dnd_svg
-        // if not, create one
-        let dnd_svg : SVGSVGElement | undefined = undefined;
-        for (let i in this.diagram_outer_svg.children) {
-            let child = this.diagram_outer_svg.children[i];
-            if (child instanceof SVGSVGElement && child.getAttribute("meta") == "dnd_svg") {
-                dnd_svg = child;
-            }
-            // while looping, also find the diagram_svg
-            if (child instanceof SVGSVGElement && child.getAttribute("meta") == "diagram_svg") {
-                diagram_svg = child;
-            }
-        }
-
-        if (diagram_svg == undefined) {
-            diagram_svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            diagram_svg.setAttribute("meta", "diagram_svg")
-            diagram_svg.setAttribute("width", "100%");
-            diagram_svg.setAttribute("height", "100%");
-            this.diagram_outer_svg.appendChild(diagram_svg);
-        }
-
-        if (dnd_svg == undefined) {
-            dnd_svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            dnd_svg.setAttribute("meta", "dnd_svg");
-            dnd_svg.setAttribute("width", "100%");
-            dnd_svg.setAttribute("height", "100%");
-            this.diagram_outer_svg.appendChild(dnd_svg);
-        }
+        let [diagram_svg, dnd_svg] = this.generate_svg_component('dnd');
 
         // if this is the fist time this function is called, create a dragAndDropHandler
         if (this.dragAndDropHandler == undefined) {
