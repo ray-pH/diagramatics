@@ -97,7 +97,7 @@ export class Interactive {
         this.dragAndDropHandler?.setViewBox();
     }
 
-    generate_svg_component(element : 'locator' | 'dnd') : [SVGSVGElement, SVGSVGElement] {
+    get_svg_element(element : 'locator' | 'dnd') : [SVGSVGElement, SVGSVGElement] {
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
         let diagram_svg : SVGSVGElement | undefined = undefined;
         // check if this.diagram_outer_svg has a child with meta=control_svg
@@ -146,7 +146,7 @@ export class Interactive {
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
         this.inp_variables[variable_name] = value;
 
-        let [diagram_svg, control_svg] = this.generate_svg_component('locator');
+        let [diagram_svg, control_svg] = this.get_svg_element('locator');
         // if this is the fist time this function is called, create a locatorHandler
         if (this.locatorHandler == undefined) {
             let locatorHandler = new LocatorHandler(control_svg, diagram_svg);
@@ -312,9 +312,9 @@ export class Interactive {
         this.control_container_div.appendChild(container);
     }
 
-    public drag_and_drop() : DragAndDropHandler {
+    init_drag_and_drop() {
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
-        let [diagram_svg, dnd_svg] = this.generate_svg_component('dnd');
+        let [diagram_svg, dnd_svg] = this.get_svg_element('dnd');
 
         // if this is the fist time this function is called, create a dragAndDropHandler
         if (this.dragAndDropHandler == undefined) {
@@ -326,9 +326,18 @@ export class Interactive {
             this.diagram_outer_svg.addEventListener('touchend'   , (evt) => { dragAndDropHandler.endDrag(evt); });
             this.diagram_outer_svg.addEventListener('touchcancel', (evt) => { dragAndDropHandler.endDrag(evt); });
         }
-
-        return this.dragAndDropHandler;
     }
+
+    public dnd_container(name : string, diagram : Diagram) {
+        this.init_drag_and_drop();
+        this.dragAndDropHandler?.add_container(name, diagram);
+    }
+
+    public dnd_draggable(name : string, diagram : Diagram) {
+        this.init_drag_and_drop();
+        this.dragAndDropHandler?.add_draggable(name, diagram);
+    }
+        
 
 }
 
