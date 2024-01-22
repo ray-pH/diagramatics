@@ -630,6 +630,11 @@ class DragAndDropHandler {
             this.draggedElementName = name;
             this.startDrag(evt);
         });
+        rect.onmouseover = (_evt) => { 
+            if (this.draggables[name].container){
+                this.hoveredContainerName = this.draggables[name].container;
+            }
+        }
 
         this.dnd_svg.append(rect);
         return rect;
@@ -641,6 +646,10 @@ class DragAndDropHandler {
     }
     move_draggable_to_container(draggable_name : string, container_name : string) {
         let draggable = this.draggables[draggable_name];
+
+        // ignore if the draggable is already in the container
+        if (draggable.container == container_name) return;
+
         let container = this.containers[container_name];
         let original_container_name = draggable.container;
         let draggable_size = draggable.bbox[1].sub(draggable.bbox[0]);
@@ -662,7 +671,6 @@ class DragAndDropHandler {
         let container = this.containers[container_name];
         if (container.content.length == 0) {
             this.move_draggable_to_container(draggable_name, container_name);
-            return;
         } else {
             // swap
             let original_container_name = draggable.container;
