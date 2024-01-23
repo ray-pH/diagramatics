@@ -540,17 +540,16 @@ class LocatorHandler {
     }
 }
 
-type bbox_t = [Vector2, Vector2];
 type DragAndDropContainerData = {
     name : string,
-    bbox : bbox_t,
+    points : Vector2[],
     position : Vector2,
     svgelement : SVGElement,
     content : string[]
 }
 type DragAndDropDraggableData = {
     name : string,
-    bbox : bbox_t,
+    points : Vector2[],
     position : Vector2,
     svgelement : SVGElement,
     container : string,
@@ -569,10 +568,16 @@ class DragAndDropHandler {
     }
 
     public add_container(name : string, diagram : Diagram) {
-        this.add_container_bbox(name, diagram.bounding_box());
+        let points : Vector2[] = diagram.path?.points ?
+            diagram.path.points.map((p) => p.sub(diagram.origin)) :
+            diagram.bounding_box().map((p) => p.sub(diagram.origin));
+        this.add_container_points(name, points, diagram.origin);
     }
     public add_draggable(name : string, diagram : Diagram) {
-        this.add_draggable_bbox(name, diagram.bounding_box());
+        let points : Vector2[] = diagram.path?.points ?
+            diagram.path.points.map((p) => p.sub(diagram.origin)) :
+            diagram.bounding_box().map((p) => p.sub(diagram.origin));
+        this.add_draggable_points(name, points, diagram.origin);
     }
 
     registerCallback(name : string, callback : (pos : Vector2) => any){
@@ -593,68 +598,75 @@ class DragAndDropHandler {
         return data;
     }
 
-    public add_container_bbox(name : string, bbox : bbox_t) {
+    public add_container_points(name : string, points : Vector2[], position : Vector2) {
         if (this.containers[name] != undefined) throw Error(`container with name ${name} already exists`);
-        let position = bbox[0].add(bbox[1]).scale(0.5);
-        let svgelement = this.add_container_svg(name, bbox);
-        this.containers[name] = {name, bbox, position, svgelement, content : []};
+        let svgelement = this.add_container_svg(name, points, position);
+        this.containers[name] = {name, points, position, svgelement, content : []};
     }
 
-    public add_draggable_bbox(name : string, bbox : bbox_t) {
+    public add_draggable_points(name : string, points : Vector2[], position : Vector2) {
         if (this.draggables[name] != undefined) throw Error(`draggable with name ${name} already exists`);
         // add a container as initial container for the draggable
         let initial_container_name = `_container0_${name}`;
-        this.add_container_bbox(initial_container_name, bbox);
+        this.add_container_points(initial_container_name, points, position);
         this.containers[initial_container_name].content.push(name);
-        let position = bbox[0].add(bbox[1]).scale(0.5);
-        let svgelement = this.add_draggable_svg(name, bbox);
-        this.draggables[name] = {name, bbox, position, svgelement, container : initial_container_name};
+        let svgelement = this.add_draggable_svg(name, points, position);
+        this.draggables[name] = {name, points, position, svgelement, container : initial_container_name};
     }
 
-    add_container_svg(name : string, bbox : bbox_t) : SVGElement {
-        let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        rect.setAttribute("x", bbox[0].x.toString());
-        rect.setAttribute("y", (-bbox[1].y).toString());
-        rect.setAttribute("width", (bbox[1].x - bbox[0].x).toString());
-        rect.setAttribute("height", (bbox[1].y - bbox[0].y).toString());
-        rect.setAttribute("fill", "red");
-        rect.setAttribute("fill-opacity", "0.5");
-        rect.setAttribute("class", "diagramatics-draggable-container");
-        rect.setAttribute("id", name);
-        this.dnd_svg.prepend(rect);
+    add_container_svg(name : string, points : Vector2[], position : Vector2) : SVGElement {
+        let poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+        for (let i = 0; i < points.length; i++) {
+            let p = points[i];
+            var point = this.dnd_svg.createSVGPoint();
+            point.x =  p.x;
+            point.y = -p.y;
+            poly.points.appendItem(point);
+        }
+        poly.setAttribute("transform", `translate(${position.x},${-position.y})`);
+        poly.setAttribute("fill", "red");
+        poly.setAttribute("fill-opacity", "0.5");
+        poly.setAttribute("class", "diagramatics-draggable-container");
+        poly.setAttribute("id", name);
+        
+        this.dnd_svg.prepend(poly);
 
-        rect.onmouseover = (_evt) => { this.hoveredContainerName = name; }
-        return rect;
+        poly.onmouseover = (_evt) => { this.hoveredContainerName = name; }
+        return poly;
     }
 
-    add_draggable_svg(name : string, bbox : bbox_t) : SVGElement {
-        let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        rect.setAttribute("x", bbox[0].x.toString());
-        rect.setAttribute("y", (-bbox[1].y).toString());
-        rect.setAttribute("width", (bbox[1].x - bbox[0].x).toString());
-        rect.setAttribute("height", (bbox[1].y - bbox[0].y).toString());
-        rect.setAttribute("fill", "white");
-        rect.setAttribute("fill-opacity", "0.0");
-        rect.setAttribute("class", "diagramatics-draggable");
-        rect.setAttribute("id", name);
-        rect.setAttribute("draggable", "true");
+    add_draggable_svg(name : string, points : Vector2[], position : Vector2) : SVGElement {
+        let poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+        for (let i = 0; i < points.length; i++) {
+            let p = points[i];
+            var point = this.dnd_svg.createSVGPoint();
+            point.x =  p.x;
+            point.y = -p.y;
+            poly.points.appendItem(point);
+        }
+        poly.setAttribute("transform", `translate(${position.x},${-position.y})`);
+        poly.setAttribute("fill", "blue");
+        poly.setAttribute("fill-opacity", "0.5");
+        poly.setAttribute("class", "diagramatics-draggable");
+        poly.setAttribute("id", name);
+        poly.setAttribute("draggable", "true");
 
-        rect.onmousedown = (evt) => {
+        poly.onmousedown = (evt) => {
             this.draggedElementName = name;
             this.startDrag(evt);
         }
-        rect.ontouchstart = (evt) => {
+        poly.ontouchstart = (evt) => {
             this.draggedElementName = name;
             this.startDrag(evt);
         }
-        rect.onmouseover = (_evt) => { 
+        poly.onmouseover = (_evt) => { 
             if (this.draggables[name].container){
                 this.hoveredContainerName = this.draggables[name].container;
             }
         }
 
-        this.dnd_svg.append(rect);
-        return rect;
+        this.dnd_svg.append(poly);
+        return poly;
     }
 
     remove_draggable_from_container(draggable_name : string, container_name : string) {
@@ -669,16 +681,14 @@ class DragAndDropHandler {
 
         let container = this.containers[container_name];
         let original_container_name = draggable.container;
-        let draggable_size = draggable.bbox[1].sub(draggable.bbox[0]);
+        let original_position = draggable.position;
         let target_position  = container.position;
-        let newbbox = [target_position.sub(draggable_size.scale(0.5)), 
-            target_position.add(draggable_size.scale(0.5))] as bbox_t;
-        draggable.svgelement.setAttribute("x", newbbox[0].x.toString());
-        draggable.svgelement.setAttribute("y", (-newbbox[1].y).toString());
+        let newpoints = draggable.points.map((p) => p.add(target_position.sub(original_position)));
+        draggable.svgelement.setAttribute("transform", `translate(${target_position.x},${-target_position.y})`);
 
         this.remove_draggable_from_container(draggable_name, original_container_name);
         draggable.container = container_name;
-        draggable.bbox = newbbox;
+        draggable.points = newpoints;
         draggable.position = target_position;
         container.content.push(draggable_name);
 
@@ -704,7 +714,6 @@ class DragAndDropHandler {
         if (evt instanceof MouseEvent) { evt.preventDefault(); }
         if (window.TouchEvent && evt instanceof TouchEvent) { evt.preventDefault(); }
         this.hoveredContainerName = null;
-        // console.log(evt);
         
         // create a clone of the dragged element
         if (this.draggedElementName == null) return;
@@ -723,8 +732,7 @@ class DragAndDropHandler {
         if (window.TouchEvent && evt instanceof TouchEvent) { evt.preventDefault(); }
 
         let coord = getMousePosition(evt, this.dnd_svg);
-        this.draggedElementGhost.setAttribute("x", coord.x.toString());
-        this.draggedElementGhost.setAttribute("y", coord.y.toString());
+        this.draggedElementGhost.setAttribute("transform", `translate(${coord.x},${coord.y})`);
     }
 
     endDrag(_evt : DnDEvent) {
