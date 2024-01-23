@@ -103,9 +103,14 @@ export class Interactive {
         // check if this.diagram_outer_svg has a child with meta=control_svg
         // if not, create one
         let control_svg : SVGSVGElement | undefined = undefined;
+
+        let metaname : string = "control_svg"
+        if (element == 'locator') metaname = "control_svg";
+        else if (element == 'dnd') metaname = "dnd_svg";
+
         for (let i in this.diagram_outer_svg.children) {
             let child = this.diagram_outer_svg.children[i];
-            if (child instanceof SVGSVGElement && child.getAttribute("meta") == "control_svg") {
+            if (child instanceof SVGSVGElement && child.getAttribute("meta") == metaname) {
                 control_svg = child;
             }
             // while looping, also find the diagram_svg
@@ -124,7 +129,7 @@ export class Interactive {
 
         if (control_svg == undefined) {
             control_svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            control_svg.setAttribute("meta", "control_svg");
+            control_svg.setAttribute("meta", metaname);
             control_svg.setAttribute("width", "100%");
             control_svg.setAttribute("height", "100%");
             this.diagram_outer_svg.appendChild(control_svg);
