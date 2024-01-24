@@ -571,14 +571,11 @@ class DragAndDropHandler {
     }
 
     public add_container(name : string, diagram : Diagram) {
-        // this.add_container_points(name, points, diagram.origin);
         if (this.containers[name] != undefined) throw Error(`container with name ${name} already exists`);
-        // let svgelement = this.add_container_svg(name, diagram);
         this.containers[name] = {name, diagram, position : diagram.origin, content : []};
     }
 
     public add_draggable(name : string, diagram : Diagram, container_diagram? : Diagram) {
-        // this.add_draggable_points(name, points, diagram.origin);
         if (this.draggables[name] != undefined) throw Error(`draggable with name ${name} already exists`);
         // add a container as initial container for the draggable
         let initial_container_name = `_container0_${name}`;
@@ -588,7 +585,6 @@ class DragAndDropHandler {
         this.add_container(initial_container_name, container_diagram);
 
         this.containers[initial_container_name].content.push(name);
-        // let svgelement = this.add_draggable_svg(name, diagram);
         this.draggables[name] = {name, diagram, position : diagram.origin, container : initial_container_name};
     }
 
