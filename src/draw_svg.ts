@@ -187,13 +187,21 @@ function collect_text(diagram : Diagram) : Diagram[] {
     }
 }
 
-function draw_texts(svgelement : SVGSVGElement, diagrams : Diagram[]) : void {
+/**
+ * @param svgelement the svg element to draw to
+ * @param diagrams the list of text diagrams to draw
+ * @param referencesvgelement the svg element to use as reference for scaling
+ */
+function draw_texts(svgelement : SVGSVGElement, diagrams : Diagram[], referencesvgelement? : SVGSVGElement) : void {
 
-    // scale font-size adjusting for svgelement.bbox and size
-    let bbox = svgelement.getBBox();
-    let svgelement_width = svgelement.width.baseVal.value;
-    let svgelement_height = svgelement.height.baseVal.value;
-    let calculated_scale = Math.max(bbox.width / svgelement_width, bbox.height / svgelement_height)
+    // use svgelement as reference if referencesvgelement is undefined
+    if (referencesvgelement == undefined) referencesvgelement = svgelement;
+
+    // scale font-size adjusting for referencesvgelement.bbox and size
+    let bbox = referencesvgelement.getBBox();
+    let refsvgelement_width = referencesvgelement.width.baseVal.value;
+    let refsvgelement_height = referencesvgelement.height.baseVal.value;
+    let calculated_scale = Math.max(bbox.width / refsvgelement_width, bbox.height / refsvgelement_height)
 
     for (let diagram of diagrams) {
         let style = {...default_text_diagram_style, ...diagram.style}; // use default if not defined
@@ -242,8 +250,14 @@ function draw_texts(svgelement : SVGSVGElement, diagrams : Diagram[]) : void {
     }
 }
 
-
-export function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, render_text : boolean = true) : void {
+/**
+ * @param svgelement the svg element to draw to
+ * @param diagram the diagram to draw
+ * @param render_text whether to render text
+ * @param textreferencesvgelement the svg element to use as reference for text scaling
+ */
+export function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, render_text : boolean = true, 
+    textreferencesvgelement? : SVGSVGElement) : void {
 
     if (diagram.type == DiagramType.Polygon) {
         draw_polygon(svgelement, diagram);
@@ -264,8 +278,9 @@ export function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, ren
     // draw text last to make the scaling works
     // because the text is scaled based on the bounding box of the svgelement
     if (render_text) {
+        if (textreferencesvgelement == undefined) textreferencesvgelement = svgelement;
         let text_diagrams : Diagram[] = collect_text(diagram);
-        draw_texts(svgelement, text_diagrams);
+        draw_texts(svgelement, text_diagrams, textreferencesvgelement);
     }
     
 }
