@@ -715,8 +715,7 @@ class DragAndDropHandler {
         this.draggedElementGhost = draggable.svgelement.cloneNode(true) as SVGElement;
         // set pointer-events : none
         this.draggedElementGhost.style.pointerEvents = "none";
-        this.draggedElementGhost.setAttribute("fill", "black");
-        this.draggedElementGhost.setAttribute("fill-opacity", "0.2");
+        this.draggedElementGhost.setAttribute("opacity", "0.5");
         this.dnd_svg.prepend(this.draggedElementGhost);
     }
 
@@ -727,7 +726,8 @@ class DragAndDropHandler {
         if (window.TouchEvent && evt instanceof TouchEvent) { evt.preventDefault(); }
 
         let coord = getMousePosition(evt, this.dnd_svg);
-        this.draggedElementGhost.setAttribute("transform", `translate(${coord.x},${coord.y})`);
+        this.draggedElementGhost.setAttribute("x", coord.x.toString());
+        this.draggedElementGhost.setAttribute("y", coord.y.toString());
     }
 
     endDrag(_evt : DnDEvent) {
