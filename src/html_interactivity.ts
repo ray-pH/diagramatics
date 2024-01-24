@@ -97,6 +97,7 @@ export class Interactive {
     }
     public drag_and_drop_draw(){
         this.dragAndDropHandler?.setViewBox();
+        this.dragAndDropHandler?.drawSvg();
     }
 
     get_svg_element(element : 'locator' | 'dnd') : [SVGSVGElement, SVGSVGElement] {
@@ -545,13 +546,15 @@ class LocatorHandler {
 type DragAndDropContainerData = {
     name : string,
     position : Vector2,
-    svgelement : SVGElement,
+    svgelement? : SVGElement,
+    diagram : Diagram,
     content : string[]
 }
 type DragAndDropDraggableData = {
     name : string,
     position : Vector2,
-    svgelement : SVGElement,
+    svgelement? : SVGElement,
+    diagram : Diagram,
     container : string,
 }
 type DragAndDropData = {container:string, content:string[]}[]
@@ -570,8 +573,8 @@ class DragAndDropHandler {
     public add_container(name : string, diagram : Diagram) {
         // this.add_container_points(name, points, diagram.origin);
         if (this.containers[name] != undefined) throw Error(`container with name ${name} already exists`);
-        let svgelement = this.add_container_svg(name, diagram);
-        this.containers[name] = {name, position : diagram.origin, svgelement, content : []};
+        // let svgelement = this.add_container_svg(name, diagram);
+        this.containers[name] = {name, diagram, position : diagram.origin, content : []};
     }
 
     public add_draggable(name : string, diagram : Diagram, container_diagram? : Diagram) {
@@ -585,8 +588,8 @@ class DragAndDropHandler {
         this.add_container(initial_container_name, container_diagram);
 
         this.containers[initial_container_name].content.push(name);
-        let svgelement = this.add_draggable_svg(name, diagram);
-        this.draggables[name] = {name, position : diagram.origin, svgelement, container : initial_container_name};
+        // let svgelement = this.add_draggable_svg(name, diagram);
+        this.draggables[name] = {name, diagram, position : diagram.origin, container : initial_container_name};
     }
 
     registerCallback(name : string, callback : (pos : Vector2) => any){
@@ -597,6 +600,12 @@ class DragAndDropHandler {
         // set viewBox and preserveAspectRatio of control_svg to be the same as diagram_svg
         this.dnd_svg.setAttribute("viewBox", this.diagram_svg.getAttribute("viewBox") as string);
         this.dnd_svg.setAttribute("preserveAspectRatio", this.diagram_svg.getAttribute("preserveAspectRatio") as string);
+    }
+    drawSvg(){
+        for (let name in this.containers)
+            this.add_container_svg(name, this.containers[name].diagram);
+        for (let name in this.draggables)
+            this.add_draggable_svg(name, this.draggables[name].diagram);
     }
 
     getData() : DragAndDropData {
@@ -612,7 +621,7 @@ class DragAndDropHandler {
         return rect.strokedasharray([5]);
     }
 
-    add_container_svg(name : string, diagram: Diagram) : SVGElement {
+    add_container_svg(name : string, diagram: Diagram) {
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         f_draw_to_svg(svg, diagram.position(V2(0,0)).fill('lightred'), false);
         let position = diagram.origin;
@@ -623,11 +632,13 @@ class DragAndDropHandler {
         svg.setAttribute("id", name);
         this.dnd_svg.prepend(svg);
 
-        svg.onmouseover = (_evt) => { this.hoveredContainerName = name; }
-        return svg;
+        svg.onmouseover = (_evt) => { 
+            this.hoveredContainerName = name; 
+        }
+        this.containers[name].svgelement = svg;
     }
 
-    add_draggable_svg(name : string, diagram : Diagram) : SVGElement {
+    add_draggable_svg(name : string, diagram : Diagram) {
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         f_draw_to_svg(svg, diagram.position(V2(0,0)), false);
         let position = diagram.origin;
@@ -653,7 +664,7 @@ class DragAndDropHandler {
         }
 
         this.dnd_svg.append(svg);
-        return svg;
+        this.draggables[name].svgelement = svg;
     }
 
     remove_draggable_from_container(draggable_name : string, container_name : string) {
@@ -669,8 +680,9 @@ class DragAndDropHandler {
         let container = this.containers[container_name];
         let original_container_name = draggable.container;
         let target_position  = container.position;
-        draggable.svgelement.setAttribute("x", target_position.x.toString());
-        draggable.svgelement.setAttribute("y", (-target_position.y).toString());
+
+        draggable.svgelement?.setAttribute("x", target_position.x.toString());
+        draggable.svgelement?.setAttribute("y", (-target_position.y).toString());
 
         this.remove_draggable_from_container(draggable_name, original_container_name);
         draggable.container = container_name;
@@ -702,7 +714,9 @@ class DragAndDropHandler {
         
         // create a clone of the dragged element
         if (this.draggedElementName == null) return;
-        this.draggedElementGhost = this.draggables[this.draggedElementName].svgelement.cloneNode(true) as SVGElement;
+        let draggable = this.draggables[this.draggedElementName];
+        if (draggable.svgelement == undefined) return;
+        this.draggedElementGhost = draggable.svgelement.cloneNode(true) as SVGElement;
         // set pointer-events : none
         this.draggedElementGhost.style.pointerEvents = "none";
         this.draggedElementGhost.setAttribute("fill", "black");
