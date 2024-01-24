@@ -243,7 +243,7 @@ function draw_texts(svgelement : SVGSVGElement, diagrams : Diagram[]) : void {
 }
 
 
-function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, render_text : boolean = true) : void {
+export function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, render_text : boolean = true) : void {
 
     if (diagram.type == DiagramType.Polygon) {
         draw_polygon(svgelement, diagram);

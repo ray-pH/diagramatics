@@ -108,9 +108,9 @@
 
 /*---------------------- Drag and Drop --------------*/
 .diagramatics-draggable-container:hover{
-    fill-opacity: 0.2;
+    fill-opacity: 0.5;
 }
 .diagramatics-draggable:hover{
     cursor: pointer;
-    fill-opacity: 0.2;
+    fill-opacity: 0.5;
 }
