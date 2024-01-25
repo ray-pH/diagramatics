@@ -628,9 +628,14 @@ class DragAndDropHandler {
         svg.setAttribute("id", name);
         this.dnd_svg.prepend(svg);
 
-        svg.onmouseover = (_evt) => { 
+        svg.onmouseenter = (_evt) => { 
             this.hoveredContainerName = name; 
         }
+        svg.onmouseleave = (_evt) => {
+            if (this.hoveredContainerName == name) this.hoveredContainerName = null;
+        }
+
+
         this.containers[name].svgelement = svg;
     }
 
@@ -653,9 +658,16 @@ class DragAndDropHandler {
             this.draggedElementName = name;
             this.startDrag(evt);
         }
-        svg.onmouseover = (_evt) => { 
+
+        svg.onmouseenter = (_evt) => { 
             if (this.draggables[name].container){
                 this.hoveredContainerName = this.draggables[name].container;
+            }
+        }
+        svg.onmouseleave = (_evt) => {
+            if (this.draggables[name].container){
+                if (this.hoveredContainerName == this.draggables[name].container) 
+                    this.hoveredContainerName = null;
             }
         }
 
