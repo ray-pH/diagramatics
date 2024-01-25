@@ -559,6 +559,11 @@ type DragAndDropDraggableData = {
 }
 type DragAndDropData = {container:string, content:string[]}[]
 
+enum dnd_type {
+    container = "diagramatics-dnd-container",
+    draggable = "diagramatics-dnd-draggable"
+}
+
 class DragAndDropHandler {
     containers : {[key : string] : DragAndDropContainerData} = {};
     draggables : {[key : string] : DragAndDropDraggableData} = {};
@@ -619,34 +624,34 @@ class DragAndDropHandler {
 
     add_container_svg(name : string, diagram: Diagram) {
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        f_draw_to_svg(svg, diagram.position(V2(0,0)).fill('lightred'), false);
+        f_draw_to_svg(svg, diagram.position(V2(0,0)).fill('lightred'), 
+            false, this.dnd_svg, dnd_type.container);
         let position = diagram.origin;
         svg.setAttribute("overflow", "visible");
         svg.setAttribute("x", position.x.toString());
         svg.setAttribute("y", (-position.y).toString());
-        svg.setAttribute("class", "diagramatics-draggable-container");
+        svg.setAttribute("class", dnd_type.container);
         svg.setAttribute("id", name);
         this.dnd_svg.prepend(svg);
 
-        svg.onmouseenter = (_evt) => { 
-            this.hoveredContainerName = name; 
-        }
-        svg.onmouseleave = (_evt) => {
-            if (this.hoveredContainerName == name) this.hoveredContainerName = null;
-        }
-
+        // svg.onmouseenter = (_evt) => { 
+        //     this.hoveredContainerName = name; 
+        // }
+        // svg.onmouseleave = (_evt) => {
+        //     if (this.hoveredContainerName == name) this.hoveredContainerName = null;
+        // }
 
         this.containers[name].svgelement = svg;
     }
 
     add_draggable_svg(name : string, diagram : Diagram) {
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        f_draw_to_svg(svg, diagram.position(V2(0,0)), true, this.dnd_svg);
+        f_draw_to_svg(svg, diagram.position(V2(0,0)), true, this.dnd_svg, dnd_type.draggable);
         let position = diagram.origin;
         svg.setAttribute("overflow", "visible");
         svg.setAttribute("x", position.x.toString());
         svg.setAttribute("y", (-position.y).toString());
-        svg.setAttribute("class", "diagramatics-draggable");
+        svg.setAttribute("class", dnd_type.draggable);
         svg.setAttribute("id", name);
         svg.setAttribute("draggable", "true");
 
@@ -659,17 +664,17 @@ class DragAndDropHandler {
             this.startDrag(evt);
         }
 
-        svg.onmouseenter = (_evt) => { 
-            if (this.draggables[name].container){
-                this.hoveredContainerName = this.draggables[name].container;
-            }
-        }
-        svg.onmouseleave = (_evt) => {
-            if (this.draggables[name].container){
-                if (this.hoveredContainerName == this.draggables[name].container) 
-                    this.hoveredContainerName = null;
-            }
-        }
+        // svg.onmouseenter = (_evt) => { 
+        //     if (this.draggables[name].container){
+        //         this.hoveredContainerName = this.draggables[name].container;
+        //     }
+        // }
+        // svg.onmouseleave = (_evt) => {
+        //     if (this.draggables[name].container){
+        //         if (this.hoveredContainerName == this.draggables[name].container) 
+        //             this.hoveredContainerName = null;
+        //     }
+        // }
 
         this.dnd_svg.append(svg);
         this.draggables[name].svgelement = svg;
@@ -731,11 +736,50 @@ class DragAndDropHandler {
         this.dnd_svg.prepend(this.draggedElementGhost);
     }
 
+    get_dnd_element_data_from_evt(evt : DnDEvent) : {name : string, type : string} | null {
+        let element : HTMLElement | null = null;
+        if (window.TouchEvent && evt instanceof TouchEvent) { 
+            let evt_touch = evt.touches[0];
+            element = document.elementFromPoint(evt_touch.clientX, evt_touch.clientY) as HTMLElement;
+        } else if (!(evt instanceof TouchEvent)) {
+            element = document.elementFromPoint(evt.clientX, evt.clientY) as HTMLElement;
+        }
+        if (element == null) return null;
+
+        let dg_tag = element.getAttribute("_dg_tag");
+        if (dg_tag == null) return null;
+
+        if (dg_tag == dnd_type.container) {
+            let parent = element.parentElement;
+            if (parent == null) return null;
+            let name = parent.getAttribute("id");
+            if (name == null) return null;
+            return {name, type : dnd_type.container};
+        }
+        if (dg_tag == dnd_type.draggable) {
+            let parent = element.parentElement;
+            if (parent == null) return null;
+            let name = parent.getAttribute("id");
+            if (name == null) return null;
+            return {name, type : dnd_type.draggable};
+        }
+        return null;
+    }
+
     drag(evt : DnDEvent) {
         if (this.draggedElementName == null) return;
         if (this.draggedElementGhost == null) return;
         if (evt instanceof MouseEvent) { evt.preventDefault(); }
         if (window.TouchEvent && evt instanceof TouchEvent) { evt.preventDefault(); }
+
+        let element_data = this.get_dnd_element_data_from_evt(evt);
+        if (element_data == null) {
+            this.hoveredContainerName = null;
+        } else if (element_data.type == dnd_type.container) {
+            this.hoveredContainerName = element_data.name;
+        } else if (element_data.type == dnd_type.draggable) {
+            this.hoveredContainerName = this.draggables[element_data.name]?.container;
+        }
 
         let coord = getMousePosition(evt, this.dnd_svg);
         this.draggedElementGhost.setAttribute("x", coord.x.toString());
