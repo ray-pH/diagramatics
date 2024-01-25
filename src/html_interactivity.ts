@@ -27,6 +27,9 @@ export class Interactive {
     public inp_setter    : inpSetter_t = {};
     public display_mode  : "svg" | "canvas" = "svg";
 
+    public locator_svg : SVGSVGElement | undefined = undefined;
+    public dnd_svg : SVGSVGElement | undefined = undefined;
+
     private locatorHandler? : LocatorHandler = undefined;
     private dragAndDropHandler? : DragAndDropHandler = undefined;
     // no support for canvas yet
@@ -155,6 +158,7 @@ export class Interactive {
         this.inp_variables[variable_name] = value;
 
         let [diagram_svg, control_svg] = this.get_svg_element('locator');
+        this.locator_svg = control_svg;
         // if this is the fist time this function is called, create a locatorHandler
         if (this.locatorHandler == undefined) {
             let locatorHandler = new LocatorHandler(control_svg, diagram_svg);
@@ -323,6 +327,7 @@ export class Interactive {
     init_drag_and_drop() {
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
         let [diagram_svg, dnd_svg] = this.get_svg_element('dnd');
+        this.dnd_svg = dnd_svg;
 
         // if this is the fist time this function is called, create a dragAndDropHandler
         if (this.dragAndDropHandler == undefined) {
