@@ -634,13 +634,6 @@ class DragAndDropHandler {
         svg.setAttribute("id", name);
         this.dnd_svg.prepend(svg);
 
-        // svg.onmouseenter = (_evt) => { 
-        //     this.hoveredContainerName = name; 
-        // }
-        // svg.onmouseleave = (_evt) => {
-        //     if (this.hoveredContainerName == name) this.hoveredContainerName = null;
-        // }
-
         this.containers[name].svgelement = svg;
     }
 
@@ -663,18 +656,6 @@ class DragAndDropHandler {
             this.draggedElementName = name;
             this.startDrag(evt);
         }
-
-        // svg.onmouseenter = (_evt) => { 
-        //     if (this.draggables[name].container){
-        //         this.hoveredContainerName = this.draggables[name].container;
-        //     }
-        // }
-        // svg.onmouseleave = (_evt) => {
-        //     if (this.draggables[name].container){
-        //         if (this.hoveredContainerName == this.draggables[name].container) 
-        //             this.hoveredContainerName = null;
-        //     }
-        // }
 
         this.dnd_svg.append(svg);
         this.draggables[name].svgelement = svg;
@@ -746,21 +727,16 @@ class DragAndDropHandler {
         }
         if (element == null) return null;
 
-        let dg_tag = element.getAttribute("_dg_tag");
-        if (dg_tag == null) return null;
+        let dg_tag = element.getAttribute("_dg_tag"); if (dg_tag == null) return null;
 
         if (dg_tag == dnd_type.container) {
-            let parent = element.parentElement;
-            if (parent == null) return null;
-            let name = parent.getAttribute("id");
-            if (name == null) return null;
+            let parent = element.parentElement; if (parent == null) return null;
+            let name = parent.getAttribute("id"); if (name == null) return null;
             return {name, type : dnd_type.container};
         }
         if (dg_tag == dnd_type.draggable) {
-            let parent = element.parentElement;
-            if (parent == null) return null;
-            let name = parent.getAttribute("id");
-            if (name == null) return null;
+            let parent = element.parentElement; if (parent == null) return null;
+            let name = parent.getAttribute("id"); if (name == null) return null;
             return {name, type : dnd_type.draggable};
         }
         return null;
