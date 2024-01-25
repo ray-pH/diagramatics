@@ -15,18 +15,20 @@ const defaultFormat_f : formatFunction = (name : string, val : any, prec? : numb
     return `${str_to_mathematical_italic(name)} = ${val_str}`;
 }
 
+type inpVariables_t = {[key : string] : any};
+type inpSetter_t    = {[key : string] : (_ : any) => void };
 /**
  * Object that controls the interactivity of the diagram
  */
 export class Interactive {
-    public inp_variables : {[key : string] : any} = {};
-    public inp_setter    : {[key : string] : (_ : any) => void } = {};
+    public inp_variables : inpVariables_t = {};
+    public inp_setter    : inpSetter_t = {};
     public display_mode  : "svg" | "canvas" = "svg";
 
     private locatorHandler? : LocatorHandler = undefined;
     // no support for canvas yet
 
-    public draw_function : (inp_object : typeof this.inp_variables, setter_object? : typeof this.inp_setter) => any 
+    public draw_function : (inp_object : inpVariables_t, setter_object? : inpSetter_t) => any 
         = (_) => {};
     public display_precision : undefined | number = 5;
     intervals : {[key : string] : any} = {};         
