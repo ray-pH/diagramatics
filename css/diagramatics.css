@@ -109,6 +109,10 @@
 /*---------------------- Drag and Drop --------------*/
 .diagramatics-dnd-draggable:hover{
     cursor: pointer;
+    fill-opacity: 0.5;
+}
+.diagramatics-dnd-container:hover{
+    fill-opacity: 0.5;
 }
 
 .diagramatics-dnd-container.hovered{
