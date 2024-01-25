@@ -561,7 +561,8 @@ type DragAndDropData = {container:string, content:string[]}[]
 
 enum dnd_type {
     container = "diagramatics-dnd-container",
-    draggable = "diagramatics-dnd-draggable"
+    draggable = "diagramatics-dnd-draggable",
+    ghost     = "diagramatics-dnd-draggable-ghost"
 }
 
 class DragAndDropHandler {
@@ -705,6 +706,12 @@ class DragAndDropHandler {
         if (evt instanceof MouseEvent) { evt.preventDefault(); }
         if (window.TouchEvent && evt instanceof TouchEvent) { evt.preventDefault(); }
         this.hoveredContainerName = null;
+
+        // reset container hovered class
+        this.reset_hovered_class();
+        // delete orphaned ghost
+        let ghosts = this.dnd_svg.getElementsByClassName(dnd_type.ghost);
+        for (let i = 0; i < ghosts.length; i++) ghosts[i].remove();
         
         // create a clone of the dragged element
         if (this.draggedElementName == null) return;
@@ -714,6 +721,7 @@ class DragAndDropHandler {
         // set pointer-events : none
         this.draggedElementGhost.style.pointerEvents = "none";
         this.draggedElementGhost.setAttribute("opacity", "0.5");
+        this.draggedElementGhost.setAttribute("class", dnd_type.ghost);
         this.dnd_svg.prepend(this.draggedElementGhost);
     }
 
@@ -748,13 +756,17 @@ class DragAndDropHandler {
         if (evt instanceof MouseEvent) { evt.preventDefault(); }
         if (window.TouchEvent && evt instanceof TouchEvent) { evt.preventDefault(); }
 
+        this.reset_hovered_class();
         let element_data = this.get_dnd_element_data_from_evt(evt);
         if (element_data == null) {
             this.hoveredContainerName = null;
         } else if (element_data.type == dnd_type.container) {
             this.hoveredContainerName = element_data.name;
+            this.containers[element_data.name].svgelement?.classList.add("hovered");
         } else if (element_data.type == dnd_type.draggable) {
             this.hoveredContainerName = this.draggables[element_data.name]?.container;
+            this.draggables[element_data.name].svgelement?.classList.add("hovered");
+            // this.containers[this.hoveredContainerName]?.svgelement?.classList.add("hovered");
         }
 
         let coord = getMousePosition(evt, this.dnd_svg);
@@ -768,6 +780,7 @@ class DragAndDropHandler {
         }
         this.draggedElementName = null;
         this.hoveredContainerName = null;
+        this.reset_hovered_class();
 
         if (this.draggedElementGhost != null){
             this.draggedElementGhost.remove();
@@ -775,5 +788,13 @@ class DragAndDropHandler {
         }
     }
 
-
+    reset_hovered_class(){
+        // reset hovered class
+        for (let name in this.containers) {
+            this.containers[name].svgelement?.classList.remove("hovered");
+        }
+        for (let name in this.draggables) {
+            this.draggables[name].svgelement?.classList.remove("hovered");
+        }
+    }
 }

@@ -107,10 +107,13 @@
 }
 
 /*---------------------- Drag and Drop --------------*/
-.diagramatics-dnd-container:hover{
-    fill-opacity: 0.5;
-}
 .diagramatics-dnd-draggable:hover{
     cursor: pointer;
+}
+
+.diagramatics-dnd-container.hovered{
+    fill-opacity: 0.5;
+}
+.diagramatics-dnd-draggable.hovered{
     fill-opacity: 0.5;
 }
