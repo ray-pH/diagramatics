@@ -117,3 +117,6 @@
 .diagramatics-dnd-draggable.hovered{
     fill-opacity: 0.5;
 }
+.diagramatics-dnd-draggable.picked{
+    fill-opacity: 0.5;
+}

@@ -717,6 +717,7 @@ class DragAndDropHandler {
         if (this.draggedElementName == null) return;
         let draggable = this.draggables[this.draggedElementName];
         if (draggable.svgelement == undefined) return;
+        draggable.svgelement.classList.add("picked");
         this.draggedElementGhost = draggable.svgelement.cloneNode(true) as SVGElement;
         // set pointer-events : none
         this.draggedElementGhost.style.pointerEvents = "none";
@@ -781,6 +782,7 @@ class DragAndDropHandler {
         this.draggedElementName = null;
         this.hoveredContainerName = null;
         this.reset_hovered_class();
+        this.reset_picked_class();
 
         if (this.draggedElementGhost != null){
             this.draggedElementGhost.remove();
@@ -789,12 +791,17 @@ class DragAndDropHandler {
     }
 
     reset_hovered_class(){
-        // reset hovered class
         for (let name in this.containers) {
             this.containers[name].svgelement?.classList.remove("hovered");
         }
         for (let name in this.draggables) {
             this.draggables[name].svgelement?.classList.remove("hovered");
+        }
+    }
+
+    reset_picked_class(){
+        for (let name in this.draggables) {
+            this.draggables[name].svgelement?.classList.remove("picked");
         }
     }
 }
