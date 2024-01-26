@@ -630,7 +630,7 @@ class DragAndDropHandler {
 
     add_container_svg(name : string, diagram: Diagram) {
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        f_draw_to_svg(svg, diagram.position(V2(0,0)).fill('lightred'), 
+        f_draw_to_svg(svg, diagram.position(V2(0,0)), 
             false, this.dnd_svg, dnd_type.container);
         let position = diagram.origin;
         svg.setAttribute("overflow", "visible");
