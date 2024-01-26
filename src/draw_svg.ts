@@ -358,8 +358,9 @@ export function handle_tex_in_svg(svg : SVGElement, texhandler : texhadler_funct
             let str = child.innerHTML;
             if (!is_texstr(str)) continue;
 
-            let fontsize = child.getAttribute('font-size');
-            if (fontsize == null) continue;
+            let fontsizestr = child.getAttribute('font-size');
+            if (fontsizestr == null) continue;
+            let fontsize = parseFloat(fontsizestr);
 
             let svgstr = texhandler(strip_texstr(str), {
                 display : is_texdisplaystr(str),
@@ -378,17 +379,16 @@ export function handle_tex_in_svg(svg : SVGElement, texhandler : texhadler_funct
             child.outerHTML = svgstr;
             child = svg.children[i]; // update child
 
+            let widthexstr = child.getAttribute('width');   // ###ex
+            if (widthexstr == null) continue;
+            let widthex = parseFloat(widthexstr.substring(0, widthexstr.length-2));
+            let heightexstr = child.getAttribute('height'); // ###ex
+            if (heightexstr == null) continue;
+            let heightex = parseFloat(heightexstr.substring(0, heightexstr.length-2));
 
-            
-            // HACK: scaling for mathjax tex2svg, for other option think about it later
-            const default_fontsize = 18;
-            let scale = parseFloat(fontsize) / default_fontsize;
-            let widthex = child.getAttribute('width');   // ###ex
-            if (widthex == null) continue;
-            let width = parseFloat(widthex.substring(0, widthex.length-2)) * scale;
-            let heightex = child.getAttribute('height'); // ###ex
-            if (heightex == null) continue;
-            let height = parseFloat(heightex.substring(0, heightex.length-2)) * scale;
+            let ratio = widthex / heightex;
+            let height = fontsize;
+            let width = fontsize * ratio;
 
             let xval = parseFloat(xstr);
             let yval = parseFloat(ystr);
@@ -407,10 +407,10 @@ export function handle_tex_in_svg(svg : SVGElement, texhandler : texhadler_funct
                     yval -= height; break;
             }
 
-            child.setAttribute('width', `${width}ex`);
-            child.setAttribute('height', `${height}ex`);
-            child.setAttribute('x', `${xval}ex`);
-            child.setAttribute('y', `${yval}ex`);
+            child.setAttribute('width', width.toString());
+            child.setAttribute('height', height.toString());
+            child.setAttribute('x', xval.toString());
+            child.setAttribute('y', yval.toString());
         } else if (child instanceof SVGElement) {
             handle_tex_in_svg(child, texhandler);
         }
