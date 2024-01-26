@@ -379,6 +379,7 @@ export function handle_tex_in_svg(svg : SVGElement, texhandler : texhadler_funct
             child.outerHTML = svgstr;
             child = svg.children[i]; // update child
 
+            // HACK: scaling for mathjax tex2svg, for other option think about it later
             let widthexstr = child.getAttribute('width');   // ###ex
             if (widthexstr == null) continue;
             let widthex = parseFloat(widthexstr.substring(0, widthexstr.length-2));
@@ -386,9 +387,9 @@ export function handle_tex_in_svg(svg : SVGElement, texhandler : texhadler_funct
             if (heightexstr == null) continue;
             let heightex = parseFloat(heightexstr.substring(0, heightexstr.length-2));
 
-            let ratio = widthex / heightex;
-            let height = fontsize;
-            let width = fontsize * ratio;
+            const magic_number = 2;
+            let width = widthex * fontsize / magic_number;
+            let height = heightex * fontsize / magic_number;
 
             let xval = parseFloat(xstr);
             let yval = parseFloat(ystr);
