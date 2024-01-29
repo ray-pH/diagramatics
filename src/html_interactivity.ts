@@ -435,6 +435,13 @@ export class Interactive {
         }
     }
 
+    /**
+     * Create a toggle button
+     * @param name name of the button
+     * @param diagram_on diagram of the button when it is on
+     * @param diagram_off diagram of the button when it is off
+     * @param state initial state of the button
+    */
     public button_toggle(name : string, diagram_on : Diagram, diagram_off : Diagram, state : boolean = false){
         this.init_button();
         if (this.buttonHandler == undefined) throw Error("buttonHandler in Interactive class is undefined");
@@ -445,11 +452,17 @@ export class Interactive {
         this.buttonHandler.add_toggle(name, diagram_on, diagram_off, state, callback);
     }
 
+    /**
+     * Create a click button
+     * @param name name of the button
+     * @param diagram diagram of the button
+     * @param diagram_pressed diagram of the button when it is pressed
+     * @param callback callback function when the button is clicked
+    */
     public button_click(name : string, diagram : Diagram, diagram_pressed : Diagram, callback : () => any){
         this.init_button();
         if (this.buttonHandler == undefined) throw Error("buttonHandler in Interactive class is undefined");
         this.buttonHandler.add_click(name, diagram, diagram_pressed, callback);
-
     }
 }
 
