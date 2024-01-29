@@ -56,6 +56,8 @@ export class Interactive {
 
     public draw() : void {
         this.draw_function(this.inp_variables, this.inp_setter);
+        this.locatorHandler?.setViewBox();
+        this.dragAndDropHandler?.setViewBox();
     }
 
     public set(variable_name : string, val : any) : void {
@@ -95,10 +97,18 @@ export class Interactive {
     }
 
 
+    /**
+     * WARNING: deprecated
+     * use `locator_initial_draw` instead
+     */
     public locator_draw(){
         this.locatorHandler?.setViewBox();
     }
-    public drag_and_drop_draw(){
+    public locator_initial_draw(){
+        // TODO: generate the svg here
+        this.locatorHandler?.setViewBox();
+    }
+    public drag_and_drop_initial_draw(){
         this.dragAndDropHandler?.setViewBox();
         this.dragAndDropHandler?.drawSvg();
     }
@@ -324,7 +334,7 @@ export class Interactive {
         this.control_container_div.appendChild(container);
     }
 
-    init_drag_and_drop() {
+    private init_drag_and_drop() {
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
         let [diagram_svg, dnd_svg] = this.get_svg_element('dnd');
         this.dnd_svg = dnd_svg;
