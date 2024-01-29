@@ -444,6 +444,13 @@ export class Interactive {
         const callback = (state : boolean) => { this.inp_variables[name] = state }
         this.buttonHandler.add_toggle(name, diagram_on, diagram_off, state, callback);
     }
+
+    public button_click(name : string, diagram : Diagram, diagram_pressed : Diagram, callback : () => any){
+        this.init_button();
+        if (this.buttonHandler == undefined) throw Error("buttonHandler in Interactive class is undefined");
+        this.buttonHandler.add_click(name, diagram, diagram_pressed, callback);
+
+    }
 }
 
 // ========== functions
@@ -919,6 +926,9 @@ class ButtonHandler {
         svg_on.setAttribute("overflow", "visible");
         svg_on.style.cursor = "pointer";
 
+        this.button_svg.appendChild(svg_off);
+        this.button_svg.appendChild(svg_on);
+
         this.states[name] = state;
 
         const set_display = (state : boolean) => {
@@ -941,7 +951,6 @@ class ButtonHandler {
             e.preventDefault();
             update_state(true); 
         };
-
         svg_on.ontouchstart = (e) => { 
             e.preventDefault();
             this.touchdownName = name; 
@@ -960,7 +969,71 @@ class ButtonHandler {
             this.touchdownName = null;
         };
 
-        this.button_svg.appendChild(svg_off);
-        this.button_svg.appendChild(svg_on);
     }
+
+    // TODO: handle touch input moving out of the button
+    add_click(name : string, diagram : Diagram, diagram_pressed : Diagram, callback : () => any){
+        let svg_normal = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        f_draw_to_svg(svg_normal, diagram, true, this.diagram_svg);
+        svg_normal.setAttribute("overflow", "visible");
+        svg_normal.style.cursor = "pointer";
+
+        let svg_pressed = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        f_draw_to_svg(svg_pressed, diagram_pressed, true, this.diagram_svg);
+        svg_pressed.setAttribute("overflow", "visible");
+        svg_pressed.style.cursor = "pointer";
+
+        this.button_svg.appendChild(svg_normal);
+        this.button_svg.appendChild(svg_pressed);
+
+        const set_display = (pressed : boolean) => {
+            svg_pressed.setAttribute("display", pressed ? "block" : "none");
+            svg_normal.setAttribute("display", pressed ? "none" : "block");
+        }
+        set_display(false);
+
+        svg_normal.onmousedown = (e) => {
+            e.preventDefault();
+            this.touchdownName = name;
+            set_display(true);
+        }
+        svg_normal.onmouseup = (e) => {
+            e.preventDefault();
+            this.touchdownName = null;
+        }
+        svg_pressed.onmouseleave = (_e) => { set_display(false); }
+        svg_pressed.onmousedown = (e) => {
+            e.preventDefault();
+            this.touchdownName = name;
+        }
+        svg_pressed.onmouseup = (_e) => {
+            if (this.touchdownName == name) callback();
+            this.touchdownName = null;
+            set_display(false);
+        }
+
+        svg_normal.ontouchstart = (e) => { 
+            e.preventDefault();
+            this.touchdownName = name; 
+            set_display(true);
+        };
+        svg_normal.ontouchend = (_e) => {
+            if (this.touchdownName == name) callback();
+            this.touchdownName = null;
+            set_display(false);
+        }
+        svg_pressed.ontouchstart = (e) => { 
+            e.preventDefault();
+            this.touchdownName = name; 
+            set_display(true);
+        };
+        svg_pressed.ontouchend = (_e) => {
+            if (this.touchdownName == name) callback();
+            this.touchdownName = null;
+            set_display(false);
+        }
+            
+            
+    }
+        
 }
