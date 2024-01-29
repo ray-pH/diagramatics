@@ -2,6 +2,8 @@ import { Diagram, DiagramType } from './diagram.js';
 import { str_to_mathematical_italic } from './unicode_utils.js'
 import { Vector2, V2 } from './vector.js';
 import { get_color, tab_color } from './color_palette.js';
+import { f_draw_to_svg } from './draw_svg.js';
+import { rectangle_corner } from './shapes.js';
 
 function format_number(val : number, prec : number) {
     let fixed = val.toFixed(prec);
@@ -25,7 +27,11 @@ export class Interactive {
     public inp_setter    : inpSetter_t = {};
     public display_mode  : "svg" | "canvas" = "svg";
 
+    public locator_svg : SVGSVGElement | undefined = undefined;
+    public dnd_svg : SVGSVGElement | undefined = undefined;
+
     private locatorHandler? : LocatorHandler = undefined;
+    private dragAndDropHandler? : DragAndDropHandler = undefined;
     // no support for canvas yet
 
     public draw_function : (inp_object : inpVariables_t, setter_object? : inpSetter_t) => any 
@@ -92,27 +98,25 @@ export class Interactive {
     public locator_draw(){
         this.locatorHandler?.setViewBox();
     }
+    public drag_and_drop_draw(){
+        this.dragAndDropHandler?.setViewBox();
+        this.dragAndDropHandler?.drawSvg();
+    }
 
-    /**
-     * Create a locator
-     * Locator is a draggable object that contain 2D coordinate information
-     * @param variable_name name of the variable
-     * @param value initial value
-     * @param radius radius of the locator draggable object
-     * @param color color of the locator
-     * @param track_diagram if provided, the locator will snap to the closest point on the diagram
-     */
-    public locator(variable_name : string, value : Vector2, radius : number, color : string = 'blue', track_diagram? : Diagram, blink : boolean = true){
+    get_svg_element(element : 'locator' | 'dnd') : [SVGSVGElement, SVGSVGElement] {
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
-        this.inp_variables[variable_name] = value;
-
         let diagram_svg : SVGSVGElement | undefined = undefined;
         // check if this.diagram_outer_svg has a child with meta=control_svg
         // if not, create one
         let control_svg : SVGSVGElement | undefined = undefined;
+
+        let metaname : string = "control_svg"
+        if (element == 'locator') metaname = "control_svg";
+        else if (element == 'dnd') metaname = "dnd_svg";
+
         for (let i in this.diagram_outer_svg.children) {
             let child = this.diagram_outer_svg.children[i];
-            if (child instanceof SVGSVGElement && child.getAttribute("meta") == "control_svg") {
+            if (child instanceof SVGSVGElement && child.getAttribute("meta") == metaname) {
                 control_svg = child;
             }
             // while looping, also find the diagram_svg
@@ -131,12 +135,30 @@ export class Interactive {
 
         if (control_svg == undefined) {
             control_svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            control_svg.setAttribute("meta", "control_svg");
+            control_svg.setAttribute("meta", metaname);
             control_svg.setAttribute("width", "100%");
             control_svg.setAttribute("height", "100%");
             this.diagram_outer_svg.appendChild(control_svg);
         }
 
+        return [diagram_svg, control_svg];
+    }
+
+    /**
+     * Create a locator
+     * Locator is a draggable object that contain 2D coordinate information
+     * @param variable_name name of the variable
+     * @param value initial value
+     * @param radius radius of the locator draggable object
+     * @param color color of the locator
+     * @param track_diagram if provided, the locator will snap to the closest point on the diagram
+     */
+    public locator(variable_name : string, value : Vector2, radius : number, color : string = 'blue', track_diagram? : Diagram, blink : boolean = true){
+        if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
+        this.inp_variables[variable_name] = value;
+
+        let [diagram_svg, control_svg] = this.get_svg_element('locator');
+        this.locator_svg = control_svg;
         // if this is the fist time this function is called, create a locatorHandler
         if (this.locatorHandler == undefined) {
             let locatorHandler = new LocatorHandler(control_svg, diagram_svg);
@@ -301,6 +323,47 @@ export class Interactive {
 
         this.control_container_div.appendChild(container);
     }
+
+    init_drag_and_drop() {
+        if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
+        let [diagram_svg, dnd_svg] = this.get_svg_element('dnd');
+        this.dnd_svg = dnd_svg;
+
+        // if this is the fist time this function is called, create a dragAndDropHandler
+        if (this.dragAndDropHandler == undefined) {
+            let dragAndDropHandler = new DragAndDropHandler(dnd_svg, diagram_svg);
+            this.dragAndDropHandler = dragAndDropHandler;
+            this.diagram_outer_svg.addEventListener('mousemove'  , (evt) => { dragAndDropHandler.drag(evt);    });
+            this.diagram_outer_svg.addEventListener('mouseup'    , (evt) => { dragAndDropHandler.endDrag(evt); });
+            this.diagram_outer_svg.addEventListener('touchmove'  , (evt) => { dragAndDropHandler.drag(evt);    });
+            this.diagram_outer_svg.addEventListener('touchend'   , (evt) => { dragAndDropHandler.endDrag(evt); });
+            this.diagram_outer_svg.addEventListener('touchcancel', (evt) => { dragAndDropHandler.endDrag(evt); });
+        }
+    }
+
+    public dnd_container(name : string, diagram : Diagram) {
+        this.init_drag_and_drop();
+        this.dragAndDropHandler?.add_container(name, diagram);
+    }
+
+    public dnd_draggable(name : string, diagram : Diagram, container_diagram? : Diagram) {
+        this.init_drag_and_drop();
+        if (this.dragAndDropHandler == undefined) throw Error("dragAndDropHandler in Interactive class is undefined");
+
+        this.inp_variables[name] = diagram.origin;
+        this.dragAndDropHandler.add_draggable(name, diagram, container_diagram);
+
+        const callback = (pos : Vector2, redraw : boolean = true) => {
+            this.inp_variables[name] = pos;
+            if (redraw) this.draw();
+        }
+        this.dragAndDropHandler.registerCallback(name, callback);
+    }
+
+    public get_dnd_data() : DragAndDropData {
+        return this.dragAndDropHandler?.getData() ?? [];
+    }
+
 }
 
 // ========== functions
@@ -390,6 +453,28 @@ function firefox_calcCTM(svgelem : SVGSVGElement) : DOMMatrix {
 }
 
 type LocatorEvent = TouchEvent | Touch | MouseEvent
+type DnDEvent = TouchEvent | Touch | MouseEvent
+
+function getMousePosition(evt : LocatorEvent, svgelem : SVGSVGElement) : {x : number, y : number} {
+    // var CTM = this.control_svg.getScreenCTM() as DOMMatrix;
+    // NOTE: there's a well known bug in firefox about `getScreenCTM()`
+    // check if the browser is firefox
+    let CTM : DOMMatrix;
+    if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
+        CTM = firefox_calcCTM(svgelem);
+    } else {
+        CTM = svgelem.getScreenCTM() as DOMMatrix;
+    }
+    // console.log(CTM);
+
+    // firefox doesn't support `TouchEvent`, we need to check for it
+    if (window.TouchEvent && evt instanceof TouchEvent) { evt = evt.touches[0]; }
+    return {
+        x: ((evt as Touch | MouseEvent).clientX - CTM.e) / CTM.a,
+        y: ((evt as Touch | MouseEvent).clientY - CTM.f) / CTM.d
+    };
+}
+
 class LocatorHandler {
 
     selectedElement  : SVGElement | null = null;
@@ -403,25 +488,6 @@ class LocatorHandler {
     constructor(public control_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
     }
 
-    getMousePosition(evt : LocatorEvent ) {
-        // var CTM = this.control_svg.getScreenCTM() as DOMMatrix;
-        // NOTE: there's a well known bug in firefox about `getScreenCTM()`
-        // check if the browser is firefox
-        let CTM : DOMMatrix;
-        if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
-            CTM = firefox_calcCTM(this.control_svg);
-        } else {
-            CTM = this.control_svg.getScreenCTM() as DOMMatrix;
-        }
-        // console.log(CTM);
-
-        // firefox doesn't support `TouchEvent`, we need to check for it
-        if (window.TouchEvent && evt instanceof TouchEvent) { evt = evt.touches[0]; }
-        return {
-            x: ((evt as Touch | MouseEvent).clientX - CTM.e) / CTM.a,
-            y: ((evt as Touch | MouseEvent).clientY - CTM.f) / CTM.d
-        };
-    }
     startDrag(_ : LocatorEvent, variable_name : string, selectedElement : SVGElement) {
         this.selectedElement  = selectedElement;
         this.selectedVariable = variable_name;
@@ -434,7 +500,7 @@ class LocatorHandler {
         if (evt instanceof MouseEvent) { evt.preventDefault(); }
         if (window.TouchEvent && evt instanceof TouchEvent) { evt.preventDefault(); }
 
-        let coord = this.getMousePosition(evt);
+        let coord = getMousePosition(evt, this.control_svg);
 
         let pos = V2(coord.x, -coord.y);
         // check if setter for this.selectedVariable exists
@@ -479,5 +545,268 @@ class LocatorHandler {
         }
         this.blinking_circle_outers = [];
         if (this.first_touch_callback != null) this.first_touch_callback();
+    }
+}
+
+type DragAndDropContainerData = {
+    name : string,
+    position : Vector2,
+    svgelement? : SVGElement,
+    diagram : Diagram,
+    content : string[]
+}
+type DragAndDropDraggableData = {
+    name : string,
+    position : Vector2,
+    svgelement? : SVGElement,
+    diagram : Diagram,
+    container : string,
+}
+type DragAndDropData = {container:string, content:string[]}[]
+
+enum dnd_type {
+    container = "diagramatics-dnd-container",
+    draggable = "diagramatics-dnd-draggable",
+    ghost     = "diagramatics-dnd-draggable-ghost"
+}
+
+class DragAndDropHandler {
+    containers : {[key : string] : DragAndDropContainerData} = {};
+    draggables : {[key : string] : DragAndDropDraggableData} = {};
+    callbacks : {[key : string] : (pos : Vector2) => any} = {};
+    hoveredContainerName : string | null = null;
+    draggedElementName : string | null = null;
+    draggedElementGhost : SVGElement | null = null;
+
+    constructor(public dnd_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
+    }
+
+    public add_container(name : string, diagram : Diagram) {
+        if (this.containers[name] != undefined) throw Error(`container with name ${name} already exists`);
+        this.containers[name] = {name, diagram, position : diagram.origin, content : []};
+    }
+
+    public add_draggable(name : string, diagram : Diagram, container_diagram? : Diagram) {
+        if (this.draggables[name] != undefined) throw Error(`draggable with name ${name} already exists`);
+        // add a container as initial container for the draggable
+        let initial_container_name = `_container0_${name}`;
+
+        if (container_diagram == undefined)
+            container_diagram = this.diagram_container_from_draggable(diagram);
+        this.add_container(initial_container_name, container_diagram);
+
+        this.containers[initial_container_name].content.push(name);
+        this.draggables[name] = {name, diagram, position : diagram.origin, container : initial_container_name};
+    }
+
+    registerCallback(name : string, callback : (pos : Vector2) => any){
+        this.callbacks[name] = callback;
+    }
+
+    setViewBox() {
+        // set viewBox and preserveAspectRatio of control_svg to be the same as diagram_svg
+        this.dnd_svg.setAttribute("viewBox", this.diagram_svg.getAttribute("viewBox") as string);
+        this.dnd_svg.setAttribute("preserveAspectRatio", this.diagram_svg.getAttribute("preserveAspectRatio") as string);
+    }
+    drawSvg(){
+        for (let name in this.containers)
+            this.add_container_svg(name, this.containers[name].diagram);
+        for (let name in this.draggables)
+            this.add_draggable_svg(name, this.draggables[name].diagram);
+    }
+
+    getData() : DragAndDropData {
+        let data : DragAndDropData = []
+        for (let name in this.containers){
+            data.push({container : name, content : this.containers[name].content});
+        }
+        return data;
+    }
+
+    diagram_container_from_draggable(diagram : Diagram) : Diagram {
+        let rect = rectangle_corner(...diagram.bounding_box()).move_origin(diagram.origin);
+        return rect.strokedasharray([5]);
+    }
+
+    add_container_svg(name : string, diagram: Diagram) {
+        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        f_draw_to_svg(svg, diagram.position(V2(0,0)), 
+            false, this.dnd_svg, dnd_type.container);
+        let position = diagram.origin;
+        svg.setAttribute("overflow", "visible");
+        svg.setAttribute("x", position.x.toString());
+        svg.setAttribute("y", (-position.y).toString());
+        svg.setAttribute("class", dnd_type.container);
+        svg.setAttribute("id", name);
+        this.dnd_svg.prepend(svg);
+
+        this.containers[name].svgelement = svg;
+    }
+
+    add_draggable_svg(name : string, diagram : Diagram) {
+        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        f_draw_to_svg(svg, diagram.position(V2(0,0)), true, this.dnd_svg, dnd_type.draggable);
+        let position = diagram.origin;
+        svg.setAttribute("overflow", "visible");
+        svg.setAttribute("x", position.x.toString());
+        svg.setAttribute("y", (-position.y).toString());
+        svg.setAttribute("class", dnd_type.draggable);
+        svg.setAttribute("id", name);
+        svg.setAttribute("draggable", "true");
+
+        svg.onmousedown = (evt) => {
+            this.draggedElementName = name;
+            this.startDrag(evt);
+        }
+        svg.ontouchstart = (evt) => {
+            this.draggedElementName = name;
+            this.startDrag(evt);
+        }
+
+        this.dnd_svg.append(svg);
+        this.draggables[name].svgelement = svg;
+    }
+
+    remove_draggable_from_container(draggable_name : string, container_name : string) {
+        this.containers[container_name].content = 
+            this.containers[container_name].content.filter((name) => name != draggable_name);
+    }
+    move_draggable_to_container(draggable_name : string, container_name : string) {
+        let draggable = this.draggables[draggable_name];
+
+        // ignore if the draggable is already in the container
+        if (draggable.container == container_name) return;
+
+        let container = this.containers[container_name];
+        let original_container_name = draggable.container;
+        let target_position  = container.position;
+
+        draggable.svgelement?.setAttribute("x", target_position.x.toString());
+        draggable.svgelement?.setAttribute("y", (-target_position.y).toString());
+
+        this.remove_draggable_from_container(draggable_name, original_container_name);
+        draggable.container = container_name;
+        draggable.position = target_position;
+        container.content.push(draggable_name);
+
+        let draggedElement = this.draggables[draggable_name];
+        this.callbacks[draggedElement.name](draggedElement.position);
+    }
+
+    try_move_draggable_to_container(draggable_name : string, container_name : string) {
+        let draggable = this.draggables[draggable_name];
+        let container = this.containers[container_name];
+        if (container.content.length == 0) {
+            this.move_draggable_to_container(draggable_name, container_name);
+        } else {
+            // swap
+            let original_container_name = draggable.container;
+            let other_draggable_name = container.content[0];
+            this.move_draggable_to_container(other_draggable_name, original_container_name);
+            this.move_draggable_to_container(draggable_name, container_name);
+        }
+    }
+
+    startDrag(evt : DnDEvent) {
+        if (evt instanceof MouseEvent) { evt.preventDefault(); }
+        if (window.TouchEvent && evt instanceof TouchEvent) { evt.preventDefault(); }
+        this.hoveredContainerName = null;
+
+        // reset container hovered class
+        this.reset_hovered_class();
+        // delete orphaned ghost
+        let ghosts = this.dnd_svg.getElementsByClassName(dnd_type.ghost);
+        for (let i = 0; i < ghosts.length; i++) ghosts[i].remove();
+        
+        // create a clone of the dragged element
+        if (this.draggedElementName == null) return;
+        let draggable = this.draggables[this.draggedElementName];
+        if (draggable.svgelement == undefined) return;
+        draggable.svgelement.classList.add("picked");
+        this.draggedElementGhost = draggable.svgelement.cloneNode(true) as SVGElement;
+        // set pointer-events : none
+        this.draggedElementGhost.style.pointerEvents = "none";
+        this.draggedElementGhost.setAttribute("opacity", "0.5");
+        this.draggedElementGhost.setAttribute("class", dnd_type.ghost);
+        this.dnd_svg.prepend(this.draggedElementGhost);
+    }
+
+    get_dnd_element_data_from_evt(evt : DnDEvent) : {name : string, type : string} | null {
+        let element : HTMLElement | null = null;
+        if (window.TouchEvent && evt instanceof TouchEvent) { 
+            let evt_touch = evt.touches[0];
+            element = document.elementFromPoint(evt_touch.clientX, evt_touch.clientY) as HTMLElement;
+        } else if (!(evt instanceof TouchEvent)) {
+            element = document.elementFromPoint(evt.clientX, evt.clientY) as HTMLElement;
+        }
+        if (element == null) return null;
+
+        let dg_tag = element.getAttribute("_dg_tag"); if (dg_tag == null) return null;
+
+        if (dg_tag == dnd_type.container) {
+            let parent = element.parentElement; if (parent == null) return null;
+            let name = parent.getAttribute("id"); if (name == null) return null;
+            return {name, type : dnd_type.container};
+        }
+        if (dg_tag == dnd_type.draggable) {
+            let parent = element.parentElement; if (parent == null) return null;
+            let name = parent.getAttribute("id"); if (name == null) return null;
+            return {name, type : dnd_type.draggable};
+        }
+        return null;
+    }
+
+    drag(evt : DnDEvent) {
+        if (this.draggedElementName == null) return;
+        if (this.draggedElementGhost == null) return;
+        if (evt instanceof MouseEvent) { evt.preventDefault(); }
+        if (window.TouchEvent && evt instanceof TouchEvent) { evt.preventDefault(); }
+
+        this.reset_hovered_class();
+        let element_data = this.get_dnd_element_data_from_evt(evt);
+        if (element_data == null) {
+            this.hoveredContainerName = null;
+        } else if (element_data.type == dnd_type.container) {
+            this.hoveredContainerName = element_data.name;
+            this.containers[element_data.name].svgelement?.classList.add("hovered");
+        } else if (element_data.type == dnd_type.draggable) {
+            this.hoveredContainerName = this.draggables[element_data.name]?.container;
+            this.draggables[element_data.name].svgelement?.classList.add("hovered");
+            // this.containers[this.hoveredContainerName]?.svgelement?.classList.add("hovered");
+        }
+
+        let coord = getMousePosition(evt, this.dnd_svg);
+        this.draggedElementGhost.setAttribute("x", coord.x.toString());
+        this.draggedElementGhost.setAttribute("y", coord.y.toString());
+    }
+
+    endDrag(_evt : DnDEvent) {
+        if (this.hoveredContainerName != null && this.draggedElementName != null){
+            this.try_move_draggable_to_container(this.draggedElementName, this.hoveredContainerName);
+        }
+        this.draggedElementName = null;
+        this.hoveredContainerName = null;
+        this.reset_hovered_class();
+        this.reset_picked_class();
+
+        if (this.draggedElementGhost != null){
+            this.draggedElementGhost.remove();
+            this.draggedElementGhost = null;
+        }
+    }
+
+    reset_hovered_class(){
+        for (let name in this.containers) {
+            this.containers[name].svgelement?.classList.remove("hovered");
+        }
+        for (let name in this.draggables) {
+            this.draggables[name].svgelement?.classList.remove("hovered");
+        }
+    }
+
+    reset_picked_class(){
+        for (let name in this.draggables) {
+            this.draggables[name].svgelement?.classList.remove("picked");
+        }
     }
 }
