@@ -19,6 +19,14 @@ const defaultFormat_f : formatFunction = (name : string, val : any, prec? : numb
 
 type inpVariables_t = {[key : string] : any};
 type inpSetter_t    = {[key : string] : (_ : any) => void };
+
+enum control_svg_name {
+    locator   = "control_svg",
+    dnd       = "dnd_svg",
+    custom    = "custom_int_svg",
+    clickable = "clickable_svg",
+}
+
 /**
  * Object that controls the interactivity of the diagram
  */
@@ -27,8 +35,10 @@ export class Interactive {
     public inp_setter    : inpSetter_t = {};
     public display_mode  : "svg" | "canvas" = "svg";
 
+    public diagram_svg : SVGSVGElement | undefined = undefined;
     public locator_svg : SVGSVGElement | undefined = undefined;
     public dnd_svg : SVGSVGElement | undefined = undefined;
+    public custom_svg : SVGSVGElement | undefined = undefined;
 
     private locatorHandler? : LocatorHandler = undefined;
     private dragAndDropHandler? : DragAndDropHandler = undefined;
@@ -58,6 +68,8 @@ export class Interactive {
         this.draw_function(this.inp_variables, this.inp_setter);
         this.locatorHandler?.setViewBox();
         this.dragAndDropHandler?.setViewBox();
+        set_viewbox(this.custom_svg, this.diagram_svg);
+        // TODO: also do this for the other control_svg
     }
 
     public set(variable_name : string, val : any) : void {
@@ -113,16 +125,12 @@ export class Interactive {
         this.dragAndDropHandler?.drawSvg();
     }
 
-    get_svg_element(element : 'locator' | 'dnd') : [SVGSVGElement, SVGSVGElement] {
+    get_svg_element(metaname : string) : [SVGSVGElement, SVGSVGElement] {
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
         let diagram_svg : SVGSVGElement | undefined = undefined;
         // check if this.diagram_outer_svg has a child with meta=control_svg
         // if not, create one
         let control_svg : SVGSVGElement | undefined = undefined;
-
-        let metaname : string = "control_svg"
-        if (element == 'locator') metaname = "control_svg";
-        else if (element == 'dnd') metaname = "dnd_svg";
 
         for (let i in this.diagram_outer_svg.children) {
             let child = this.diagram_outer_svg.children[i];
@@ -151,6 +159,7 @@ export class Interactive {
             this.diagram_outer_svg.appendChild(control_svg);
         }
 
+        this.diagram_svg = diagram_svg;
         return [diagram_svg, control_svg];
     }
 
@@ -167,7 +176,7 @@ export class Interactive {
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
         this.inp_variables[variable_name] = value;
 
-        let [diagram_svg, control_svg] = this.get_svg_element('locator');
+        let [diagram_svg, control_svg] = this.get_svg_element(control_svg_name.locator);
         this.locator_svg = control_svg;
         // if this is the fist time this function is called, create a locatorHandler
         if (this.locatorHandler == undefined) {
@@ -336,7 +345,7 @@ export class Interactive {
 
     private init_drag_and_drop() {
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
-        let [diagram_svg, dnd_svg] = this.get_svg_element('dnd');
+        let [diagram_svg, dnd_svg] = this.get_svg_element(control_svg_name.dnd);
         this.dnd_svg = dnd_svg;
 
         // if this is the fist time this function is called, create a dragAndDropHandler
@@ -389,10 +398,40 @@ export class Interactive {
         return this.dragAndDropHandler?.getData() ?? [];
     }
 
+    /**
+     * Create a custom interactive object
+     * @param id id of the object
+     * @param classlist list of classes of the object
+     * @param diagram diagram of the object
+     * @returns the svg element of the object
+     */
+    public custom_object(id : string, classlist: string[], diagram : Diagram) : SVGSVGElement {
+        if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
+        let [diagram_svg, control_svg] = this.get_svg_element(control_svg_name.custom);
+
+        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        f_draw_to_svg(svg, diagram, true, diagram_svg);
+        svg.setAttribute("overflow", "visible");
+        svg.setAttribute("class", classlist.join(" "));
+        svg.setAttribute("id",id);
+
+        control_svg.appendChild(svg);
+        this.custom_svg = control_svg;
+        return svg;
+    }
 }
 
 // ========== functions
 //
+
+function set_viewbox(taget : SVGSVGElement | undefined, source : SVGSVGElement | undefined) {
+    if (taget == undefined) return;
+    if (source == undefined) return;
+    taget.setAttribute("viewBox", source.getAttribute("viewBox") as string);
+    taget.setAttribute("preserveAspectRatio", source.getAttribute("preserveAspectRatio") as string);
+}
+
+
 function create_slider(callback : (val : number) => any, min : number = 0, max : number = 100, value : number = 50, step : number) : HTMLInputElement {
     // create a slider
     let slider = document.createElement("input");
