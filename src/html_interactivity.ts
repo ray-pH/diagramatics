@@ -24,7 +24,7 @@ enum control_svg_name {
     locator   = "control_svg",
     dnd       = "dnd_svg",
     custom    = "custom_int_svg",
-    clickable = "clickable_svg",
+    button    = "button_svg"
 }
 
 /**
@@ -39,9 +39,11 @@ export class Interactive {
     public locator_svg : SVGSVGElement | undefined = undefined;
     public dnd_svg : SVGSVGElement | undefined = undefined;
     public custom_svg : SVGSVGElement | undefined = undefined;
+    public button_svg : SVGSVGElement | undefined = undefined;
 
     private locatorHandler? : LocatorHandler = undefined;
     private dragAndDropHandler? : DragAndDropHandler = undefined;
+    private buttonHandler? : ButtonHandler = undefined;
     // no support for canvas yet
 
     public draw_function : (inp_object : inpVariables_t, setter_object? : inpSetter_t) => any 
@@ -69,6 +71,7 @@ export class Interactive {
         this.locatorHandler?.setViewBox();
         this.dragAndDropHandler?.setViewBox();
         set_viewbox(this.custom_svg, this.diagram_svg);
+        set_viewbox(this.button_svg, this.diagram_svg);
         // TODO: also do this for the other control_svg
     }
 
@@ -418,6 +421,28 @@ export class Interactive {
         control_svg.appendChild(svg);
         this.custom_svg = control_svg;
         return svg;
+    }
+
+    private init_button() {
+        if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
+        let [diagram_svg, button_svg] = this.get_svg_element(control_svg_name.button);
+        this.button_svg = button_svg;
+
+        // if this is the fist time this function is called, create a dragAndDropHandler
+        if (this.buttonHandler == undefined) {
+            let buttonHandler = new ButtonHandler(button_svg, diagram_svg);
+            this.buttonHandler = buttonHandler;
+        }
+    }
+
+    public button_toggle(name : string, diagram_on : Diagram, diagram_off : Diagram, state : boolean = false){
+        this.init_button();
+        if (this.buttonHandler == undefined) throw Error("buttonHandler in Interactive class is undefined");
+
+        this.inp_variables[name] = state;
+
+        const callback = (state : boolean) => { this.inp_variables[name] = state }
+        this.buttonHandler.add_toggle(name, diagram_on, diagram_off, state, callback);
     }
 }
 
@@ -872,5 +897,70 @@ class DragAndDropHandler {
         for (let name in this.draggables) {
             this.draggables[name].svgelement?.classList.remove("picked");
         }
+    }
+}
+
+class ButtonHandler {
+    // callbacks : {[key : string] : (state : boolean) => any} = {};
+    states : {[key : string] : boolean} = {};
+    touchdownName : string | null = null;
+
+    constructor(public button_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
+    }
+
+    add_toggle(name : string, diagram_on : Diagram, diagram_off : Diagram, state : boolean, callback : (state : boolean) => any){
+        let svg_off = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        f_draw_to_svg(svg_off, diagram_off, true, this.diagram_svg);
+        svg_off.setAttribute("overflow", "visible");
+        svg_off.style.cursor = "pointer";
+
+        let svg_on = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        f_draw_to_svg(svg_on, diagram_on, true, this.diagram_svg);
+        svg_on.setAttribute("overflow", "visible");
+        svg_on.style.cursor = "pointer";
+
+        this.states[name] = state;
+
+        const set_display = (state : boolean) => {
+            svg_on.setAttribute("display", state ? "block" : "none");
+            svg_off.setAttribute("display", state ? "none" : "block");
+        }
+        set_display(this.states[name]);
+
+        const update_state = (state : boolean) => {
+            this.states[name] = state;
+            callback(this.states[name]);
+            set_display(this.states[name]);
+        }
+
+        svg_on.onclick = (e) => { 
+            e.preventDefault();
+            update_state(false); 
+        };
+        svg_off.onclick = (e) => { 
+            e.preventDefault();
+            update_state(true); 
+        };
+
+        svg_on.ontouchstart = (e) => { 
+            e.preventDefault();
+            this.touchdownName = name; 
+        };
+        svg_off.ontouchstart = (e) => { 
+            e.preventDefault();
+            this.touchdownName = name; 
+        };
+
+        svg_on.ontouchend = () => { 
+            if (this.touchdownName == name) update_state(false); 
+            this.touchdownName = null;
+        };
+        svg_off.ontouchend = () => { 
+            if (this.touchdownName == name) update_state(true); 
+            this.touchdownName = null;
+        };
+
+        this.button_svg.appendChild(svg_off);
+        this.button_svg.appendChild(svg_on);
     }
 }
