@@ -351,11 +351,22 @@ export class Interactive {
         }
     }
 
+    /**
+     * Create a drag and drop container
+     * @param name name of the container
+     * @param diagram diagram of the container
+    */
     public dnd_container(name : string, diagram : Diagram) {
         this.init_drag_and_drop();
         this.dragAndDropHandler?.add_container(name, diagram);
     }
 
+    /**
+     * Create a drag and drop draggable
+     * @param name name of the draggable
+     * @param diagram diagram of the draggable
+     * @param container_diagram diagram of the container, if not provided, a container will be created automatically
+    */
     public dnd_draggable(name : string, diagram : Diagram, container_diagram? : Diagram) {
         this.init_drag_and_drop();
         if (this.dragAndDropHandler == undefined) throw Error("dragAndDropHandler in Interactive class is undefined");
@@ -370,6 +381,10 @@ export class Interactive {
         this.dragAndDropHandler.registerCallback(name, callback);
     }
 
+    /**
+     * Get the data of the drag and drop objects with the format:
+     * `{container:string, content:string[]}[]`
+    */
     public get_dnd_data() : DragAndDropData {
         return this.dragAndDropHandler?.getData() ?? [];
     }
