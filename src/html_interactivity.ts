@@ -448,7 +448,10 @@ export class Interactive {
 
         this.inp_variables[name] = state;
 
-        const callback = (state : boolean) => { this.inp_variables[name] = state }
+        const callback = (state : boolean, redraw : boolean = true) => { 
+            this.inp_variables[name] = state 
+            if (redraw) this.draw();
+        }
         this.buttonHandler.add_toggle(name, diagram_on, diagram_off, state, callback);
     }
 
@@ -462,7 +465,9 @@ export class Interactive {
     public button_click(name : string, diagram : Diagram, diagram_pressed : Diagram, callback : () => any){
         this.init_button();
         if (this.buttonHandler == undefined) throw Error("buttonHandler in Interactive class is undefined");
-        this.buttonHandler.add_click(name, diagram, diagram_pressed, callback);
+
+        let n_callback = () => { callback(); this.draw(); }
+        this.buttonHandler.add_click(name, diagram, diagram_pressed, n_callback);
     }
 }
 
