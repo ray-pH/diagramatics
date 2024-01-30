@@ -17,8 +17,9 @@ const defaultFormat_f : formatFunction = (name : string, val : any, prec? : numb
     return `${str_to_mathematical_italic(name)} = ${val_str}`;
 }
 
+type setter_function_t = (_ : any) => void;
 type inpVariables_t = {[key : string] : any};
-type inpSetter_t    = {[key : string] : (_ : any) => void };
+type inpSetter_t    = {[key : string] : setter_function_t };
 
 enum control_svg_name {
     locator   = "control_svg",
@@ -452,7 +453,8 @@ export class Interactive {
             this.inp_variables[name] = state 
             if (redraw) this.draw();
         }
-        this.buttonHandler.add_toggle(name, diagram_on, diagram_off, state, callback);
+        let setter = this.buttonHandler.add_toggle(name, diagram_on, diagram_off, state, callback);
+        this.inp_setter[name] = setter;
     }
 
     /**
@@ -933,7 +935,7 @@ class ButtonHandler {
     constructor(public button_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
     }
 
-    add_toggle(name : string, diagram_on : Diagram, diagram_off : Diagram, state : boolean, callback : (state : boolean) => any){
+    add_toggle(name : string, diagram_on : Diagram, diagram_off : Diagram, state : boolean, callback : (state : boolean, redraw? : boolean) => any) : setter_function_t {
         let svg_off = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         f_draw_to_svg(svg_off, diagram_off, true, this.diagram_svg);
         svg_off.setAttribute("overflow", "visible");
@@ -955,9 +957,9 @@ class ButtonHandler {
         }
         set_display(this.states[name]);
 
-        const update_state = (state : boolean) => {
+        const update_state = (state : boolean, redraw : boolean = true) => {
             this.states[name] = state;
-            callback(this.states[name]);
+            callback(this.states[name], redraw);
             set_display(this.states[name]);
         }
 
@@ -987,6 +989,8 @@ class ButtonHandler {
             this.touchdownName = null;
         };
 
+        const setter = (state : boolean) => { update_state(state, false); }
+        return setter;
     }
 
     // TODO: handle touch input moving out of the button
