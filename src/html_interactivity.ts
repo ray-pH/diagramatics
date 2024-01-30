@@ -124,7 +124,14 @@ export class Interactive {
         // TODO: generate the svg here
         this.locatorHandler?.setViewBox();
     }
+
+    /** 
+     * alias for `dnd_initial_draw`
+     */
     public drag_and_drop_initial_draw(){
+        this.drag_and_drop_initial_draw();
+    }
+    public dnd_initial_draw() {
         this.dragAndDropHandler?.setViewBox();
         this.dragAndDropHandler?.drawSvg();
     }
