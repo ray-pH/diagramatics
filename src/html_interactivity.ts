@@ -449,18 +449,22 @@ export class Interactive {
      * @param diagram_on diagram of the button when it is on
      * @param diagram_off diagram of the button when it is off
      * @param state initial state of the button
+     * @param callback callback function when the button state is changed
     */
-    public button_toggle(name : string, diagram_on : Diagram, diagram_off : Diagram, state : boolean = false){
+    public button_toggle(name : string, diagram_on : Diagram, diagram_off : Diagram, state : boolean = false,
+        callback : (name : string, state : boolean) => any
+    ){
         this.init_button();
         if (this.buttonHandler == undefined) throw Error("buttonHandler in Interactive class is undefined");
 
         this.inp_variables[name] = state;
 
-        const callback = (state : boolean, redraw : boolean = true) => { 
+        const main_callback = (state : boolean, redraw : boolean = true) => { 
             this.inp_variables[name] = state 
+            callback(name, state);
             if (redraw) this.draw();
         }
-        let setter = this.buttonHandler.add_toggle(name, diagram_on, diagram_off, state, callback);
+        let setter = this.buttonHandler.add_toggle(name, diagram_on, diagram_off, state, main_callback);
         this.inp_setter[name] = setter;
     }
 
