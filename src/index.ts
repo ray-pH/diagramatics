@@ -49,7 +49,7 @@ export {
     xtickmark_empty, xtickmark, xticks,
     ytickmark_empty, ytickmark, yticks,
     xyaxes, xygrid, xycorneraxes,
-    xaxis, yaxis,
+    xaxis, yaxis, xgrid, ygrid,
     plot, plotv, plotf, under_curvef,
     axes_options,
 } from './shapes/shapes_graph.js'

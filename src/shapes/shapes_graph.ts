@@ -292,6 +292,31 @@ export function yaxis(axes_options? : Partial<axes_options>) : Diagram {
     return diagram_combine(yaxis, ytickmarks);
 }
 
+export function xgrid(axes_options? : Partial<axes_options>) : Diagram {
+    let opt = {...default_axes_options, ...axes_options}; // use default if not defined
+    if (opt.xticks == undefined) {
+        opt.xticks = get_tick_numbers(opt.xrange[0], opt.xrange[1], false);
+    }
+
+    let xgrid_diagrams = opt.xticks.map(x => 
+        line(V2(x,opt.yrange[0]), V2(x,opt.yrange[1])).transform(axes_transform(opt)).stroke('gray')
+    );
+    return diagram_combine(...xgrid_diagrams);
+}
+
+export function ygrid(axes_options? : Partial<axes_options>) : Diagram {
+    let opt = {...default_axes_options, ...axes_options}; // use default if not defined
+    if (opt.yticks == undefined) {
+        opt.yticks = get_tick_numbers(opt.yrange[0], opt.yrange[1], false);
+    }
+
+    let ygrid_diagrams = opt.yticks.map(y =>
+        line(V2(opt.xrange[0],y), V2(opt.xrange[1],y)).transform(axes_transform(opt)).stroke('gray')
+    );
+    return diagram_combine(...ygrid_diagrams);
+
+}
+
 export function xygrid(axes_options? : Partial<axes_options>) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
     if (opt.xticks == undefined) {
