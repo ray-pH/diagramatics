@@ -39,6 +39,7 @@ export {
 
 export {
     Interactive,
+    get_SVGCoord_from_event,
 } from './html_interactivity.js'
 
 export * as mod from './modifier.js'

@@ -612,6 +612,16 @@ function getMousePosition(evt : LocatorEvent, svgelem : SVGSVGElement) : {x : nu
     };
 }
 
+/**
+ * Get the SVG coordinate from the event (MouseEvent or TouchEvent)
+ * @param evt the event
+ * @param svgelem the svg element
+ * @returns the SVG coordinate
+ */
+export function get_SVGCoord_from_event(evt : LocatorEvent, svgelem : SVGSVGElement) : {x : number, y : number} {
+    return getMousePosition(evt, svgelem);
+}
+
 class LocatorHandler {
 
     selectedElement  : SVGElement | null = null;
