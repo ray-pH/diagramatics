@@ -68,8 +68,14 @@ export function range(start: number, end: number, step: number = 1) : number[] {
     if (n <= 0) return [];
 
     let result = [];
-    for (let i = start; i < end; i += step) {
-        result.push(i);
+    if (step > 0){
+        for (let i = start; i < end; i += step) {
+            result.push(i);
+        }
+    } else {
+        for (let i = start; i > end; i += step) {
+            result.push(i);
+        }
     }
     return result;
 }
@@ -88,8 +94,14 @@ export function range_inc(start: number, end: number, step: number = 1) : number
     if (n <= 0) return [];
 
     let result = [];
-    for (let i = start; i <= end; i += step) {
-        result.push(i);
+    if (step > 0){
+        for (let i = start; i <= end; i += step) {
+            result.push(i);
+        }
+    } else {
+        for (let i = start; i >= end; i += step) {
+            result.push(i);
+        }
     }
     return result;
 }
