@@ -43,7 +43,7 @@ export type TextData = {
     "font-weight"      : string,
     "font-style"       : string,
     "text-anchor"      : string,
-    "dominant-baseline": string,
+    "dy"               : string, // used to be "dominant-baseline": string,
     "angle"            : string,
     "font-scale"       : string, // this is a custom attribute that is not present in SVG
     // "letter-spacing"   : string,
@@ -61,15 +61,15 @@ function anchor_to_textdata(anchor : Anchor) : Partial<TextData> {
     // hanging vs text-before-edge
     // ideographic vs text-after-edge
     switch (anchor) {
-        case "top-left"      : return {"text-anchor" : "start" , "dominant-baseline" : "text-before-edge"};
-        case "top-center"    : return {"text-anchor" : "middle", "dominant-baseline" : "text-before-edge"};
-        case "top-right"     : return {"text-anchor" : "end"   , "dominant-baseline" : "text-before-edge"};
-        case "center-left"   : return {"text-anchor" : "start" , "dominant-baseline" : "middle"};
-        case "center-center" : return {"text-anchor" : "middle", "dominant-baseline" : "middle"};
-        case "center-right"  : return {"text-anchor" : "end"   , "dominant-baseline" : "middle"};
-        case "bottom-left"   : return {"text-anchor" : "start" , "dominant-baseline" : "text-after-edge"};
-        case "bottom-center" : return {"text-anchor" : "middle", "dominant-baseline" : "text-after-edge"};
-        case "bottom-right"  : return {"text-anchor" : "end"   , "dominant-baseline" : "text-after-edge"};
+        case "top-left"      : return {"text-anchor" : "start" , "dy" : "0.75em"};
+        case "top-center"    : return {"text-anchor" : "middle", "dy" : "0.75em"};
+        case "top-right"     : return {"text-anchor" : "end"   , "dy" : "0.75em"};
+        case "center-left"   : return {"text-anchor" : "start" , "dy" : "0.25em"};
+        case "center-center" : return {"text-anchor" : "middle", "dy" : "0.25em"};
+        case "center-right"  : return {"text-anchor" : "end"   , "dy" : "0.25em"};
+        case "bottom-left"   : return {"text-anchor" : "start" , "dy" : "-0.25em"};
+        case "bottom-center" : return {"text-anchor" : "middle", "dy" : "-0.25em"};
+        case "bottom-right"  : return {"text-anchor" : "end"   , "dy" : "-0.25em"};
         default: throw new Error("Unknown anchor " + anchor);
     }
 }
@@ -379,8 +379,8 @@ export class Diagram {
     public textanchor(textanchor : 'start' | 'middle' | 'end' ) : Diagram {
         return this.update_textdata('text-anchor', textanchor);
     }
-    public textdominantbaseline(dominantbaseline : 'auto' | 'text-bottom' | 'alphabetic' | 'ideographic' | 'middle' | 'central' | 'mathematical' | 'hanging' | 'text-top' ) : Diagram {
-        return this.update_textdata('dominant-baseline', dominantbaseline);
+    public textdy(dy : string) : Diagram {
+        return this.update_textdata('dy', dy);
     }
     public textangle(angle : number){
         return this.update_textdata('angle', angle.toString());
@@ -643,7 +643,7 @@ export class Diagram {
         let newd = this.copy_if_not_mutable();
         let textdata = anchor_to_textdata(anchor);
         newd.textdata['text-anchor'] = textdata['text-anchor'];
-        newd.textdata['dominant-baseline'] = textdata['dominant-baseline'];
+        newd.textdata['dy'] = textdata['dy'];
         return newd;
     }
 

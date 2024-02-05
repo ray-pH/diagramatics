@@ -39,7 +39,7 @@ export const default_textdata : TextData = {
     "font-size"        : "18",
     "font-weight"      : "normal",
     "text-anchor"      : "middle",
-    "dominant-baseline": "middle",
+    "dy"               : "0",
     "angle"            : "0",
     "font-style"       : "normal",
     "font-scale"       : "auto",
@@ -231,7 +231,8 @@ function draw_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
         text.setAttribute("font-size", font_size.toString());
         text.setAttribute("font-weight", textdata["font-weight"] as string);
         text.setAttribute("text-anchor", textdata["text-anchor"] as string);
-        text.setAttribute("dominant-baseline", textdata["dominant-baseline"] as string);
+        text.setAttribute("dy", textdata["dy"] as string);
+        // text.setAttribute("dominant-baseline", textdata["dominant-baseline"] as string);
         text.setAttribute("transform", `translate(${xpos} ${ypos}) rotate(${angle_deg}) `);
         if (svgtag != undefined) text.setAttribute("_dg_tag", svgtag);
 
