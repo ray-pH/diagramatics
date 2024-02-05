@@ -176,13 +176,13 @@ function draw_image(svgelement : SVGSVGElement, diagram : Diagram, svgtag? : str
  * @param diagram the outer diagram
  * @returns a list of DiagramType.Text
 */
-function collect_text(diagram : Diagram) : Diagram[] {
-    if (diagram.type == DiagramType.Text) {
+function collect_text(diagram : Diagram, type : DiagramType.Text | DiagramType.MultilineText) : Diagram[] {
+    if (diagram.type == type) {
         return [diagram];
     } else if (diagram.type == DiagramType.Diagram) {
         let result : Diagram[] = [];
         for (let d of diagram.children) {
-            result = result.concat(collect_text(d));
+            result = result.concat(collect_text(d, type));
         }
         return result;
     } else {
@@ -256,6 +256,85 @@ function draw_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
     }
 }
 
+function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[], 
+    referencesvgelement? : SVGSVGElement, svgtag? : string) : void {
+
+    // use svgelement as reference if referencesvgelement is undefined
+    if (referencesvgelement == undefined) referencesvgelement = svgelement;
+
+    // scale font-size adjusting for referencesvgelement.bbox and size
+    let bbox = referencesvgelement.getBBox();
+    let refsvgelement_width = referencesvgelement.width.baseVal.value;
+    let refsvgelement_height = referencesvgelement.height.baseVal.value;
+    let calculated_scale = Math.max(bbox.width / refsvgelement_width, bbox.height / refsvgelement_height)
+
+    for (let diagram of diagrams) {
+    //     let style = {...default_text_diagram_style, ...diagram.style}; // use default if not defined
+    //     style.fill = get_color(style.fill as string, tab_color);
+    //     style.stroke = get_color(style.stroke as string, tab_color);
+    //
+    //     let textdata = {...default_textdata, ...diagram.textdata}; // use default if not defined
+        if (diagram.path == undefined) { throw new Error("Text must have a path"); }
+        // draw svg of text
+        let textsvg = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        let xpos = diagram.path.points[0].x;
+        let ypos = -diagram.path.points[0].y;
+        // let angle_deg = to_degree(parseFloat(textdata["angle"] as string));
+        let angle_deg = 0;
+
+        if (diagram.multilinedata?.content == undefined) { throw new Error("MultilineText must have multilinedata"); }
+        for (let tspandata of diagram.multilinedata.content) {
+            // create tspan for each tspandata
+            let tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+            tspan.innerHTML = tspandata.text;
+
+            let tspanstyle = {...default_text_diagram_style, ...default_textdata, ...tspandata.style};
+
+            tspan.setAttribute("font-family", tspanstyle["font-family"] as string);
+            tspan.setAttribute("font-size", tspanstyle["font-size"] as string);
+            tspan.setAttribute("font-weight", tspanstyle["font-weight"] as string);
+            // tspan.setAttribute("text-anchor", tspanstyle["text-anchor"] as string);
+            tspan.style["fill"] = get_color(tspanstyle.fill as string, tab_color);
+            tspan.style["stroke"] = get_color(tspanstyle.stroke as string, tab_color);
+            tspan.style["opacity"] = tspanstyle.opacity as string;
+            textsvg.appendChild(tspan);
+        }
+
+        //
+        // let scale = textdata["font-scale"] == "auto" ? 
+        //     calculated_scale : parseFloat(textdata["font-scale"] as string);
+        // let font_size = parseFloat(textdata["font-size"] as string) * scale;
+        //
+        // // set font styles (font-family, font-size, font-weight)
+        // text.setAttribute("font-family", textdata["font-family"] as string);
+        // text.setAttribute("font-size", font_size.toString());
+        // text.setAttribute("font-weight", textdata["font-weight"] as string);
+        // text.setAttribute("text-anchor", textdata["text-anchor"] as string);
+        // text.setAttribute("dy", textdata["dy"] as string);
+        // // text.setAttribute("dominant-baseline", textdata["dominant-baseline"] as string);
+        textsvg.setAttribute("transform", `translate(${xpos} ${ypos}) rotate(${angle_deg}) `);
+        // if (svgtag != undefined) text.setAttribute("_dg_tag", svgtag);
+        //
+        // // custom attribute for tex display
+        // text.setAttribute("_x", xpos.toString());
+        // text.setAttribute("_y", ypos.toString());
+        // text.setAttribute("_angle", angle_deg.toString());
+        // 
+        // for (let stylename in style) {
+        //     text.style[stylename as any] = (style as any)[stylename as any];
+        // }
+        //
+        // // set the content of the text
+        // let text_content = textdata["text"];
+        // if (diagram.tags.includes('textvar') && !is_texstr(text_content)) 
+        //     text_content = str_to_mathematical_italic(text_content);
+        // text.innerHTML = text_content;
+        //
+        // // add to svgelement
+        svgelement.appendChild(textsvg);
+    }
+}
+
 /**
  * @param svgelement the svg element to draw to
  * @param diagram the diagram to draw
@@ -269,7 +348,7 @@ export function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, ren
         draw_polygon(svgelement, diagram, svgtag);
     } else if (diagram.type == DiagramType.Curve){
         draw_curve(svgelement, diagram, svgtag);
-    } else if (diagram.type == DiagramType.Text){
+    } else if (diagram.type == DiagramType.Text || diagram.type == DiagramType.MultilineText){
         // do nothing
     } else if (diagram.type == DiagramType.Image){
         draw_image(svgelement, diagram, svgtag);
@@ -285,8 +364,10 @@ export function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, ren
     // because the text is scaled based on the bounding box of the svgelement
     if (render_text) {
         if (textreferencesvgelement == undefined) textreferencesvgelement = svgelement;
-        let text_diagrams : Diagram[] = collect_text(diagram);
+        let text_diagrams      : Diagram[] = collect_text(diagram, DiagramType.Text);
+        let multiline_diagrams : Diagram[] = collect_text(diagram, DiagramType.MultilineText);
         draw_texts(svgelement, text_diagrams, textreferencesvgelement, svgtag);
+        draw_multiline_texts(svgelement, multiline_diagrams, textreferencesvgelement, svgtag);
     }
     
 }

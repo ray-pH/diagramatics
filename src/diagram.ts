@@ -12,6 +12,7 @@ export enum DiagramType {
     Text    = 'text',
     Image   = 'image',
     Diagram = 'diagram',
+    MultilineText = 'multilinetext',
 }
 
 export type Anchor = 
@@ -56,6 +57,14 @@ export type ImageData = {
     "src"    : string,
 }
 
+type TextSpanData = {
+    "text"  : string,
+    "style" : Partial<TextData> & Partial<DiagramStyle>,
+}
+export type MultilineTextData = {
+    "content" : TextSpanData[],
+}
+
 function anchor_to_textdata(anchor : Anchor) : Partial<TextData> {
     // TODO : might want to look at
     // hanging vs text-before-edge
@@ -89,10 +98,11 @@ export class Diagram {
     children : Diagram[] = [];
     path : Path | undefined = undefined; // Polygon and Curve have a path
     origin : Vector2 = new Vector2(0, 0); // position of the origin of the diagram
-    style    : Partial<DiagramStyle> = {};
-    textdata : Partial<TextData>     = {};
-    imgdata  : Partial<ImageData>    = {};
-    mutable  : boolean   = false;
+    style         : Partial<DiagramStyle>      = {};
+    textdata      : Partial<TextData>          = {};
+    multilinedata : Partial<MultilineTextData> = {};
+    imgdata       : Partial<ImageData>         = {};
+    mutable       : boolean   = false;
     tags : string[] = [];
 
     constructor(type_ : DiagramType, 
@@ -101,6 +111,7 @@ export class Diagram {
             children? : Diagram[], 
             textdata? : Partial<TextData>, 
             imgdata?  : Partial<ImageData> 
+            multilinedata? : Partial<MultilineTextData>
         } = {}
     ) {
         this.type = type_;
@@ -108,6 +119,7 @@ export class Diagram {
         if (args.children) { this.children = args.children; }
         if (args.textdata) { this.textdata = args.textdata; }
         if (args.imgdata)  { this.imgdata  = args.imgdata; }
+        if (args.multilinedata) { this.multilinedata = args.multilinedata; }
     }
 
     /**
@@ -1005,6 +1017,22 @@ export function image(src : string, width : number, height: number){
     ]);
     let img = new Diagram(DiagramType.Image, {imgdata : imgdata, path : path});
     return img;
+}
+
+/**
+ * Create a multiline text diagram
+ * @param strs list of text to display
+ */
+export function multiline(strs : string[], styles : Partial<TextData>[]) : Diagram {
+    let tspans : TextSpanData[] = [];
+    for (let i = 0; i < strs.length; i++) {
+        tspans.push({text : strs[i], style:styles[i]});
+    }
+    let dmulti = new Diagram(DiagramType.MultilineText, {
+        multilinedata : { content : tspans },
+        path : new Path([new Vector2(0, 0)]),
+    });
+    return dmulti;
 }
 
 
