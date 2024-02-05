@@ -57,9 +57,14 @@ export type ImageData = {
     "src"    : string,
 }
 
+type ExtraTspanStyle = {
+    "dy" : string,
+    "dx" : string,
+    "textvar" : boolean,
+}
 type TextSpanData = {
     "text"  : string,
-    "style" : Partial<TextData> & Partial<DiagramStyle>,
+    "style" : Partial<TextData> & Partial<DiagramStyle> & Partial<ExtraTspanStyle>,
 }
 export type MultilineTextData = {
     "content" : TextSpanData[],
@@ -1023,10 +1028,12 @@ export function image(src : string, width : number, height: number){
  * Create a multiline text diagram
  * @param strs list of text to display
  */
-export function multiline(strs : string[], styles : Partial<TextData>[]) : Diagram {
+export function multiline(spans : ([string] | [string,Partial<TextData>])[]) : Diagram {
     let tspans : TextSpanData[] = [];
-    for (let i = 0; i < strs.length; i++) {
-        tspans.push({text : strs[i], style:styles[i]});
+    for (let i = 0; i < spans.length; i++) {
+        let text = spans[i][0];
+        let style = spans[i][1] ?? {};
+        tspans.push({text, style});
     }
     let dmulti = new Diagram(DiagramType.MultilineText, {
         multilinedata : { content : tspans },

@@ -256,6 +256,11 @@ function draw_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
     }
 }
 
+/**
+ * @param svgelement the svg element to draw to
+ * @param diagrams the list of text diagrams to draw
+ * @param referencesvgelement the svg element to use as reference for scaling
+ */
 function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[], 
     referencesvgelement? : SVGSVGElement, svgtag? : string) : void {
 
@@ -283,13 +288,30 @@ function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
         let angle_deg = 0;
 
         if (diagram.multilinedata?.content == undefined) { throw new Error("MultilineText must have multilinedata"); }
+        // let current_line : number = 0;
+        let is_in_front  : boolean = true;
         for (let tspandata of diagram.multilinedata.content) {
+
+            if (tspandata.text == "\n") { is_in_front = true; continue; }
+
             // create tspan for each tspandata
             let tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
-            tspan.innerHTML = tspandata.text;
 
-            let tspanstyle = {...default_text_diagram_style, ...default_textdata, ...tspandata.style};
+            let not_setting_dy = (tspandata.style['dy'] == undefined)
+            let tspanstyle = {
+                ...{dy : "0", dx : "0"}, 
+                ...default_text_diagram_style, ...default_textdata, ...tspandata.style
+            };
 
+            if (is_in_front) {
+                tspan.setAttribute("x", "0");
+                if (not_setting_dy) tspanstyle.dy = "1em";
+                is_in_front = false;
+            }
+
+            tspan.setAttribute("dx", tspanstyle.dx as string);
+            tspan.setAttribute("dy", tspanstyle.dy as string);
+            tspan.setAttribute("font-style", tspanstyle["font-style"] as string);
             tspan.setAttribute("font-family", tspanstyle["font-family"] as string);
             tspan.setAttribute("font-size", tspanstyle["font-size"] as string);
             tspan.setAttribute("font-weight", tspanstyle["font-weight"] as string);
@@ -297,6 +319,10 @@ function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
             tspan.style["fill"] = get_color(tspanstyle.fill as string, tab_color);
             tspan.style["stroke"] = get_color(tspanstyle.stroke as string, tab_color);
             tspan.style["opacity"] = tspanstyle.opacity as string;
+
+            let text = tspandata.text;
+            if (tspanstyle["textvar"]) text = str_to_mathematical_italic(text);
+            tspan.innerHTML = text;
             textsvg.appendChild(tspan);
         }
 
@@ -313,7 +339,7 @@ function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
         // text.setAttribute("dy", textdata["dy"] as string);
         // // text.setAttribute("dominant-baseline", textdata["dominant-baseline"] as string);
         textsvg.setAttribute("transform", `translate(${xpos} ${ypos}) rotate(${angle_deg}) `);
-        // if (svgtag != undefined) text.setAttribute("_dg_tag", svgtag);
+        if (svgtag != undefined) textsvg.setAttribute("_dg_tag", svgtag);
         //
         // // custom attribute for tex display
         // text.setAttribute("_x", xpos.toString());
