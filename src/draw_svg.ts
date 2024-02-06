@@ -309,11 +309,16 @@ function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
                 is_in_front = false;
             }
 
+            let scale = tspanstyle["font-scale"] == "auto" ? 
+                calculated_scale : parseFloat(tspanstyle["font-scale"] as string);
+            let font_size = parseFloat(tspanstyle["font-size"] as string) * scale;
+
             tspan.setAttribute("dx", tspanstyle.dx as string);
             tspan.setAttribute("dy", tspanstyle.dy as string);
             tspan.setAttribute("font-style", tspanstyle["font-style"] as string);
             tspan.setAttribute("font-family", tspanstyle["font-family"] as string);
-            tspan.setAttribute("font-size", tspanstyle["font-size"] as string);
+            // tspan.setAttribute("font-size", tspanstyle["font-size"] as string);
+            tspan.setAttribute("font-size", font_size.toString());
             tspan.setAttribute("font-weight", tspanstyle["font-weight"] as string);
             // tspan.setAttribute("text-anchor", tspanstyle["text-anchor"] as string);
             tspan.style["fill"] = get_color(tspanstyle.fill as string, tab_color);
