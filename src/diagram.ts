@@ -1,4 +1,5 @@
 import { Vector2, V2, Transform } from './vector.js';
+import { BB_multiline } from './BBcode.js'
 
 function assert(condition : boolean, message : string) : void {
     if (!condition) {
@@ -1035,6 +1036,15 @@ export function multiline(spans : ([string] | [string,Partial<TextData>])[]) : D
         let style = spans[i][1] ?? {};
         tspans.push({text, style});
     }
+    let dmulti = new Diagram(DiagramType.MultilineText, {
+        multilinedata : { content : tspans },
+        path : new Path([new Vector2(0, 0)]),
+    });
+    return dmulti;
+}
+
+export function multiline_bb(bbstr : string) : Diagram {
+    let tspans : TextSpanData[] = BB_multiline.from_BBCode(bbstr) as TextSpanData[];
     let dmulti = new Diagram(DiagramType.MultilineText, {
         multilinedata : { content : tspans },
         path : new Path([new Vector2(0, 0)]),
