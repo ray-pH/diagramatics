@@ -394,8 +394,8 @@ export function handle_tex_in_svg(svg : SVGElement, texhandler : texhadler_funct
             if (xstr == null || ystr == null) continue;
 
             let textanchor = child.getAttribute('text-anchor');
-            let dominantbaseline = child.getAttribute('dominant-baseline');
-            if (textanchor == null || dominantbaseline == null) continue;
+            let dy = child.getAttribute('dy');
+            if (textanchor == null || dy == null) continue;
 
             child.outerHTML = svgstr;
             child = svg.children[i]; // update child
@@ -421,11 +421,11 @@ export function handle_tex_in_svg(svg : SVGElement, texhandler : texhadler_funct
                 case "end":          // right
                     xval -= width; break;
             }
-            switch (dominantbaseline) {
-                case "text-before-edge": break; // top
-                case "middle":                  // center
+            switch (dy) {
+                case "0.75em": break; // top
+                case "0.25em":                  // center
                     yval -= height/2; break;
-                case "text-after-edge":         // bottom
+                case "-0.25em":         // bottom
                     yval -= height; break;
             }
 
