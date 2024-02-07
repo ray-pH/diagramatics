@@ -139,9 +139,11 @@ export class BB_multiline {
                 case "i"     : style["font-style"] = "italic"; break;
                 case "color" : style["fill"] = tag["color"]; break;
                 case "size"  : style["font-size"] = tag["size"]; break;
+                case "dx"    : style["dx"] = tag["dx"]; break;
                 case "dy"    : style["dy"] = tag["dy"]; break;
                 case "font"  : style["font-family"] = tag["font"]; break;
                 case "var"   : style["textvar"] = true; break;
+                case "tag"   : style["tag"] = tag["tag"]; break;
             }
         }
         return style;
