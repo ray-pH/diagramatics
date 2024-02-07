@@ -1044,8 +1044,8 @@ export function multiline(spans : ([string] | [string,Partial<TextData>])[]) : D
     return dmulti;
 }
 
-export function multiline_bb(bbstr : string) : Diagram {
-    let tspans : TextSpanData[] = BB_multiline.from_BBCode(bbstr) as TextSpanData[];
+export function multiline_bb(bbstr : string, linespace? : string) : Diagram {
+    let tspans : TextSpanData[] = BB_multiline.from_BBCode(bbstr,linespace) as TextSpanData[];
     let dmulti = new Diagram(DiagramType.MultilineText, {
         multilinedata : { content : tspans },
         path : new Path([new Vector2(0, 0)]),

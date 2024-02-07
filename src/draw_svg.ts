@@ -295,9 +295,14 @@ function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
         if (diagram.multilinedata?.content == undefined) { throw new Error("MultilineText must have multilinedata"); }
         // let current_line : number = 0;
         let is_in_front  : boolean = true;
+        let newline_dy   : string  = "1em";
         for (let tspandata of diagram.multilinedata.content) {
 
-            if (tspandata.text == "\n") { is_in_front = true; continue; }
+            if (tspandata.text == "\n") { 
+                is_in_front = true; 
+                newline_dy = tspandata.style['dy'] ?? "1em";
+                continue; 
+            }
 
             // create tspan for each tspandata
             let tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
@@ -313,7 +318,7 @@ function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
 
             if (is_in_front) {
                 tspan.setAttribute("x", "0");
-                if (not_setting_dy) tspanstyle.dy = "1em";
+                if (not_setting_dy) tspanstyle.dy = newline_dy;
                 is_in_front = false;
             }
 

@@ -91,7 +91,7 @@ export class BB_Lexer {
 }
 
 export class BB_multiline {
-    static from_BBCode(text : string) {
+    static from_BBCode(text : string, linespace : string = "1em") {
         let tspans : {text : string, style : {}}[]  = []
         let tag_stack : { [key: string]: string }[] = [];
         let tokens = BB_Lexer.parse(text);
@@ -104,7 +104,7 @@ export class BB_multiline {
                 case BB_TokenType.OPEN_TAG: {
                     // if the token is [br] then add a new line
                     if (token.attributes['_tag_name'] === "br") {
-                        tspans.push({text: "\n", style: {}});
+                        tspans.push({text: "\n", style: {dy: linespace}});
                         break;
                     }
                     tag_stack.push(token.attributes);
