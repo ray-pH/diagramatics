@@ -62,6 +62,7 @@ type ExtraTspanStyle = {
     "dy" : string,
     "dx" : string,
     "textvar" : boolean,
+    "tag" : string,
 }
 type TextSpanData = {
     "text"  : string,

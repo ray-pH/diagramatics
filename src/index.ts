@@ -14,6 +14,7 @@ export {
 
 export {
     draw_to_svg, download_svg_as_svg, download_svg_as_png,
+    get_tagged_svg_element,
     handle_tex_in_svg,
     default_diagram_style, default_text_diagram_style, default_textdata,
     _init_default_diagram_style, _init_default_text_diagram_style, _init_default_textdata,

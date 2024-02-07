@@ -320,6 +320,8 @@ function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
                 calculated_scale : parseFloat(tspanstyle["font-scale"] as string);
             let font_size = parseFloat(tspanstyle["font-size"] as string) * scale;
 
+            if (tspanstyle["tag"]) tspan.setAttribute("_dg_tag", tspanstyle["tag"] as string);
+
             tspan.setAttribute("dx", tspanstyle.dx as string);
             tspan.setAttribute("dy", tspanstyle.dy as string);
             tspan.setAttribute("font-style", tspanstyle["font-style"] as string);
@@ -371,6 +373,28 @@ function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
         // // add to svgelement
         svgelement.appendChild(textsvg);
     }
+}
+
+/**
+ * Get all svg elements with a specific tag
+ * @param svgelement the svg element to search
+ * @param tag the tag to search
+ * @returns a list of svg elements with the tag
+ */
+export function get_tagged_svg_element(tag : string, svgelement : SVGElement) : SVGElement[] {
+    let result : SVGElement[] = [];
+    for (let i in svgelement.children) {
+        let child = svgelement.children[i];
+        if (!(child instanceof SVGElement)) continue;
+        if (child.getAttribute("_dg_tag") == tag) {
+            result.push(child);
+        }
+        // recurse through all children
+        if (child.children?.length) {
+            result = result.concat(get_tagged_svg_element(tag, child));
+        }
+    }
+    return result;
 }
 
 /**
