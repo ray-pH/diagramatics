@@ -39,7 +39,7 @@ export const default_textdata : TextData = {
     "font-size"        : "18",
     "font-weight"      : "normal",
     "text-anchor"      : "middle",
-    "dy"               : "0",
+    "dy"               : "0.25em",
     "angle"            : "0",
     "font-style"       : "normal",
     "font-scale"       : "auto",
