@@ -592,7 +592,13 @@ function firefox_calcCTM(svgelem : SVGSVGElement) : DOMMatrix {
 type LocatorEvent = TouchEvent | Touch | MouseEvent
 type DnDEvent = TouchEvent | Touch | MouseEvent
 
-function getMousePosition(evt : LocatorEvent, svgelem : SVGSVGElement) : {x : number, y : number} {
+/**
+ * Convert client position to SVG position
+ * @param clientPos the client position
+ * @param svgelem the svg element
+ */
+export function clientPos_to_svgPos(clientPos : {x : number, y : number}, svgelem : SVGSVGElement) : 
+{x : number, y : number} {
     // var CTM = this.control_svg.getScreenCTM() as DOMMatrix;
     // NOTE: there's a well known bug in firefox about `getScreenCTM()`
     // check if the browser is firefox
@@ -603,13 +609,21 @@ function getMousePosition(evt : LocatorEvent, svgelem : SVGSVGElement) : {x : nu
         CTM = svgelem.getScreenCTM() as DOMMatrix;
     }
     // console.log(CTM);
+    
+    return {
+        x : (clientPos.x - CTM.e) / CTM.a,
+        y : (clientPos.y - CTM.f) / CTM.d
+    }
+}
 
+function getMousePosition(evt : LocatorEvent, svgelem : SVGSVGElement) : {x : number, y : number} {
     // firefox doesn't support `TouchEvent`, we need to check for it
     if (window.TouchEvent && evt instanceof TouchEvent) { evt = evt.touches[0]; }
-    return {
-        x: ((evt as Touch | MouseEvent).clientX - CTM.e) / CTM.a,
-        y: ((evt as Touch | MouseEvent).clientY - CTM.f) / CTM.d
-    };
+    let clientPos = {
+        x : (evt as Touch | MouseEvent).clientX,
+        y : (evt as Touch | MouseEvent).clientY
+    }
+    return clientPos_to_svgPos(clientPos, svgelem);
 }
 
 /**
@@ -618,7 +632,7 @@ function getMousePosition(evt : LocatorEvent, svgelem : SVGSVGElement) : {x : nu
  * @param svgelem the svg element
  * @returns the SVG coordinate
  */
-export function get_SVGCoord_from_event(evt : LocatorEvent, svgelem : SVGSVGElement) : {x : number, y : number} {
+export function get_SVGPos_from_event(evt : LocatorEvent, svgelem : SVGSVGElement) : {x : number, y : number} {
     return getMousePosition(evt, svgelem);
 }
 
