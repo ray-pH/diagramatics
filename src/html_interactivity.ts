@@ -136,42 +136,35 @@ export class Interactive {
         this.dragAndDropHandler?.drawSvg();
     }
 
-    get_svg_element(metaname : string) : [SVGSVGElement, SVGSVGElement] {
+    get_svg_element(metaname : string) : SVGSVGElement {
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
         let diagram_svg : SVGSVGElement | undefined = undefined;
         // check if this.diagram_outer_svg has a child with meta=control_svg
         // if not, create one
-        let control_svg : SVGSVGElement | undefined = undefined;
+        let svg_element : SVGSVGElement | undefined = undefined;
 
         for (let i in this.diagram_outer_svg.children) {
             let child = this.diagram_outer_svg.children[i];
             if (child instanceof SVGSVGElement && child.getAttribute("meta") == metaname) {
-                control_svg = child;
-            }
-            // while looping, also find the diagram_svg
-            if (child instanceof SVGSVGElement && child.getAttribute("meta") == "diagram_svg") {
-                diagram_svg = child;
+                svg_element = child;
             }
         }
 
-        if (diagram_svg == undefined) {
-            diagram_svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            diagram_svg.setAttribute("meta", "diagram_svg")
-            diagram_svg.setAttribute("width", "100%");
-            diagram_svg.setAttribute("height", "100%");
-            this.diagram_outer_svg.appendChild(diagram_svg);
+        if (svg_element == undefined) {
+            svg_element = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg_element.setAttribute("meta", metaname);
+            svg_element.setAttribute("width", "100%");
+            svg_element.setAttribute("height", "100%");
+            this.diagram_outer_svg.appendChild(svg_element);
         }
 
-        if (control_svg == undefined) {
-            control_svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            control_svg.setAttribute("meta", metaname);
-            control_svg.setAttribute("width", "100%");
-            control_svg.setAttribute("height", "100%");
-            this.diagram_outer_svg.appendChild(control_svg);
-        }
+        return svg_element;
+    }
 
+    get_diagram_svg() : SVGSVGElement {
+        let diagram_svg = this.get_svg_element("diagram_svg");
         this.diagram_svg = diagram_svg;
-        return [diagram_svg, control_svg];
+        return diagram_svg;
     }
 
     /**
@@ -187,7 +180,8 @@ export class Interactive {
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
         this.inp_variables[variable_name] = value;
 
-        let [diagram_svg, control_svg] = this.get_svg_element(control_svg_name.locator);
+        let diagram_svg  = this.get_diagram_svg();
+        let control_svg  = this.get_svg_element(control_svg_name.locator);
         this.locator_svg = control_svg;
         // if this is the fist time this function is called, create a locatorHandler
         if (this.locatorHandler == undefined) {
@@ -356,8 +350,9 @@ export class Interactive {
 
     private init_drag_and_drop() {
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
-        let [diagram_svg, dnd_svg] = this.get_svg_element(control_svg_name.dnd);
-        this.dnd_svg = dnd_svg;
+        let diagram_svg = this.get_diagram_svg();
+        let dnd_svg     = this.get_svg_element(control_svg_name.dnd);
+        this.dnd_svg    = dnd_svg;
 
         // if this is the fist time this function is called, create a dragAndDropHandler
         if (this.dragAndDropHandler == undefined) {
@@ -418,7 +413,8 @@ export class Interactive {
      */
     public custom_object(id : string, classlist: string[], diagram : Diagram) : SVGSVGElement {
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
-        let [diagram_svg, control_svg] = this.get_svg_element(control_svg_name.custom);
+        let diagram_svg = this.get_diagram_svg();
+        let control_svg = this.get_svg_element(control_svg_name.custom);
 
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         f_draw_to_svg(svg, diagram, true, diagram_svg);
@@ -433,7 +429,8 @@ export class Interactive {
 
     private init_button() {
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
-        let [diagram_svg, button_svg] = this.get_svg_element(control_svg_name.button);
+        let diagram_svg = this.get_diagram_svg();
+        let button_svg  = this.get_svg_element(control_svg_name.button);
         this.button_svg = button_svg;
 
         // if this is the fist time this function is called, create a dragAndDropHandler
