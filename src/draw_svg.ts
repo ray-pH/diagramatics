@@ -287,6 +287,11 @@ function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
         // let angle_deg = to_degree(parseFloat(textdata["angle"] as string));
         let angle_deg = 0;
 
+
+        let textdata = {...default_textdata, ...diagram.textdata}; // use default if not defined
+        let diagram_font_size = textdata["font-size"];
+
+
         if (diagram.multilinedata?.content == undefined) { throw new Error("MultilineText must have multilinedata"); }
         // let current_line : number = 0;
         let is_in_front  : boolean = true;
@@ -300,7 +305,9 @@ function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
             let not_setting_dy = (tspandata.style['dy'] == undefined)
             let tspanstyle = {
                 ...{dy : "0", dx : "0"}, 
-                ...default_text_diagram_style, ...default_textdata, ...tspandata.style
+                ...default_text_diagram_style, ...default_textdata, 
+                ...{"font-size" : diagram_font_size},
+                ...tspandata.style
             };
 
             if (is_in_front) {

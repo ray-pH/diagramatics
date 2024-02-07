@@ -369,7 +369,7 @@ export class Diagram {
 
     private update_textdata(textdataname : keyof Diagram['textdata'], textdatavalue : string) : Diagram {
         let newd : Diagram = this.copy_if_not_mutable();
-        if (newd.type == DiagramType.Text) {
+        if (newd.type == DiagramType.Text || newd.type == DiagramType.MultilineText) {
             newd.textdata[textdataname] = textdatavalue;
         } else if (newd.type == DiagramType.Diagram) {
             // newd.children = newd.children.map(c => c.update_textdata(textdataname, textdatavalue));
