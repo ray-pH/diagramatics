@@ -609,7 +609,7 @@ export function clientPos_to_svgPos(clientPos : {x : number, y : number}, svgele
     
     return {
         x : (clientPos.x - CTM.e) / CTM.a,
-        y : (clientPos.y - CTM.f) / CTM.d
+        y : - (clientPos.y - CTM.f) / CTM.d
     }
 }
 
@@ -660,7 +660,7 @@ class LocatorHandler {
 
         let coord = getMousePosition(evt, this.control_svg);
 
-        let pos = V2(coord.x, -coord.y);
+        let pos = V2(coord.x, coord.y);
         // check if setter for this.selectedVariable exists
         // if it does, call it
         if (this.setter[this.selectedVariable] != undefined) {
@@ -935,7 +935,7 @@ class DragAndDropHandler {
 
         let coord = getMousePosition(evt, this.dnd_svg);
         this.draggedElementGhost.setAttribute("x", coord.x.toString());
-        this.draggedElementGhost.setAttribute("y", coord.y.toString());
+        this.draggedElementGhost.setAttribute("y", (-coord.y).toString());
     }
 
     endDrag(_evt : DnDEvent) {
