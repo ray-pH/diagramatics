@@ -163,6 +163,8 @@ export function distribute_vertical_and_align(diagrams : Diagram[], vertical_spa
  * @param column_count number of columns
  * @param vectical_space space between the diagrams vertically (default = 0)
  * @param horizontal_space space between the diagrams horizontally (default = 0)
+ * NODE: the behaviour is updated in v1.3.0 
+ * (now the returned diagram's children is the distributed diagrams instead of list of list of diagrams)
  */
 export function distribute_grid_row(diagrams : Diagram[], column_count : number, 
     vectical_space : number = 0, horizontal_space : number = 0,
@@ -177,5 +179,12 @@ export function distribute_grid_row(diagrams : Diagram[], column_count : number,
     }
     let distributed_rows = rows.map(row => distribute_horizontal(row, horizontal_space));
     let distributed_diagrams = distribute_vertical(distributed_rows, vectical_space);
-    return distributed_diagrams;
+
+    let grid_diagrams = []
+    for (let i = 0; i < distributed_diagrams.children.length; i++) {
+        for (let j = 0; j < distributed_diagrams.children[i].children.length; j++) {
+            grid_diagrams.push(distributed_diagrams.children[i].children[j]);
+        }
+    }
+    return diagram_combine(...grid_diagrams);
 }
