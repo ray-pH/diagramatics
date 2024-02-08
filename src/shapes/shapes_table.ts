@@ -101,7 +101,7 @@ export function empty_fixed_size(row_count : number, col_count : number,
     let rows : Diagram[] = [];
     let y_top = 0;
     for (let r = 0; r < row_count; r++) {
-        let y_bot   = y_top + rowsizes[r];
+        let y_bot   = y_top - rowsizes[r];
         let x_left = 0;
         let cols : Diagram[] = [];
         for (let c = 0; c < col_count; c++) {
