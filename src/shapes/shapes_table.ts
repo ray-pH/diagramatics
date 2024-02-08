@@ -109,7 +109,7 @@ export function empty_fixed_size(row_count : number, col_count : number,
             let x_mid = (x_left + x_right) / 2;
             let y_mid = (y_top + y_bot) / 2;
 
-            //TODO: think more about maybe just drawing the line instead of rectangles for each cell
+            //TODO: draw line instead of recangles
             let rect = rectangle_corner(V2(x_left, y_bot), V2(x_right, y_top)).move_origin(V2(x_mid, y_mid));
             cols.push(rect);
             x_left = x_right;
