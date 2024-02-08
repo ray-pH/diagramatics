@@ -17,7 +17,7 @@ enum TableOrientation {
  * @param min_colsize minimum size of each column
  * @returns a diagram of the table with the diagrams inside
  */
-export function table(diagrams : Diagram[][], orientation : TableOrientation = TableOrientation.ROWS, 
+export function table(diagrams : Diagram[][], padding : number = 0, orientation : TableOrientation = TableOrientation.ROWS, 
     min_rowsize : number = 0, min_colsize : number = 0) : Diagram {
     // if the orientation is columns, then we just transpose the rows and columns
     let diagram_rows = orientation == TableOrientation.ROWS ? diagrams : transpose(diagrams);
@@ -25,8 +25,8 @@ export function table(diagrams : Diagram[][], orientation : TableOrientation = T
     function f_size(d? : Diagram) : [number, number] {
         if (d == undefined) return [min_colsize, min_rowsize];
         let [bottomleft, topright] = d.bounding_box();
-        let width  = topright.x - bottomleft.x;
-        let height = topright.y - bottomleft.y;
+        let width  = topright.x - bottomleft.x + 2*padding;
+        let height = topright.y - bottomleft.y + 2*padding;
         return [width, height];
     }
 
