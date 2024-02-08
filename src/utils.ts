@@ -105,3 +105,21 @@ export function range_inc(start: number, end: number, step: number = 1) : number
     }
     return result;
 }
+
+/**
+ * Transpose a 2D array
+ * if the array is not a rectangle, the transposed array will be padded with undefined
+ * @param arr 2D array
+ * @returns transposed 2D array
+ */
+export function transpose<T>(arr : T[][]) : (T|undefined)[][] {
+    let result : T[][] = [];
+    let n = Math.max(...arr.map(a => a.length));
+    for (let i = 0; i < n; i++) {
+        result.push([]);
+        for (let j = 0; j < arr.length; j++) {
+            result[i].push(arr[j][i]);
+        }
+    }
+    return result;
+}
