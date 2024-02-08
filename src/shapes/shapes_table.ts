@@ -9,6 +9,44 @@ enum TableOrientation {
 }
 
 /**
+ * Create a table with diagrams inside
+ * @param diagrams 2D array of diagrams
+ * @param orientation orientation of the table (default: 'rows')
+ * can be 'rows' or 'columns'
+ * @param min_rowsize minimum size of each row
+ * @param min_colsize minimum size of each column
+ * @returns a diagram of the table with the diagrams inside
+ */
+export function table(diagrams : Diagram[][], orientation : TableOrientation = TableOrientation.ROWS, 
+    min_rowsize : number = 0, min_colsize : number = 0) : Diagram {
+    // if the orientation is columns, then we just transpose the rows and columns
+    let diagram_rows = orientation == TableOrientation.ROWS ? diagrams : transpose(diagrams);
+
+    function f_size(d? : Diagram) : [number, number] {
+        if (d == undefined) return [min_colsize, min_rowsize];
+        let [bottomleft, topright] = d.bounding_box();
+        let width  = topright.x - bottomleft.x;
+        let height = topright.y - bottomleft.y;
+        return [width, height];
+    }
+
+    let row_count = diagram_rows.length;
+    let col_count = Math.max(...diagram_rows.map(row => row.length));
+    let rowsizes : number[] = Array(row_count).fill(min_rowsize);
+    let colsizes : number[] = Array(col_count).fill(min_colsize);
+    // find the maximum size of each row and column
+    for (let r = 0; r < row_count; r++) {
+        for (let c = 0; c < col_count; c++) {
+            let [w, h] = f_size(diagram_rows[r][c]);
+            rowsizes[r] = Math.max(rowsizes[r], h);
+            colsizes[c] = Math.max(colsizes[c], w);
+        }
+    }
+
+    return fixed_size(diagrams, rowsizes, colsizes, orientation);
+}
+
+/**
  * Create a table with fixed size
  * @param diagrams 2D array of diagrams
  * @param rowsizes size of each row
@@ -45,7 +83,7 @@ export function fixed_size(diagrams : Diagram[][], rowsizes : number[], colsizes
 }
 
 /**
- * Create a table with fixed size
+ * Create an empty table with fixed size
  * @param row_count number of rows
  * @param col_count number of columns
  * @param rowsizes size of each row
