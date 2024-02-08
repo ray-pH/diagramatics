@@ -1,4 +1,5 @@
 import { Vector2, V2, Transform } from './vector.js';
+import { BB_multiline } from './BBcode.js'
 
 function assert(condition : boolean, message : string) : void {
     if (!condition) {
@@ -12,6 +13,7 @@ export enum DiagramType {
     Text    = 'text',
     Image   = 'image',
     Diagram = 'diagram',
+    MultilineText = 'multilinetext',
 }
 
 export type Anchor = 
@@ -56,6 +58,20 @@ export type ImageData = {
     "src"    : string,
 }
 
+type ExtraTspanStyle = {
+    "dy" : string,
+    "dx" : string,
+    "textvar" : boolean,
+    "tag" : string,
+}
+type TextSpanData = {
+    "text"  : string,
+    "style" : Partial<TextData> & Partial<DiagramStyle> & Partial<ExtraTspanStyle>,
+}
+export type MultilineTextData = {
+    "content" : TextSpanData[],
+}
+
 function anchor_to_textdata(anchor : Anchor) : Partial<TextData> {
     // TODO : might want to look at
     // hanging vs text-before-edge
@@ -89,10 +105,11 @@ export class Diagram {
     children : Diagram[] = [];
     path : Path | undefined = undefined; // Polygon and Curve have a path
     origin : Vector2 = new Vector2(0, 0); // position of the origin of the diagram
-    style    : Partial<DiagramStyle> = {};
-    textdata : Partial<TextData>     = {};
-    imgdata  : Partial<ImageData>    = {};
-    mutable  : boolean   = false;
+    style         : Partial<DiagramStyle>      = {};
+    textdata      : Partial<TextData>          = {};
+    multilinedata : Partial<MultilineTextData> = {};
+    imgdata       : Partial<ImageData>         = {};
+    mutable       : boolean   = false;
     tags : string[] = [];
 
     constructor(type_ : DiagramType, 
@@ -101,6 +118,7 @@ export class Diagram {
             children? : Diagram[], 
             textdata? : Partial<TextData>, 
             imgdata?  : Partial<ImageData> 
+            multilinedata? : Partial<MultilineTextData>
         } = {}
     ) {
         this.type = type_;
@@ -108,6 +126,7 @@ export class Diagram {
         if (args.children) { this.children = args.children; }
         if (args.textdata) { this.textdata = args.textdata; }
         if (args.imgdata)  { this.imgdata  = args.imgdata; }
+        if (args.multilinedata) { this.multilinedata = args.multilinedata; }
     }
 
     /**
@@ -351,7 +370,7 @@ export class Diagram {
 
     private update_textdata(textdataname : keyof Diagram['textdata'], textdatavalue : string) : Diagram {
         let newd : Diagram = this.copy_if_not_mutable();
-        if (newd.type == DiagramType.Text) {
+        if (newd.type == DiagramType.Text || newd.type == DiagramType.MultilineText) {
             newd.textdata[textdataname] = textdatavalue;
         } else if (newd.type == DiagramType.Diagram) {
             // newd.children = newd.children.map(c => c.update_textdata(textdataname, textdatavalue));
@@ -1005,6 +1024,33 @@ export function image(src : string, width : number, height: number){
     ]);
     let img = new Diagram(DiagramType.Image, {imgdata : imgdata, path : path});
     return img;
+}
+
+/**
+ * Create a multiline text diagram
+ * @param strs list of text to display
+ */
+export function multiline(spans : ([string] | [string,Partial<TextData>])[]) : Diagram {
+    let tspans : TextSpanData[] = [];
+    for (let i = 0; i < spans.length; i++) {
+        let text = spans[i][0];
+        let style = spans[i][1] ?? {};
+        tspans.push({text, style});
+    }
+    let dmulti = new Diagram(DiagramType.MultilineText, {
+        multilinedata : { content : tspans },
+        path : new Path([new Vector2(0, 0)]),
+    });
+    return dmulti;
+}
+
+export function multiline_bb(bbstr : string, linespace? : string) : Diagram {
+    let tspans : TextSpanData[] = BB_multiline.from_BBCode(bbstr,linespace) as TextSpanData[];
+    let dmulti = new Diagram(DiagramType.MultilineText, {
+        multilinedata : { content : tspans },
+        path : new Path([new Vector2(0, 0)]),
+    });
+    return dmulti;
 }
 
 

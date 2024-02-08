@@ -176,13 +176,13 @@ function draw_image(svgelement : SVGSVGElement, diagram : Diagram, svgtag? : str
  * @param diagram the outer diagram
  * @returns a list of DiagramType.Text
 */
-function collect_text(diagram : Diagram) : Diagram[] {
-    if (diagram.type == DiagramType.Text) {
+function collect_text(diagram : Diagram, type : DiagramType.Text | DiagramType.MultilineText) : Diagram[] {
+    if (diagram.type == type) {
         return [diagram];
     } else if (diagram.type == DiagramType.Diagram) {
         let result : Diagram[] = [];
         for (let d of diagram.children) {
-            result = result.concat(collect_text(d));
+            result = result.concat(collect_text(d, type));
         }
         return result;
     } else {
@@ -258,6 +258,153 @@ function draw_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
 
 /**
  * @param svgelement the svg element to draw to
+ * @param diagrams the list of text diagrams to draw
+ * @param referencesvgelement the svg element to use as reference for scaling
+ */
+function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[], 
+    referencesvgelement? : SVGSVGElement, svgtag? : string) : void {
+
+    // use svgelement as reference if referencesvgelement is undefined
+    if (referencesvgelement == undefined) referencesvgelement = svgelement;
+
+    // scale font-size adjusting for referencesvgelement.bbox and size
+    let bbox = referencesvgelement.getBBox();
+    let refsvgelement_width = referencesvgelement.width.baseVal.value;
+    let refsvgelement_height = referencesvgelement.height.baseVal.value;
+    let calculated_scale = Math.max(bbox.width / refsvgelement_width, bbox.height / refsvgelement_height)
+
+    for (let diagram of diagrams) {
+    //     let style = {...default_text_diagram_style, ...diagram.style}; // use default if not defined
+    //     style.fill = get_color(style.fill as string, tab_color);
+    //     style.stroke = get_color(style.stroke as string, tab_color);
+    //
+    //     let textdata = {...default_textdata, ...diagram.textdata}; // use default if not defined
+        if (diagram.path == undefined) { throw new Error("Text must have a path"); }
+        // draw svg of text
+        let textsvg = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        let xpos = diagram.path.points[0].x;
+        let ypos = -diagram.path.points[0].y;
+        // let angle_deg = to_degree(parseFloat(textdata["angle"] as string));
+        let angle_deg = 0;
+
+
+        let textdata = {...default_textdata, ...{dy:"0"}, ...diagram.textdata}; // use default if not defined
+        let diagram_font_size = textdata["font-size"];
+
+
+        if (diagram.multilinedata?.content == undefined) { throw new Error("MultilineText must have multilinedata"); }
+        // let current_line : number = 0;
+        let is_in_front  : boolean = true;
+        let newline_dy   : string  = "1em";
+        for (let tspandata of diagram.multilinedata.content) {
+
+            if (tspandata.text == "\n") { 
+                is_in_front = true; 
+                newline_dy = tspandata.style['dy'] ?? "1em";
+                continue; 
+            }
+
+            // create tspan for each tspandata
+            let tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+
+            let not_setting_dy = (tspandata.style['dy'] == undefined)
+            let tspanstyle = {
+                ...{dy : "0", dx : "0"}, 
+                ...default_text_diagram_style, 
+                ...textdata,
+                ...{"font-size" : diagram_font_size},
+                ...tspandata.style
+            };
+
+            if (is_in_front) {
+                tspan.setAttribute("x", "0");
+                if (not_setting_dy) tspanstyle.dy = newline_dy;
+                is_in_front = false;
+            }
+
+            let scale = tspanstyle["font-scale"] == "auto" ? 
+                calculated_scale : parseFloat(tspanstyle["font-scale"] as string);
+            let font_size = parseFloat(tspanstyle["font-size"] as string) * scale;
+
+            if (tspanstyle["tag"]) tspan.setAttribute("_dg_tag", tspanstyle["tag"] as string);
+
+            tspan.setAttribute("dx", tspanstyle.dx as string);
+            tspan.setAttribute("dy", tspanstyle.dy as string);
+            tspan.setAttribute("font-style", tspanstyle["font-style"] as string);
+            tspan.setAttribute("font-family", tspanstyle["font-family"] as string);
+            // tspan.setAttribute("font-size", tspanstyle["font-size"] as string);
+            tspan.setAttribute("font-size", font_size.toString());
+            tspan.setAttribute("font-weight", tspanstyle["font-weight"] as string);
+            // tspan.setAttribute("text-anchor", tspanstyle["text-anchor"] as string);
+            tspan.style["fill"] = get_color(tspanstyle.fill as string, tab_color);
+            tspan.style["stroke"] = get_color(tspanstyle.stroke as string, tab_color);
+            tspan.style["opacity"] = tspanstyle.opacity as string;
+
+            let text = tspandata.text;
+            if (tspanstyle["textvar"]) text = str_to_mathematical_italic(text);
+            tspan.innerHTML = text;
+            textsvg.appendChild(tspan);
+        }
+
+        //
+        // let scale = textdata["font-scale"] == "auto" ? 
+        //     calculated_scale : parseFloat(textdata["font-scale"] as string);
+        // let font_size = parseFloat(textdata["font-size"] as string) * scale;
+        //
+        // // set font styles (font-family, font-size, font-weight)
+        // text.setAttribute("font-family", textdata["font-family"] as string);
+        // text.setAttribute("font-size", font_size.toString());
+        // text.setAttribute("font-weight", textdata["font-weight"] as string);
+        // text.setAttribute("text-anchor", textdata["text-anchor"] as string);
+        // text.setAttribute("dy", textdata["dy"] as string);
+        // // text.setAttribute("dominant-baseline", textdata["dominant-baseline"] as string);
+        textsvg.setAttribute("transform", `translate(${xpos} ${ypos}) rotate(${angle_deg}) `);
+        if (svgtag != undefined) textsvg.setAttribute("_dg_tag", svgtag);
+        //
+        // // custom attribute for tex display
+        // text.setAttribute("_x", xpos.toString());
+        // text.setAttribute("_y", ypos.toString());
+        // text.setAttribute("_angle", angle_deg.toString());
+        // 
+        // for (let stylename in style) {
+        //     text.style[stylename as any] = (style as any)[stylename as any];
+        // }
+        //
+        // // set the content of the text
+        // let text_content = textdata["text"];
+        // if (diagram.tags.includes('textvar') && !is_texstr(text_content)) 
+        //     text_content = str_to_mathematical_italic(text_content);
+        // text.innerHTML = text_content;
+        //
+        // // add to svgelement
+        svgelement.appendChild(textsvg);
+    }
+}
+
+/**
+ * Get all svg elements with a specific tag
+ * @param svgelement the svg element to search
+ * @param tag the tag to search
+ * @returns a list of svg elements with the tag
+ */
+export function get_tagged_svg_element(tag : string, svgelement : SVGElement) : SVGElement[] {
+    let result : SVGElement[] = [];
+    for (let i in svgelement.children) {
+        let child = svgelement.children[i];
+        if (!(child instanceof SVGElement)) continue;
+        if (child.getAttribute("_dg_tag") == tag) {
+            result.push(child);
+        }
+        // recurse through all children
+        if (child.children?.length) {
+            result = result.concat(get_tagged_svg_element(tag, child));
+        }
+    }
+    return result;
+}
+
+/**
+ * @param svgelement the svg element to draw to
  * @param diagram the diagram to draw
  * @param render_text whether to render text
  * @param textreferencesvgelement the svg element to use as reference for text scaling
@@ -269,7 +416,7 @@ export function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, ren
         draw_polygon(svgelement, diagram, svgtag);
     } else if (diagram.type == DiagramType.Curve){
         draw_curve(svgelement, diagram, svgtag);
-    } else if (diagram.type == DiagramType.Text){
+    } else if (diagram.type == DiagramType.Text || diagram.type == DiagramType.MultilineText){
         // do nothing
     } else if (diagram.type == DiagramType.Image){
         draw_image(svgelement, diagram, svgtag);
@@ -285,8 +432,10 @@ export function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, ren
     // because the text is scaled based on the bounding box of the svgelement
     if (render_text) {
         if (textreferencesvgelement == undefined) textreferencesvgelement = svgelement;
-        let text_diagrams : Diagram[] = collect_text(diagram);
+        let text_diagrams      : Diagram[] = collect_text(diagram, DiagramType.Text);
+        let multiline_diagrams : Diagram[] = collect_text(diagram, DiagramType.MultilineText);
         draw_texts(svgelement, text_diagrams, textreferencesvgelement, svgtag);
+        draw_multiline_texts(svgelement, multiline_diagrams, textreferencesvgelement, svgtag);
     }
     
 }
