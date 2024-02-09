@@ -74,7 +74,7 @@ export function fixed_size(diagrams : Diagram[][], rowsizes : number[], colsizes
         for (let c = 0; c < col_count; c++) {
             let d = diagram_rows[r][c];
             if (d == undefined) continue;
-            d = d.position(points[r][c]);
+            d = d.move_origin('center-center').position(points[r][c]);
             diagram_grid.push(d);
         }
     }
