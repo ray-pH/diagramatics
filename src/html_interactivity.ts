@@ -381,19 +381,21 @@ export class Interactive {
      * @param name name of the draggable
      * @param diagram diagram of the draggable
      * @param container_diagram diagram of the container, if not provided, a container will be created automatically
+     * @param callback callback function when the draggable is moved
     */
-    public dnd_draggable(name : string, diagram : Diagram, container_diagram? : Diagram) {
+    public dnd_draggable(name : string, diagram : Diagram, container_diagram? : Diagram, callback? : (name:string, pos:Vector2) => any) {
         this.init_drag_and_drop();
         if (this.dragAndDropHandler == undefined) throw Error("dragAndDropHandler in Interactive class is undefined");
 
         this.inp_variables[name] = diagram.origin;
         this.dragAndDropHandler.add_draggable(name, diagram, container_diagram);
 
-        const callback = (pos : Vector2, redraw : boolean = true) => {
+        const dnd_callback = (pos : Vector2, redraw : boolean = true) => {
             this.inp_variables[name] = pos;
+            if (callback) callback(name, pos);
             if (redraw) this.draw();
         }
-        this.dragAndDropHandler.registerCallback(name, callback);
+        this.dragAndDropHandler.registerCallback(name, dnd_callback);
     }
 
     /**
