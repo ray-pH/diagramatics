@@ -319,7 +319,10 @@ export class Diagram {
         let newd : Diagram = this.copy_if_not_mutable();
         if (excludedType?.includes(newd.type)) { 
             return newd; 
-        } else if (newd.type == DiagramType.Polygon || newd.type == DiagramType.Curve || newd.type == DiagramType.Text) {
+        } else if (newd.type == DiagramType.Polygon || newd.type == DiagramType.Curve 
+            || newd.type == DiagramType.Text || newd.type == DiagramType.Image 
+            || newd.type == DiagramType.MultilineText
+        ) {
             newd.style[stylename] = stylevalue;
         } else if (newd.type == DiagramType.Diagram) {
             // newd.children = newd.children.map(c => c.update_style(stylename, stylevalue, excludedType));
