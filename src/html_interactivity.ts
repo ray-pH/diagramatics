@@ -407,6 +407,14 @@ export class Interactive {
     }
 
     /**
+     * Set the data of the drag and drop objects with the format:
+     * `{container:string, content:string[]}[]`
+     */
+    public set_dnd_data(data : DragAndDropData) : void {
+        this.dragAndDropHandler?.setData(data);
+    }
+
+    /**
      * Create a custom interactive object
      * @param id id of the object
      * @param classlist list of classes of the object
@@ -781,6 +789,18 @@ class DragAndDropHandler {
             data.push({container : name, content : this.containers[name].content});
         }
         return data;
+    }
+
+    setData(data : DragAndDropData) {
+        try {
+            for (let containerdata of data) {
+                for (let content of containerdata.content) {
+                    this.try_move_draggable_to_container(content, containerdata.container);
+                }
+            }
+        } catch (_e) {
+            console.error("the data is not valid");
+        }
     }
 
     diagram_container_from_draggable(diagram : Diagram) : Diagram {
