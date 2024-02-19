@@ -288,12 +288,14 @@ function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
         let angle_deg = 0;
 
 
-        let textdata = {...default_textdata, ...{dy:"0"}, ...diagram.textdata}; // use default if not defined
+        // use default if not defined
+        let textdata = {...default_textdata, ...{dy:"0", "text-anchor":"start"}, ...diagram.textdata}; 
         let diagram_font_size = textdata["font-size"];
 
 
         if (diagram.multilinedata?.content == undefined) { throw new Error("MultilineText must have multilinedata"); }
         // let current_line : number = 0;
+        let is_firstline : boolean = true;
         let is_in_front  : boolean = true;
         let newline_dy   : string  = "1em";
         for (let tspandata of diagram.multilinedata.content) {
@@ -309,16 +311,17 @@ function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
 
             let not_setting_dy = (tspandata.style['dy'] == undefined)
             let tspanstyle = {
-                ...{dy : "0", dx : "0"}, 
                 ...default_text_diagram_style, 
                 ...textdata,
+                ...{dy : "0", dx : "0"}, 
                 ...{"font-size" : diagram_font_size},
                 ...tspandata.style
             };
 
             if (is_in_front) {
                 tspan.setAttribute("x", "0");
-                if (not_setting_dy) tspanstyle.dy = newline_dy;
+                let textdata_dy = textdata["dy"] as string ?? "0";
+                if (not_setting_dy) tspanstyle.dy = is_firstline ? textdata_dy : newline_dy;
                 is_in_front = false;
             }
 
@@ -344,6 +347,8 @@ function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
             if (tspanstyle["textvar"]) text = str_to_mathematical_italic(text);
             tspan.innerHTML = text;
             textsvg.appendChild(tspan);
+
+            is_firstline = false;
         }
 
         //
@@ -356,8 +361,9 @@ function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
         // text.setAttribute("font-size", font_size.toString());
         // text.setAttribute("font-weight", textdata["font-weight"] as string);
         // text.setAttribute("text-anchor", textdata["text-anchor"] as string);
-        // text.setAttribute("dy", textdata["dy"] as string);
         // // text.setAttribute("dominant-baseline", textdata["dominant-baseline"] as string);
+        textsvg.setAttribute("dy", textdata["dy"] as string);
+        textsvg.setAttribute("text-anchor", textdata["text-anchor"] as string);
         textsvg.setAttribute("transform", `translate(${xpos} ${ypos}) rotate(${angle_deg}) `);
         if (svgtag != undefined) textsvg.setAttribute("_dg_tag", svgtag);
         //

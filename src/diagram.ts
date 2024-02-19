@@ -680,13 +680,13 @@ export class Diagram {
      */
     public move_origin_text(anchor : Anchor) : Diagram {
         let newd = this.copy_if_not_mutable();
-        if (this.type == DiagramType.Text) {
+        if (this.type == DiagramType.Text || this.type == DiagramType.MultilineText) {
             newd = newd.__move_origin_text(anchor);
         } else if (this.type == DiagramType.Diagram) {
             //newd.children = newd.children.map(c => c.move_origin_text(anchor));
             for (let i = 0; i < newd.children.length; i++)
                 newd.children[i] = newd.children[i].move_origin_text(anchor);
-        } else if (this.type == DiagramType.Polygon || this.type == DiagramType.Curve) {
+        } else {
             // do nothing
         }
         return newd;
