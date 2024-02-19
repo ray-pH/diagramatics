@@ -8,6 +8,8 @@ enum TableOrientation {
     COLUMNS = 'columns',
 }
 
+export type cell_style = { index : [number,number], fill? : string, stroke? : string, strokewidth? : number };
+
 /**
  * Create a table with diagrams inside
  * @param diagrams 2D array of diagrams
@@ -44,6 +46,37 @@ export function table(diagrams : Diagram[][], padding : number = 0, orientation 
     }
 
     return fixed_size(diagrams, rowsizes, colsizes, orientation);
+}
+
+/**
+ * Style the cells of a table
+ * @param table_diagram a diagram of a table
+ * @param styles an array of cell styles
+ * each style has an index of the cell and the style
+ * e.g. { index : [0,0], fill : 'red', stroke : 'black', strokewidth : 2 }
+ * not all styles are required
+ * e.g. { index : [0,0], fill : 'red' }
+ * @returns a new diagram with the cells styled
+ */
+export function style_cell(table_diagram : Diagram, styles : cell_style[]) : Diagram {
+    let newd = table_diagram.copy();
+    if (table_diagram.tags.includes('contain_table')) {
+        let table_index = newd.children.findIndex(d => d.tags.includes('table'));
+        let new_table = style_cell(newd.children[table_index], styles);
+        newd.children[table_index] = new_table;
+        return newd;
+    }
+    else if (!table_diagram.tags.includes('table')) { return table_diagram; }
+
+    for (let style of styles) {
+        let [r, c] = style.index;
+        let cell = newd.children[r].children[c];
+        if (style.fill) { cell = cell.fill(style.fill); }
+        if (style.stroke) { cell = cell.stroke(style.stroke); }
+        if (style.strokewidth) { cell = cell.strokewidth(style.strokewidth); }
+        newd.children[r].children[c] = cell;
+    }
+    return newd;
 }
 
 /**
