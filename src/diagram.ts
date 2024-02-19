@@ -462,7 +462,7 @@ export class Diagram {
                 }
                 return [new Vector2(minx, miny), new Vector2(maxx, maxy)];
         } 
-        else if (this.type == DiagramType.Text){
+        else if (this.type == DiagramType.Text || this.type == DiagramType.MultilineText){
             return [this.origin.copy(), this.origin.copy()];
         }
         else {
