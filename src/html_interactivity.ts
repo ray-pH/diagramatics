@@ -377,6 +377,30 @@ export class Interactive {
         this.dragAndDropHandler?.add_container(name, diagram, capacity);
     }
 
+    // TODO: in the next breaking changes update,
+    // merge this function with dnd_draggable_to_container
+    /**
+     * Create a drag and drop draggable that is positioned into an existing container
+     * @param name name of the draggable
+     * @param diagram diagram of the draggable
+     * @param container_name name of the container
+     * @param callback callback function when the draggable is moved
+     */
+    public dnd_draggable_to_container(name : string, diagram : Diagram, container_name : string, callback? : (name:string, container:string) => any) {
+        this.init_drag_and_drop();
+        if (this.dragAndDropHandler == undefined) throw Error("dragAndDropHandler in Interactive class is undefined");
+
+        this.inp_variables[name] = diagram.origin;
+        this.dragAndDropHandler.add_draggable_to_container(name, diagram, container_name);
+
+        const dnd_callback = (pos : Vector2, redraw : boolean = true) => {
+            this.inp_variables[name] = pos;
+            if (callback) callback(name, container_name);
+            if (redraw) this.draw();
+        }
+        this.dragAndDropHandler.registerCallback(name, dnd_callback);
+    }
+    
     /**
      * Create a drag and drop draggable
      * @param name name of the draggable
@@ -389,7 +413,7 @@ export class Interactive {
         if (this.dragAndDropHandler == undefined) throw Error("dragAndDropHandler in Interactive class is undefined");
 
         this.inp_variables[name] = diagram.origin;
-        this.dragAndDropHandler.add_draggable(name, diagram, container_diagram);
+        this.dragAndDropHandler.add_draggable_with_container(name, diagram, container_diagram);
 
         const dnd_callback = (pos : Vector2, redraw : boolean = true) => {
             this.inp_variables[name] = pos;
@@ -793,7 +817,14 @@ class DragAndDropHandler {
         }
     }
 
-    public add_draggable(name : string, diagram : Diagram, container_diagram? : Diagram) {
+    public add_draggable_to_container(name : string, diagram : Diagram, container_name : string) {
+        if (this.draggables[name] != undefined) throw Error(`draggable with name ${name} already exists`);
+
+        this.draggables[name] = {name, diagram, position : diagram.origin, container : container_name};
+        this.containers[container_name].content.push(name);
+    }
+
+    public add_draggable_with_container(name : string, diagram : Diagram, container_diagram? : Diagram) {
         if (this.draggables[name] != undefined) throw Error(`draggable with name ${name} already exists`);
         // add a container as initial container for the draggable
         let initial_container_name = `_container0_${name}`;
@@ -820,6 +851,8 @@ class DragAndDropHandler {
             this.add_container_svg(name, this.containers[name].diagram);
         for (let name in this.draggables)
             this.add_draggable_svg(name, this.draggables[name].diagram);
+        for (let name in this.containers)
+            this.reposition_container_content(name);
     }
 
     getData() : DragAndDropData {
