@@ -424,6 +424,23 @@ export class Interactive {
     }
 
     /**
+     * Register a callback function when a draggable is dropped outside of a container
+     * @param callback callback function
+     */
+    public dnd_register_drop_outside_callback(callback : (name : string) => any) {
+        this.dragAndDropHandler?.register_dropped_outside_callback(callback);
+    }
+
+    /**
+     * Move a draggable to a container
+     * @param name name of the draggable
+     * @param container_name name of the container
+     */
+    public dnd_move_to_container(name : string, container_name : string) {
+        this.dragAndDropHandler?.try_move_draggable_to_container(name, container_name);
+    }
+
+    /**
      * Get the data of the drag and drop objects with the format:
      * `{container:string, content:string[]}[]`
     */
@@ -778,6 +795,7 @@ class DragAndDropHandler {
     hoveredContainerName : string | null = null;
     draggedElementName : string | null = null;
     draggedElementGhost : SVGElement | null = null;
+    dropped_outside_callback : ((name : string) => any) | null = null;
 
     constructor(public dnd_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
     }
@@ -839,6 +857,10 @@ class DragAndDropHandler {
 
     registerCallback(name : string, callback : (pos : Vector2) => any){
         this.callbacks[name] = callback;
+    }
+
+    register_dropped_outside_callback(callback : (name : string) => any){
+        this.dropped_outside_callback = callback;
     }
 
     setViewBox() {
@@ -1047,6 +1069,13 @@ class DragAndDropHandler {
         if (this.hoveredContainerName != null && this.draggedElementName != null){
             this.try_move_draggable_to_container(this.draggedElementName, this.hoveredContainerName);
         }
+
+        // if dropped outside of any container
+        if (this.hoveredContainerName == null && this.draggedElementName != null 
+            && this.dropped_outside_callback != null){
+            this.dropped_outside_callback(this.draggedElementName);
+        }
+
         this.draggedElementName = null;
         this.hoveredContainerName = null;
         this.reset_hovered_class();
