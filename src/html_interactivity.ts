@@ -371,10 +371,13 @@ export class Interactive {
      * @param name name of the container
      * @param diagram diagram of the container
      * @param capacity capacity of the container (default is 1)
+     * @param config configuration of the container positioning
+     * the configuration is an object with the following format:
+     * `{type:"horizontal"}` or `{type:"vertical"}` or `{type:"grid", value:[number, number]}`
     */
-    public dnd_container(name : string, diagram : Diagram, capacity : number = 1) {
+    public dnd_container(name : string, diagram : Diagram, capacity : number = 1, config? : dnd_container_positioning) {
         this.init_drag_and_drop();
-        this.dragAndDropHandler?.add_container(name, diagram, capacity);
+        this.dragAndDropHandler?.add_container(name, diagram, capacity, config);
     }
 
     // TODO: in the next breaking changes update,
@@ -783,10 +786,10 @@ enum dnd_type {
 }
 
 //TODO: add more
-enum dnd_container_positioning {
-    HORIZONTAL = "horizontal",
-    VERITCAL   = "vertical"
-}
+type dnd_container_positioning =
+    {type:"horizontal"} |
+    {type:"vertical"} |
+    {type:"grid", value:[number, number]}
 
 class DragAndDropHandler {
     containers : {[key : string] : DragAndDropContainerData} = {};
@@ -800,11 +803,11 @@ class DragAndDropHandler {
     constructor(public dnd_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
     }
 
-    public add_container(name : string, diagram : Diagram, capacity : number = 1) {
+    public add_container(name : string, diagram : Diagram
+        , capacity : number = 1
+        , position_config : dnd_container_positioning = {type:"horizontal"}
+    ) {
         if (this.containers[name] != undefined) throw Error(`container with name ${name} already exists`);
-
-        // TODO: let user setup
-        let position_config = dnd_container_positioning.HORIZONTAL;
 
         let position_function = capacity == 1?
             (_index : number) => diagram.origin :
@@ -816,21 +819,35 @@ class DragAndDropHandler {
     : (index : number) => Vector2 {
         let bbox = diagram.bounding_box();
         let p_center = diagram.origin;
-        switch (config){
-            case dnd_container_positioning.HORIZONTAL: {
+        switch (config.type){
+            case "horizontal": {
                 let width = bbox[1].x - bbox[0].x;
                 let dx = width / capacity;
                 let x0 = bbox[0].x + dx / 2;
                 let y  = p_center.y;
                 return (index : number) => V2(x0 + dx * index, y);
             }
-            case dnd_container_positioning.VERITCAL: {
+            case "vertical": {
                 //NOTE: top to bottom
                 let height = bbox[1].y - bbox[0].y;
                 let dy = height / capacity;
                 let x  = p_center.x;
                 let y0 = bbox[1].y - dy / 2;
                 return (index : number) => V2(x, y0 - dy * index);
+            }
+            case "grid" : {
+                let [nx,ny] = config.value;
+                let height = bbox[1].y - bbox[0].y;
+                let width  = bbox[1].x - bbox[0].x;
+                let dx = width / nx;
+                let dy = height / ny;
+                let x0 = bbox[0].x + dx / 2;
+                let y0 = bbox[1].y - dy / 2;
+                return (index : number) => {
+                    let x = x0 + dx * (index % nx);
+                    let y = y0 - dy * Math.floor(index / nx);
+                    return V2(x, y);
+                }
             }
         }
     }
