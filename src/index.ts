@@ -10,6 +10,7 @@ export {
     to_degree, to_radian,
     linspace, range, array_repeat,
     linspace_exc, range_inc,
+    transpose,
 } from './utils.js'
 
 export {
@@ -62,6 +63,7 @@ export * as annotation from './shapes/shapes_annotation.js'
 export * as mechanics from './shapes/shapes_mechanics.js'
 export * as bar from './shapes/shapes_bar.js'
 export * as numberline from './shapes/shapes_numberline.js'
+export * as table from './shapes/shapes_table.js'
 
 // Mics
 export * as encoding from './encoding.js'
