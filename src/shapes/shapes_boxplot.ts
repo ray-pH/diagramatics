@@ -1,7 +1,7 @@
 import { Diagram, line, text, diagram_combine } from '../diagram.js';
 import { Vector2, V2 } from '../vector.js';
 import { rectangle, arrow2 } from '../shapes.js'
-import { axes_options, xticks, yticks, axes_transform } from './shapes_graph.js'
+import { axes_options, xticks, yticks, axes_transform, xtickmark_empty, ytickmark_empty } from './shapes_graph.js'
 
 export type boxplot_options = {
     range? : [number, number],
@@ -10,6 +10,7 @@ export type boxplot_options = {
     ticksize : number,
     headsize : number,
     orientation : 'x' | 'y',
+    tick_label_offset? : number,
 }
 
 export let default_bar_options : boxplot_options = {
@@ -18,9 +19,10 @@ export let default_bar_options : boxplot_options = {
     bbox: [V2(0,0), V2(10,10)],
     orientation: 'x',
     headsize : 0.05,
+    tick_label_offset : 0,
 }
 
-function to_ax_options(baropt : Partial<boxplot_options>) : axes_options {
+export function to_ax_options(baropt : Partial<boxplot_options>) : axes_options {
     let opt = {...default_bar_options, ...baropt}; // use default if not defined
     opt.bbox = opt.bbox ?? [V2(0,0), V2(10,10)]; // just to make sure it is defined
 
@@ -32,6 +34,7 @@ function to_ax_options(baropt : Partial<boxplot_options>) : axes_options {
             headsize : opt.headsize,
             ticksize : opt.ticksize,
             bbox     : opt.bbox,
+            tick_label_offset : opt.tick_label_offset,
         }
         return ax_opt;
     } else {
@@ -42,6 +45,7 @@ function to_ax_options(baropt : Partial<boxplot_options>) : axes_options {
             headsize : opt.headsize,
             ticksize : opt.ticksize,
             bbox     : opt.bbox,
+            tick_label_offset : opt.tick_label_offset,
         }
         return ax_opt;
     }
@@ -68,6 +72,21 @@ export function axes(bar_options : Partial<boxplot_options> = {}) : Diagram {
         let yaxis = arrow2(V2(0,lowerleft.y), V2(0,upperright.y), opt.headsize);
         let ytickmarks = yticks(ax_opt, 0);
         return diagram_combine(yaxis, ytickmarks).stroke('gray').fill('gray');
+    }
+}
+
+/**
+ */
+export function empty_tickmarks(xs: number[], bar_options : Partial<boxplot_options> = {}) : Diagram {
+    let opt = {...default_bar_options, ...bar_options}; // use default if not defined
+    let ax_opt = to_ax_options(opt);
+    // let ax_f = axes_transform(ax_opt);
+    if (opt.orientation == 'x') {
+        ax_opt.xticks = xs;
+        return xticks(ax_opt, 0, true);
+    } else {
+        ax_opt.yticks = xs;
+        return yticks(ax_opt, 0, true);
     }
 }
 

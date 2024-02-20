@@ -18,6 +18,7 @@ export type axes_options = {
     n_sample? : number,
     ticksize  : number,
     headsize  : number,
+    tick_label_offset? : number,
 }
 
 export let default_axes_options : axes_options = {
@@ -30,6 +31,7 @@ export let default_axes_options : axes_options = {
     n_sample : 100,
     ticksize : 0.1,
     headsize : 0.05,
+    tick_label_offset : 0,
 }
 
 export function axes_transform(axes_options? : Partial<axes_options>) : (v : Vector2) => Vector2 {
@@ -123,7 +125,9 @@ export function xtickmark_empty(x : number, y : number, axes_options? : Partial<
 
 export function xtickmark(x : number, y : number, str : string, axes_options? : Partial<axes_options>) : Diagram {
     let tick = xtickmark_empty(x, y, axes_options);
-    let label = textvar(str).move_origin_text("top-center").translate(tick.get_anchor("bottom-center")).textfill('gray');
+    let label = textvar(str).move_origin_text("top-center").translate(tick.get_anchor("bottom-center"))
+                .translate(V2(0, -(axes_options?.tick_label_offset || 0)))
+                .textfill('gray');
     return diagram_combine(tick, label);
 }
 
@@ -141,7 +145,9 @@ export function ytickmark_empty(y : number, x : number, axes_options? : Partial<
 }
 export function ytickmark(y : number, x : number, str : string, axes_options? : Partial<axes_options>) : Diagram {
     let tick = ytickmark_empty(y, x, axes_options);
-    let label = textvar(str).move_origin_text("center-right").translate(tick.get_anchor("center-left")).textfill('gray');
+    let label = textvar(str).move_origin_text("center-right").translate(tick.get_anchor("center-left"))
+                .translate(V2(-(axes_options?.tick_label_offset || 0), 0))
+                .textfill('gray');
     return diagram_combine(tick, label);
 }
 
@@ -205,7 +211,7 @@ export function get_tick_numbers(min : number, max : number, exclude_zero : bool
 
 // ======= END utility to calculate ticks
 
-export function xticks(axes_options : Partial<axes_options>, y : number = 0) : Diagram {
+export function xticks(axes_options : Partial<axes_options>, y : number = 0, empty = false) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
     if (opt.xticks == undefined) {
         opt.xticks = get_tick_numbers(opt.xrange[0], opt.xrange[1], y == 0);
@@ -215,10 +221,12 @@ export function xticks(axes_options : Partial<axes_options>, y : number = 0) : D
     // opt.xticks = opt.xticks.filter(x => x >= opt.xrange[0] && x <= opt.xrange[1]);
     opt.xticks = opt.xticks.filter(x => x > opt.xrange[0] && x < opt.xrange[1]);
 
-    let xticks_diagrams = opt.xticks.map(x => xtickmark(x, y, x.toString(), opt));
+    let xticks_diagrams = empty ? 
+        opt.xticks.map(x => xtickmark_empty(x, y, opt)) :
+        opt.xticks.map(x => xtickmark(x, y, x.toString(), opt));
     return diagram_combine(...xticks_diagrams);
 }
-export function yticks(axes_options : Partial<axes_options>, x : number = 0) : Diagram {
+export function yticks(axes_options : Partial<axes_options>, x : number = 0, empty = false) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
     if (opt.yticks == undefined) {
         opt.yticks = get_tick_numbers(opt.yrange[0], opt.yrange[1], x == 0);
@@ -228,7 +236,9 @@ export function yticks(axes_options : Partial<axes_options>, x : number = 0) : D
     // opt.yticks = opt.yticks.filter(y => y >= opt.yrange[0] && y <= opt.yrange[1]);
     opt.yticks = opt.yticks.filter(y => y > opt.yrange[0] && y < opt.yrange[1]);
 
-    let yticks_diagrams = opt.yticks.map(y => ytickmark(y, x, y.toString(), opt));
+    let yticks_diagrams = empty ? 
+        opt.yticks.map(y => ytickmark_empty(y, x, opt)) :
+        opt.yticks.map(y => ytickmark(y, x, y.toString(), opt));
     return diagram_combine(...yticks_diagrams);
 }
 
