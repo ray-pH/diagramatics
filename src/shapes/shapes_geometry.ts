@@ -72,3 +72,18 @@ export function line_extend(l : Diagram, len1 : number, len2 : number) : Diagram
     newl.path.points = [p0_new, p1_new];
     return newl;
 }
+
+/**
+ * Get the points of a line
+ * @param l a line Diagram
+ * @returns the two points of the line
+ */
+export function line_points(l : Diagram) : [Vector2, Vector2] {
+    let tags = l.tags;
+    if (!tags.includes('line')) return [V2(0,0), V2(0,0)];
+    if (l.path == undefined) return [V2(0,0), V2(0,0)];
+
+    let p0 = l.path.points[0];
+    let p1 = l.path.points[1];
+    return [p0, p1];
+}
