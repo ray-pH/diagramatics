@@ -370,10 +370,11 @@ export class Interactive {
      * Create a drag and drop container
      * @param name name of the container
      * @param diagram diagram of the container
+     * @param capacity capacity of the container (default is 1)
     */
-    public dnd_container(name : string, diagram : Diagram) {
+    public dnd_container(name : string, diagram : Diagram, capacity : number = 1) {
         this.init_drag_and_drop();
-        this.dragAndDropHandler?.add_container(name, diagram);
+        this.dragAndDropHandler?.add_container(name, diagram, capacity);
     }
 
     /**
@@ -721,7 +722,9 @@ type DragAndDropContainerData = {
     position : Vector2,
     svgelement? : SVGElement,
     diagram : Diagram,
-    content : string[]
+    content : string[],
+    capacity : number,
+    position_function : (index : number) => Vector2
 }
 type DragAndDropDraggableData = {
     name : string,
@@ -738,6 +741,12 @@ enum dnd_type {
     ghost     = "diagramatics-dnd-draggable-ghost"
 }
 
+//TODO: add more
+enum dnd_container_positioning {
+    HORIZONTAL = "horizontal",
+    VERITCAL   = "vertical"
+}
+
 class DragAndDropHandler {
     containers : {[key : string] : DragAndDropContainerData} = {};
     draggables : {[key : string] : DragAndDropDraggableData} = {};
@@ -749,9 +758,39 @@ class DragAndDropHandler {
     constructor(public dnd_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
     }
 
-    public add_container(name : string, diagram : Diagram) {
+    public add_container(name : string, diagram : Diagram, capacity : number = 1) {
         if (this.containers[name] != undefined) throw Error(`container with name ${name} already exists`);
-        this.containers[name] = {name, diagram, position : diagram.origin, content : []};
+
+        // TODO: let user setup
+        let position_config = dnd_container_positioning.HORIZONTAL;
+
+        let position_function = capacity == 1?
+            (_index : number) => diagram.origin :
+            DragAndDropHandler.generate_position_function(diagram, position_config, capacity);
+        this.containers[name] = {name, diagram, position : diagram.origin, content : [], capacity, position_function};
+    }
+
+    static generate_position_function(diagram : Diagram, config : dnd_container_positioning, capacity : number) 
+    : (index : number) => Vector2 {
+        let bbox = diagram.bounding_box();
+        let p_center = diagram.origin;
+        switch (config){
+            case dnd_container_positioning.HORIZONTAL: {
+                let width = bbox[1].x - bbox[0].x;
+                let dx = width / capacity;
+                let x0 = bbox[0].x + dx / 2;
+                let y  = p_center.y;
+                return (index : number) => V2(x0 + dx * index, y);
+            }
+            case dnd_container_positioning.VERITCAL: {
+                //NOTE: top to bottom
+                let height = bbox[1].y - bbox[0].y;
+                let dy = height / capacity;
+                let x  = p_center.x;
+                let y0 = bbox[1].y - dy / 2;
+                return (index : number) => V2(x, y0 - dy * index);
+            }
+        }
     }
 
     public add_draggable(name : string, diagram : Diagram, container_diagram? : Diagram) {
@@ -847,6 +886,18 @@ class DragAndDropHandler {
         this.draggables[name].svgelement = svg;
     }
 
+    reposition_container_content(container_name : string){
+        let container = this.containers[container_name];
+        if (container == undefined) return;
+
+        for (let i = 0; i < container.content.length; i++) {
+            let draggable = this.draggables[container.content[i]];
+            let pos = container.position_function(i);
+            draggable.position = pos;
+            draggable.svgelement?.setAttribute("x", pos.x.toString());
+            draggable.svgelement?.setAttribute("y", (-pos.y).toString());
+        }
+    }
     remove_draggable_from_container(draggable_name : string, container_name : string) {
         this.containers[container_name].content = 
             this.containers[container_name].content.filter((name) => name != draggable_name);
@@ -859,15 +910,13 @@ class DragAndDropHandler {
 
         let container = this.containers[container_name];
         let original_container_name = draggable.container;
-        let target_position  = container.position;
-
-        draggable.svgelement?.setAttribute("x", target_position.x.toString());
-        draggable.svgelement?.setAttribute("y", (-target_position.y).toString());
 
         this.remove_draggable_from_container(draggable_name, original_container_name);
         draggable.container = container_name;
-        draggable.position = target_position;
         container.content.push(draggable_name);
+
+        this.reposition_container_content(container_name);
+        this.reposition_container_content(original_container_name);
 
         let draggedElement = this.draggables[draggable_name];
         this.callbacks[draggedElement.name](draggedElement.position);
@@ -876,9 +925,10 @@ class DragAndDropHandler {
     try_move_draggable_to_container(draggable_name : string, container_name : string) {
         let draggable = this.draggables[draggable_name];
         let container = this.containers[container_name];
-        if (container.content.length == 0) {
+        if (container.content.length + 1 <= container.capacity) {
             this.move_draggable_to_container(draggable_name, container_name);
-        } else {
+        } else if (container.capacity == 1){
+            // only swap if the container has only 1 capacity
             // swap
             let original_container_name = draggable.container;
             let other_draggable_name = container.content[0];
