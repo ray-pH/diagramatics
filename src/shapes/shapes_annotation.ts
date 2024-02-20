@@ -114,3 +114,18 @@ export function length(p1 : Vector2, p2 : Vector2, str : string, offset : number
 
     return diagram_combine(lines, label);
 }
+
+export function congruence_mark(p1 : Vector2, p2 : Vector2, count : number, size : number = 1, gap? : number) : Diagram {
+    let v = p2.sub(p1)
+    let n_angle = Math.atan2(v.x, -v.y);
+    let p_mid = p1.add(p2).scale(0.5);
+    gap = gap ?? size/2;
+
+    let marks = [];
+    for (let i = 0; i < count; i++){
+        let l = line(V2(-size/2, i*gap), V2(size/2, i*gap));
+        marks.push(l)
+    }
+    let dg_marks = diagram_combine(...marks);
+    return dg_marks.rotate(n_angle).move_origin('center-center').position(p_mid);
+}
