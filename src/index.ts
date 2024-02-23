@@ -66,6 +66,7 @@ export * as bar from './shapes/shapes_bar.js'
 export * as numberline from './shapes/shapes_numberline.js'
 export * as table from './shapes/shapes_table.js'
 export * as boxplot from './shapes/shapes_boxplot.js'
+export * as tree from './shapes/shapes_tree.js'
 
 // Mics
 export * as encoding from './encoding.js'

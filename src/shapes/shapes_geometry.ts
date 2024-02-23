@@ -87,3 +87,14 @@ export function line_points(l : Diagram) : [Vector2, Vector2] {
     let p1 = l.path.points[1];
     return [p0, p1];
 }
+
+
+/**
+ * Get the size of a diagram
+ * @param diagram a diagram
+ * @returns the width and height of the diagram
+ */
+export function size(diagram : Diagram) : [number, number] {
+    let bb = diagram.bounding_box();
+    return [bb[1].x - bb[0].x, bb[1].y - bb[0].y];
+}
