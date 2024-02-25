@@ -1131,7 +1131,7 @@ class ButtonHandler {
 
     /** add a new toggle button if it doesn't exist, otherwise, update diagrams and callback */
     try_add_toggle(name : string, diagram_on : Diagram, diagram_off : Diagram, state : boolean, callback : (state : boolean, redraw? : boolean) => any) : setter_function_t {
-        if (this.states[name] != undefined) {
+        if (this.svg_element[name] != undefined) {
             // delete the old button
             let [old_svg_on, old_svg_off] = this.svg_element[name];
             old_svg_on.remove();
@@ -1201,7 +1201,7 @@ class ButtonHandler {
 
     /** add a new click button if it doesn't exist, otherwise, update diagrams and callback */
     try_add_click(name : string, diagram : Diagram, diagram_pressed : Diagram, callback : () => any){
-        if (this.states[name] != undefined) {
+        if (this.svg_element[name] != undefined) {
             // delete the old button
             let [old_svg_normal, old_svg_pressed] = this.svg_element[name];
             old_svg_normal.remove();
