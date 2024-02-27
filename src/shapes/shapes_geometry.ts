@@ -44,35 +44,6 @@ export function circle_tangent_point_from_point(point : Vector2, circle : Diagra
     return [P1, P2];
 }
 
-
-
-
-// ============================= shapes
-
-/**
- * Extend a line by a length on both ends
- * @param l a line Diagram
- * @param len1 length to extend on the first end
- * @param len2 length to extend on the second end
- * @returns a new line Diagram
- */
-export function line_extend(l : Diagram, len1 : number, len2 : number) : Diagram {
-    let tags = l.tags;
-    if (!tags.includes('line')) return l;
-    if (l.path == undefined) return l;
-
-    let p0 = l.path.points[0];
-    let p1 = l.path.points[1];
-    let v = p1.sub(p0).normalize();
-    let p0_new = p0.sub(v.scale(len1));
-    let p1_new = p1.add(v.scale(len2));
-
-    let newl = l.copy();
-    if (newl.path == undefined) return l; // to surpress typescript error
-    newl.path.points = [p0_new, p1_new];
-    return newl;
-}
-
 /**
  * Get the points of a line
  * @param l a line Diagram
@@ -108,4 +79,32 @@ export function line_intersection(l1 : Diagram, l2 : Diagram) : Vector2 {
     let x = ((x1*y2 - y1*x2)*(x3-x4) - (x1-x2)*(x3*y4 - y3*x4))/d;
     let y = ((x1*y2 - y1*x2)*(y3-y4) - (y1-y2)*(x3*y4 - y3*x4))/d;
     return V2(x, y);
+}
+
+
+
+// ============================= shapes
+
+/**
+ * Extend a line by a length on both ends
+ * @param l a line Diagram
+ * @param len1 length to extend on the first end
+ * @param len2 length to extend on the second end
+ * @returns a new line Diagram
+ */
+export function line_extend(l : Diagram, len1 : number, len2 : number) : Diagram {
+    let tags = l.tags;
+    if (!tags.includes('line')) return l;
+    if (l.path == undefined) return l;
+
+    let p0 = l.path.points[0];
+    let p1 = l.path.points[1];
+    let v = p1.sub(p0).normalize();
+    let p0_new = p0.sub(v.scale(len1));
+    let p1_new = p1.add(v.scale(len2));
+
+    let newl = l.copy();
+    if (newl.path == undefined) return l; // to surpress typescript error
+    newl.path.points = [p0_new, p1_new];
+    return newl;
 }
