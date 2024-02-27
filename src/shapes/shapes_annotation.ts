@@ -115,6 +115,14 @@ export function length(p1 : Vector2, p2 : Vector2, str : string, offset : number
     return diagram_combine(lines, label);
 }
 
+/**
+ * Create a congruence mark
+ * @param p1 start point of the line
+ * @param p2 end point of the line
+ * @param count number of marks
+ * @param size size of the mark
+ * @param gap gap between the marks
+ */
 export function congruence_mark(p1 : Vector2, p2 : Vector2, count : number, size : number = 1, gap? : number) : Diagram {
     let v = p2.sub(p1)
     let n_angle = Math.atan2(v.x, -v.y);
