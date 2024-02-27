@@ -1,6 +1,7 @@
 import { Diagram, polygon, line, diagram_combine, curve } from '../diagram.js';
 import { Vector2, V2 } from '../vector.js';
 import { linspace } from '../utils.js';
+import { arrow1 } from '../shapes.js';
 
 // ============================= utilities
 /**
@@ -44,6 +45,42 @@ export function circle_tangent_point_from_point(point : Vector2, circle : Diagra
     return [P1, P2];
 }
 
+/**
+ * Get the points of a line
+ * @param l a line Diagram
+ * @returns the two points of the line
+ */
+export function line_points(l : Diagram) : [Vector2, Vector2] {
+    let tags = l.tags;
+    if (!tags.includes('line')) return [V2(0,0), V2(0,0)];
+    if (l.path == undefined) return [V2(0,0), V2(0,0)];
+
+    let p0 = l.path.points[0];
+    let p1 = l.path.points[1];
+    return [p0, p1];
+}
+
+/**
+ * Get the intersection of two lines
+ * @param l1 a line Diagram
+ * @param l2 a line Diagram
+ * @returns the intersection point
+ * if the lines are parallel, return V2(Infinity, Infinity)
+ */
+export function line_intersection(l1 : Diagram, l2 : Diagram) : Vector2 {
+    if (!l1.tags.includes('line') || !l2.tags.includes('line')) return V2(Infinity, Infinity);
+    let [a1, b1] = line_points(l1);
+    let [a2, b2] = line_points(l2);
+
+    let x1 = a1.x; let y1 = a1.y; let x2 = b1.x; let y2 = b1.y;
+    let x3 = a2.x; let y3 = a2.y; let x4 = b2.x; let y4 = b2.y;
+
+    let d = (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4);
+    if (d == 0) return V2(Infinity, Infinity);
+    let x = ((x1*y2 - y1*x2)*(x3-x4) - (x1-x2)*(x3*y4 - y3*x4))/d;
+    let y = ((x1*y2 - y1*x2)*(y3-y4) - (y1-y2)*(x3*y4 - y3*x4))/d;
+    return V2(x, y);
+}
 
 
 
@@ -74,16 +111,17 @@ export function line_extend(l : Diagram, len1 : number, len2 : number) : Diagram
 }
 
 /**
- * Get the points of a line
- * @param l a line Diagram
- * @returns the two points of the line
+ * Add an arrow to the end of a line
+ * @param c a curve Diagram
+ * @param headsize size of the arrow head
+ * @param flip flip the arrow position
+ * @returns a new line Diagram with an arrow
  */
-export function line_points(l : Diagram) : [Vector2, Vector2] {
-    let tags = l.tags;
-    if (!tags.includes('line')) return [V2(0,0), V2(0,0)];
-    if (l.path == undefined) return [V2(0,0), V2(0,0)];
-
-    let p0 = l.path.points[0];
-    let p1 = l.path.points[1];
-    return [p0, p1];
+export function curve_add_arrow(c : Diagram, headsize : number, flip = false) : Diagram {
+    if (c.path == undefined) return c;
+    let p1 = flip ? c.path.points[0] : c.path.points[c.path.points.length - 1];
+    let p0 = flip ? c.path.points[1] : c.path.points[c.path.points.length - 2];
+    let arrow = arrow1(p0, p1, headsize);
+    // TODO: clone the style
+    return diagram_combine(c, arrow);
 }
