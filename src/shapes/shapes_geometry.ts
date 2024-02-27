@@ -87,3 +87,25 @@ export function line_points(l : Diagram) : [Vector2, Vector2] {
     let p1 = l.path.points[1];
     return [p0, p1];
 }
+
+/**
+ * Get the intersection of two lines
+ * @param l1 a line Diagram
+ * @param l2 a line Diagram
+ * @returns the intersection point
+ * if the lines are parallel, return V2(Infinity, Infinity)
+ */
+export function line_intersection(l1 : Diagram, l2 : Diagram) : Vector2 {
+    if (!l1.tags.includes('line') || !l2.tags.includes('line')) return V2(Infinity, Infinity);
+    let [a1, b1] = line_points(l1);
+    let [a2, b2] = line_points(l2);
+
+    let x1 = a1.x; let y1 = a1.y; let x2 = b1.x; let y2 = b1.y;
+    let x3 = a2.x; let y3 = a2.y; let x4 = b2.x; let y4 = b2.y;
+
+    let d = (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4);
+    if (d == 0) return V2(Infinity, Infinity);
+    let x = ((x1*y2 - y1*x2)*(x3-x4) - (x1-x2)*(x3*y4 - y3*x4))/d;
+    let y = ((x1*y2 - y1*x2)*(y3-y4) - (y1-y2)*(x3*y4 - y3*x4))/d;
+    return V2(x, y);
+}
