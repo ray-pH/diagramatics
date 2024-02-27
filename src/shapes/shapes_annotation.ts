@@ -137,3 +137,30 @@ export function congruence_mark(p1 : Vector2, p2 : Vector2, count : number, size
     let dg_marks = diagram_combine(...marks);
     return dg_marks.rotate(n_angle).move_origin('center-center').position(p_mid);
 }
+
+/**
+ * Create a parallel mark
+ * @param p1 start point of the line
+ * @param p2 end point of the line
+ * @param count number of marks
+ * @param size size of the mark
+ * @param gap gap between the marks
+ * @param arrow_angle angle of the arrow
+ */
+export function parallel_mark(p1 : Vector2, p2 : Vector2, count : number, size : number = 1, gap? : number, arrow_angle : number = 0.5) : Diagram {
+    let v = p2.sub(p1)
+    let n_angle = Math.atan2(v.x, -v.y);
+    let p_mid = p1.add(p2).scale(0.5);
+    gap = gap ?? size/2;
+
+    let marks = [];
+    let dy = size/2 * Math.cos(arrow_angle);
+    for (let i = 0; i < count; i++){
+        let p0 = V2(0, i*gap - dy);
+        let l1 = line(V2(-size/2, i*gap), p0)
+        let l2 = line(V2(size/2, i*gap), p0)
+        marks.push(l1.combine(l2));
+    }
+    let dg_marks = diagram_combine(...marks);
+    return dg_marks.rotate(n_angle).move_origin('center-center').position(p_mid);
+}
