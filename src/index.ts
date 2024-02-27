@@ -10,7 +10,7 @@ export {
     to_degree, to_radian,
     linspace, range, array_repeat,
     linspace_exc, range_inc,
-    transpose,
+    transpose, cubic_spline
 } from './utils.js'
 
 export {
