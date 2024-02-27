@@ -1,4 +1,4 @@
-import { Diagram, line, diagram_combine } from '../diagram.js';
+import { Diagram, line, diagram_combine, curve } from '../diagram.js';
 import { arrow, textvar, arc } from '../shapes.js';
 import { Vector2, V2 } from '../vector.js';
 import { str_to_mathematical_italic } from '../unicode_utils.js'
@@ -85,6 +85,20 @@ export function angle_smaller(p : [Vector2, Vector2, Vector2],
     // if dangle is larger than 180 degree, swap the two vectors
     let ps : typeof p = dangle > Math.PI ? [p3, p2, p1] : [p1, p2, p3];
     return angle(ps, str, radius, text_offset);
+}
+
+/**
+ * Create an annotation for right angle
+ * make sure the angle is 90 degree
+ * @param p three points to define the angle
+ * @param size size of the square
+ */
+export function right_angle(p : [Vector2, Vector2, Vector2], size : number = 1) : Diagram {
+    let [p1, p2, p3] = p;
+    let p1_ = p1.sub(p2).normalize().scale(size).add(p2);
+    let p3_ = p3.sub(p2).normalize().scale(size).add(p2);
+    let p2_ = V2(p1_.x, p3_.y);
+    return curve([p1_, p2_, p3_]);
 }
 
 export function length(p1 : Vector2, p2 : Vector2, str : string, offset : number, 
