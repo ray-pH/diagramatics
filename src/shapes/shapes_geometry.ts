@@ -61,6 +61,30 @@ export function line_points(l : Diagram) : [Vector2, Vector2] {
 }
 
 /**
+ * Get the intersection of a line with a horizontal line at y = yi
+ * @param l a line Diagram
+ * @param yi y value of the horizontal line
+ * @returns the intersection point
+ */
+export function line_intersection_y(l : Diagram, yi : number) : Vector2 {
+    let [a, b] = line_points(l);
+    let xi = a.x + (b.x - a.x) * (yi - a.y) / (b.y - a.y);
+    return V2(xi, yi);
+}
+
+/**
+ * Get the intersection of a line with a vertical line at x = xi
+ * @param l a line Diagram
+ * @param xi x value of the vertical line
+ * @returns the intersection point
+ */
+export function line_intersection_x(l : Diagram, xi : number) : Vector2 {
+    let [a, b] = line_points(l);
+    let yi = a.y + (b.y - a.y) * (xi - a.x) / (b.x - a.x);
+    return V2(xi, yi);
+}
+
+/**
  * Get the intersection of two lines
  * @param l1 a line Diagram
  * @param l2 a line Diagram
