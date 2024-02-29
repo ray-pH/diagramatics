@@ -228,6 +228,7 @@ function draw_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
 
         // set font styles (font-family, font-size, font-weight)
         text.setAttribute("font-family", textdata["font-family"] as string);
+        text.setAttribute("font-style", textdata["font-style"] as string);
         text.setAttribute("font-size", font_size.toString());
         text.setAttribute("font-weight", textdata["font-weight"] as string);
         text.setAttribute("text-anchor", textdata["text-anchor"] as string);
