@@ -389,6 +389,9 @@ export class Diagram {
     public fontfamily(fontfamily : string) : Diagram {
         return this.update_textdata('font-family', fontfamily);
     }
+    public fontstyle(fontstyle : string) : Diagram {
+        return this.update_textdata('font-style', fontstyle);
+    }
     public fontsize(fontsize : number) : Diagram {
         return this.update_textdata('font-size', fontsize.toString());
     }
