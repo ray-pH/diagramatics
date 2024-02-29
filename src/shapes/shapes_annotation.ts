@@ -1,7 +1,6 @@
 import { Diagram, line, diagram_combine, curve } from '../diagram.js';
 import { arrow, textvar, arc } from '../shapes.js';
 import { Vector2, V2 } from '../vector.js';
-import { str_to_mathematical_italic } from '../unicode_utils.js'
 
 /**
  * Create an annotation vector
@@ -52,7 +51,7 @@ export function angle(p : [Vector2, Vector2, Vector2],
         .add_points([V2(0,0)]).to_polygon();
     if (str == "" || str == undefined){ return angle_arc.position(p2); } // if str is empty, return only the arc
 
-    let angle_text = textvar(str_to_mathematical_italic(str))
+    let angle_text = textvar(str)
         .translate(text_offset);
 
     return diagram_combine(angle_arc, angle_text).position(p2);
