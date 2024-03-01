@@ -204,13 +204,89 @@ export class Interactive {
 
         // ============== Circle element
 
-        let locator_svg = create_locator_pointer_svg(radius, value, color, blink);
+        let locator_svg = LocatorHandler.create_locator_circle_pointer_svg(radius, value, color, blink);
         if(blink){
             // store the circle_outer into the LocatorHandler so that we can turn it off later
             let blinking_outers = locator_svg.getElementsByClassName("diagramatics-locator-blink");
             for (let i = 0; i < blinking_outers.length; i++)
                 (this.locatorHandler as LocatorHandler).addBlinkingCircleOuter(blinking_outers[i])
         }
+        locator_svg.addEventListener('mousedown', (evt) => { 
+            (this.locatorHandler as LocatorHandler).startDrag(evt, variable_name, locator_svg);
+        });
+        locator_svg.addEventListener('touchstart', (evt) => { 
+            (this.locatorHandler as LocatorHandler).startDrag(evt, variable_name, locator_svg);
+        });
+        control_svg.appendChild(locator_svg);
+
+        // =============== setter
+        let setter;
+        if (track_diagram) {
+            if (track_diagram.type != DiagramType.Polygon && track_diagram.type != DiagramType.Curve)
+                throw Error('Track diagram must be a polygon or curve');
+            if (track_diagram.path == undefined) throw Error(`diagram {diagtam.type} must have a path`);
+            let track = track_diagram.path.points;
+            setter = (pos : Vector2) => {
+                let coord = closest_point_from_points(pos, track);
+                locator_svg.setAttributeNS(null, "x", coord.x.toString());
+                locator_svg.setAttributeNS(null, "y", (-coord.y).toString());
+                return coord;
+            }
+        }
+        else{
+            setter = (pos : Vector2) => {
+                locator_svg.setAttributeNS(null, "x", pos.x.toString());
+                locator_svg.setAttributeNS(null, "y", (-pos.y).toString());
+                return pos;
+            }
+        }
+        this.locatorHandler.registerSetter(variable_name, setter);
+
+        // set initial position
+        let init_pos = setter(value);
+        callback(init_pos, false);
+    }
+
+
+    // TODO: in the next breaking changes update,
+    // merge this function with locator
+    /**
+     * Create a locator with custom diagram object
+     * @param variable_name name of the variable
+     * @param value initial value
+     * @param diagram diagram of the locator
+     * @param track_diagram if provided, the locator will snap to the closest point on the diagram
+     * @param blink if true, the locator will blink
+     */
+    public locator_custom(variable_name : string, value : Vector2, diagram : Diagram, track_diagram? : Diagram, blink : boolean = true){
+        if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
+        this.inp_variables[variable_name] = value;
+
+        let diagram_svg  = this.get_diagram_svg();
+        let control_svg  = this.get_svg_element(control_svg_name.locator);
+        this.locator_svg = control_svg;
+        // if this is the fist time this function is called, create a locatorHandler
+        if (this.locatorHandler == undefined) {
+            let locatorHandler = new LocatorHandler(control_svg, diagram_svg);
+            this.locatorHandler = locatorHandler;
+            this.diagram_outer_svg.addEventListener('mousemove'  , (evt) => { locatorHandler.drag(evt);    });
+            this.diagram_outer_svg.addEventListener('mouseup'    , (evt) => { locatorHandler.endDrag(evt); });
+            this.diagram_outer_svg.addEventListener('touchmove'  , (evt) => { locatorHandler.drag(evt);    });
+            this.diagram_outer_svg.addEventListener('touchend'   , (evt) => { locatorHandler.endDrag(evt); });
+            this.diagram_outer_svg.addEventListener('touchcancel', (evt) => { locatorHandler.endDrag(evt); });
+        }
+
+
+        // ============== callback
+        const callback = (pos : Vector2, redraw : boolean = true) => {
+            this.inp_variables[variable_name] = pos;
+            if (redraw) this.draw();
+        }
+        this.locatorHandler.registerCallback(variable_name, callback);
+
+        // ============== Circle element
+
+        let locator_svg = this.locatorHandler!.create_locator_diagram_svg(diagram, blink);
         locator_svg.addEventListener('mousedown', (evt) => { 
             (this.locatorHandler as LocatorHandler).startDrag(evt, variable_name, locator_svg);
         });
@@ -574,37 +650,6 @@ function create_slider(callback : (val : number) => any, min : number = 0, max :
     return slider;
 }
 
-function create_locator_pointer_svg(radius : number, value : Vector2, color : string, blink : boolean) : SVGSVGElement {
-    let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    // set svg overflow to visible
-    svg.setAttribute("overflow", "visible");
-    // set cursor to be pointer when hovering
-    svg.style.cursor = "pointer";
-
-    let circle_outer = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    let circle_inner = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-
-    let inner_radius    = radius * 0.4;
-
-    circle_outer.setAttribute("r", radius.toString());
-    circle_outer.setAttribute("fill", get_color(color, tab_color));
-    circle_outer.setAttribute("fill-opacity", "0.3137");
-    circle_outer.setAttribute("stroke", "none");
-    circle_outer.classList.add("diagramatics-locator-outer");
-    if (blink) circle_outer.classList.add("diagramatics-locator-blink");
-
-    circle_inner.setAttribute("r", inner_radius.toString());
-    circle_inner.setAttribute("fill", get_color(color, tab_color));
-    circle_inner.setAttribute("stroke", "none");
-    circle_inner.classList.add("diagramatics-locator-inner");
-
-    svg.appendChild(circle_outer);
-    svg.appendChild(circle_inner);
-    svg.setAttribute("x", value.x.toString());
-    svg.setAttribute("y", (-value.y).toString());
-    return svg;
-}
-
 // function create_locator() : SVGCircleElement {
 // }
 //
@@ -759,6 +804,50 @@ class LocatorHandler {
         this.blinking_circle_outers = [];
         if (this.first_touch_callback != null) this.first_touch_callback();
     }
+
+    create_locator_diagram_svg(diagram : Diagram, blink : boolean) : SVGSVGElement {
+        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        f_draw_to_svg(svg, diagram.position(V2(0,0)), true, this.control_svg);
+        svg.style.cursor = "pointer";
+        svg.setAttribute("overflow", "visible");
+        if (blink) {
+            svg.classList.add("diagramatics-locator-blink");
+            this.addBlinkingCircleOuter(svg);
+        }
+        return svg;
+    }
+
+    static create_locator_circle_pointer_svg(radius : number, value : Vector2, color : string, blink : boolean) : SVGSVGElement {
+        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        // set svg overflow to visible
+        svg.setAttribute("overflow", "visible");
+        // set cursor to be pointer when hovering
+        svg.style.cursor = "pointer";
+
+        let circle_outer = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        let circle_inner = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+
+        let inner_radius    = radius * 0.4;
+
+        circle_outer.setAttribute("r", radius.toString());
+        circle_outer.setAttribute("fill", get_color(color, tab_color));
+        circle_outer.setAttribute("fill-opacity", "0.3137");
+        circle_outer.setAttribute("stroke", "none");
+        circle_outer.classList.add("diagramatics-locator-outer");
+        if (blink) circle_outer.classList.add("diagramatics-locator-blink");
+
+        circle_inner.setAttribute("r", inner_radius.toString());
+        circle_inner.setAttribute("fill", get_color(color, tab_color));
+        circle_inner.setAttribute("stroke", "none");
+        circle_inner.classList.add("diagramatics-locator-inner");
+
+        svg.appendChild(circle_outer);
+        svg.appendChild(circle_inner);
+        svg.setAttribute("x", value.x.toString());
+        svg.setAttribute("y", (-value.y).toString());
+        return svg;
+    }
+
 }
 
 type DragAndDropContainerData = {

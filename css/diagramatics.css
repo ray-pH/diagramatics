@@ -102,7 +102,7 @@
   from {fill-opacity: 0.8;}
   to {fill-opacity: 0.3137;}
 }
-.diagramatics-locator-outer.diagramatics-locator-blink{
+.diagramatics-locator-blink{
   animation: blink-locator 0.5s infinite alternate;
 }
 
