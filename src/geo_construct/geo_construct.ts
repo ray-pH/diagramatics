@@ -5,7 +5,7 @@ import { V2, Vector2, Vdir } from '../vector.js';
 enum GeoType {
     LINE = 'LINE',
 }
-export type GeoCtx = {[key : string] : (GeoObj | Vector2)}
+export type GeoCtx = {[key : string] : (GeoObj | Vector2 | number)}
 export interface GeoObj { type : GeoType; }
 
 export interface GeoLine extends GeoObj {
