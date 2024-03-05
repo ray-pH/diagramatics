@@ -143,7 +143,10 @@ export function get_preview_diagram(ctx : GeoCtx, pad : number[] | number) : Dia
     let object_names = Object.keys(ctx);
     for (let name of object_names) {
         let obj = ctx[name];
-        if (obj instanceof Vector2) {
+        if (typeof(obj) === 'number'){
+            continue;
+        }
+        else if (obj instanceof Vector2) {
             points.push({name, p:obj});
         } else {
             typelist[obj.type].push({name, obj});
