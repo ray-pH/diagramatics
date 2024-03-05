@@ -6,9 +6,9 @@ enum GeoType {
     LINE = 'LINE',
 }
 export type GeoCtx = {[key : string] : (GeoObj | Vector2)}
-interface GeoObj { type : GeoType; }
+export interface GeoObj { type : GeoType; }
 
-interface GeoLine extends GeoObj {
+export interface GeoLine extends GeoObj {
     type : GeoType.LINE;
     p : Vector2
     dir : Vector2 // not necessarily a unit vector
