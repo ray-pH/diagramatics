@@ -45,9 +45,7 @@ export function point_collinear_extend_length(p1 : Vector2, p2 : Vector2, len : 
     return p2.add(dir.scale(len));
 }
 
-/**
- * Get a point that is `t` fraction of the way from `p1` to `p2`
- */
+/** Get a point that is `t` fraction of the way from `p1` to `p2` */
 export function point_collinear_fraction(p1 : Vector2, p2 : Vector2, t : number) : Vector2 {
     let dir = p2.sub(p1);
     return p1.add(dir.scale(t));
@@ -68,9 +66,7 @@ export function point_onLine_with_y(l : GeoLine, y : number) : Vector2 {
 }
 
 
-/**
- * Get the intersection point of two lines
- */
+/** Get the intersection point of two lines */
 export function line_intersection(l1 : GeoLine, l2 : GeoLine) : Vector2 {
     let a1 = l1.p; let b1 = l1.p.add(l1.dir);
     let a2 = l2.p; let b2 = l2.p.add(l2.dir);
@@ -99,21 +95,15 @@ export function line_from_angle(p : Vector2, angle : number) : GeoLine {
     return line(p, Vdir(angle));
 }
 
-/**
- * Define a line that is parallel to `l` and passes through `p`
- */
+/** Define a line that is parallel to `l` and passes through `p` */
 export function line_parallel_at_point(l : GeoLine, p : Vector2) : GeoLine {
     return line(p, l.dir);
 }
-/**
- * Define a line that is perpendicular to `l` and passes through `p`
- */
+/** Define a line that is perpendicular to `l` and passes through `p` */
 export function line_perpendicular_at_point(l : GeoLine, p : Vector2) : GeoLine {
     return line(p, V2(-l.dir.y, l.dir.x));
 }
-/**
- * Define a line that has the direction of `l` rotated by `angle` and passes through `p`
- */
+/** Define a line that has the direction of `l` rotated by `angle` and passes through `p` */
 export function line_rotated_at_point(l : GeoLine, angle : number, p : Vector2) : GeoLine {
     return line(p, l.dir.rotate(angle));
 }
