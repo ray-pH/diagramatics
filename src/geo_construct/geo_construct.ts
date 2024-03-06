@@ -30,7 +30,7 @@ export function intersect(o1 : GeoObj, o2 : GeoObj) : Vector2[] {
  * Get a point that is `d` distance away from `p` in the direction of `dir`
  * *ideally, point `p` should be in line `l`*
  */
-export function point_onLine_atDistance(l : GeoLine, d : number, p : Vector2) : Vector2 {
+export function point_onLine_atDistance_from(l : GeoLine, d : number, p : Vector2) : Vector2 {
     let dir = l.dir.normalize();
     return p.add(dir.scale(d));
 }
