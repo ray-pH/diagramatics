@@ -53,6 +53,21 @@ export function point_collinear_fraction(p1 : Vector2, p2 : Vector2, t : number)
     return p1.add(dir.scale(t));
 }
 
+/** Get a point on line `l` with x-coordinate `x` */
+export function point_onLine_with_x(l : GeoLine, x : number) : Vector2 {
+    let m = l.dir.y / l.dir.x;
+    let c = l.p.y - m * l.p.x;
+    return V2(x, m * x + c);
+}
+
+/** Get a point on line `l` with y-coordinate `y` */
+export function point_onLine_with_y(l : GeoLine, y : number) : Vector2 {
+    let m = l.dir.y / l.dir.x;
+    let c = l.p.y - m * l.p.x;
+    return V2((y - c) / m, y);
+}
+
+
 /**
  * Get the intersection point of two lines
  */
