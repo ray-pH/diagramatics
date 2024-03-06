@@ -27,6 +27,15 @@ export function intersect(o1 : GeoObj, o2 : GeoObj) : Vector2[] {
 
 
 /**
+ * Get a point that is `d` distance away from `p` in the direction of `dir`
+ * *ideally, point `p` should be in line `l`*
+ */
+export function point_onLine_atDistance(l : GeoLine, d : number, p : Vector2) : Vector2 {
+    let dir = l.dir.normalize();
+    return p.add(dir.scale(d));
+}
+
+/**
  * Get a point
  * - that is collinear with `p1` and `p2`
  * - that is `len` away from `p2` in the direction away from `p1`
@@ -90,7 +99,7 @@ export function line_perpendicular_at_point(l : GeoLine, p : Vector2) : GeoLine 
 /**
  * Define a line that has the direction of `l` rotated by `angle` and passes through `p`
  */
-export function line_rotated_at_point(l : GeoLine, p : Vector2, angle : number) : GeoLine {
+export function line_rotated_at_point(l : GeoLine, angle : number, p : Vector2) : GeoLine {
     return line(p, l.dir.rotate(angle));
 }
 
