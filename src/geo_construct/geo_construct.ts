@@ -175,7 +175,7 @@ export function get_preview_diagram(ctx : GeoCtx, pad : number[] | number) : Dia
     let bbox = [V2(minx - pad[0], miny - pad[1]), V2(maxx + pad[2], maxy + pad[3])] as [Vector2, Vector2];
 
     let dg_lines = lines.map(l => line_intersect_bbox(l.obj, bbox)).filter(d => d !== undefined) as Diagram[];
-    let r = Math.min(bbox[1].x - bbox[0].x, bbox[1].y - bbox[0].y) * 0.01;
+    let r = Math.max(bbox[1].x - bbox[0].x, bbox[1].y - bbox[0].y) * 0.01 * 2/3;
     let dg_points = points.map(p => {
         let c = circle(r).translate(p.p).fill('black');
         let name = textvar(p.name).translate(p.p.add(V2(r*2, r*2))).move_origin_text('bottom-left');
