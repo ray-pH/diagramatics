@@ -146,7 +146,7 @@ function normalize_padding(padding : number[] | number) : [number, number, numbe
  * @param ctx the Geo context (a dictionary of GeoObj and Vector2)
  * @param pad padding around the diagram (determine how far away from the defined point the visible diagram is)
  */
-export function get_preview_diagram(ctx : GeoCtx, pad : number[] | number) : Diagram {
+export function get_preview_diagram(ctx : GeoCtx, pad? : number[] | number) : Diagram {
     let points : {name : string, p : Vector2}[] = [];
     let lines : {name : string, obj : GeoLine}[] = [];
 
@@ -167,11 +167,13 @@ export function get_preview_diagram(ctx : GeoCtx, pad : number[] | number) : Dia
         }
     }
 
-    pad = normalize_padding(pad);
     let minx = Math.min(...points.map(p => p.p.x));
     let maxx = Math.max(...points.map(p => p.p.x));
     let miny = Math.min(...points.map(p => p.p.y));
     let maxy = Math.max(...points.map(p => p.p.y));
+
+    if (pad == undefined) pad = Math.max(maxx - minx, maxy - miny) * 0.1;
+    pad = normalize_padding(pad);
     let bbox = [V2(minx - pad[0], miny - pad[1]), V2(maxx + pad[2], maxy + pad[3])] as [Vector2, Vector2];
 
     let dg_lines = lines.map(l => line_intersect_bbox(l.obj, bbox)).filter(d => d !== undefined) as Diagram[];
