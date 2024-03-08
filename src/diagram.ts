@@ -932,6 +932,7 @@ export class Path {
  * @returns a diagram
  */
 export function diagram_combine(...diagrams : Diagram[]) : Diagram {
+    if (diagrams.length == 0) { return empty(); }
     let newdiagrams = diagrams.map(d => d.copy_if_not_mutable());
 
     // check if all children is mutable
