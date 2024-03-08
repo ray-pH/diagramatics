@@ -190,23 +190,21 @@ function collect_text(diagram : Diagram, type : DiagramType.Text | DiagramType.M
     }
 }
 
-/**
- * @param svgelement the svg element to draw to
- * @param diagrams the list of text diagrams to draw
- * @param referencesvgelement the svg element to use as reference for scaling
- */
-function draw_texts(svgelement : SVGSVGElement, diagrams : Diagram[], 
-    referencesvgelement? : SVGSVGElement, svgtag? : string) : void {
-
-    // use svgelement as reference if referencesvgelement is undefined
-    if (referencesvgelement == undefined) referencesvgelement = svgelement;
-
+function calculate_text_scale(referencesvgelement : SVGSVGElement) : number {
     // scale font-size adjusting for referencesvgelement.bbox and size
     let bbox = referencesvgelement.getBBox();
     let refsvgelement_width = referencesvgelement.width.baseVal.value;
     let refsvgelement_height = referencesvgelement.height.baseVal.value;
-    let calculated_scale = Math.max(bbox.width / refsvgelement_width, bbox.height / refsvgelement_height)
+    return Math.max(bbox.width / refsvgelement_width, bbox.height / refsvgelement_height)
+}
 
+/**
+ * @param svgelement the svg element to draw to
+ * @param diagrams the list of text diagrams to draw
+ * @param calculated_scale the calculated scale for the text
+ */
+function draw_texts(svgelement : SVGSVGElement, diagrams : Diagram[], 
+    calculated_scale : number, svgtag? : string) : void {
     for (let diagram of diagrams) {
         let style = {...default_text_diagram_style, ...diagram.style}; // use default if not defined
         style.fill = get_color(style.fill as string, tab_color);
@@ -260,20 +258,10 @@ function draw_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
 /**
  * @param svgelement the svg element to draw to
  * @param diagrams the list of text diagrams to draw
- * @param referencesvgelement the svg element to use as reference for scaling
+ * @param calculated_scale the calculated scale for the text
  */
 function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[], 
-    referencesvgelement? : SVGSVGElement, svgtag? : string) : void {
-
-    // use svgelement as reference if referencesvgelement is undefined
-    if (referencesvgelement == undefined) referencesvgelement = svgelement;
-
-    // scale font-size adjusting for referencesvgelement.bbox and size
-    let bbox = referencesvgelement.getBBox();
-    let refsvgelement_width = referencesvgelement.width.baseVal.value;
-    let refsvgelement_height = referencesvgelement.height.baseVal.value;
-    let calculated_scale = Math.max(bbox.width / refsvgelement_width, bbox.height / refsvgelement_height)
-
+    calculated_scale : number, svgtag? : string) : void {
     for (let diagram of diagrams) {
     //     let style = {...default_text_diagram_style, ...diagram.style}; // use default if not defined
     //     style.fill = get_color(style.fill as string, tab_color);
@@ -441,8 +429,9 @@ export function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, ren
         if (textreferencesvgelement == undefined) textreferencesvgelement = svgelement;
         let text_diagrams      : Diagram[] = collect_text(diagram, DiagramType.Text);
         let multiline_diagrams : Diagram[] = collect_text(diagram, DiagramType.MultilineText);
-        draw_texts(svgelement, text_diagrams, textreferencesvgelement, svgtag);
-        draw_multiline_texts(svgelement, multiline_diagrams, textreferencesvgelement, svgtag);
+        let calculated_scale = calculate_text_scale(textreferencesvgelement);
+        draw_texts(svgelement, text_diagrams, calculated_scale, svgtag);
+        draw_multiline_texts(svgelement, multiline_diagrams, calculated_scale, svgtag);
     }
     
 }
