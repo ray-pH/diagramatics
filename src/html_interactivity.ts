@@ -526,7 +526,7 @@ export class Interactive {
 
         }
 
-        let setter = this.buttonHandler.add_toggle(name, diagram_on, diagram_off, state, main_callback);
+        let setter = this.buttonHandler.try_add_toggle(name, diagram_on, diagram_off, state, main_callback);
         this.inp_setter[name] = setter;
     }
 
@@ -542,7 +542,7 @@ export class Interactive {
         if (this.buttonHandler == undefined) throw Error("buttonHandler in Interactive class is undefined");
 
         let n_callback = () => { callback(); this.draw(); }
-        this.buttonHandler.add_click(name, diagram, diagram_pressed, n_callback);
+        this.buttonHandler.try_add_click(name, diagram, diagram_pressed, n_callback);
     }
 }
 
@@ -1123,9 +1123,21 @@ class DragAndDropHandler {
 class ButtonHandler {
     // callbacks : {[key : string] : (state : boolean) => any} = {};
     states : {[key : string] : boolean} = {};
+    svg_element : {[key : string] : [SVGSVGElement,SVGSVGElement]} = {};
     touchdownName : string | null = null;
 
     constructor(public button_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
+    }
+
+    /** add a new toggle button if it doesn't exist, otherwise, update diagrams and callback */
+    try_add_toggle(name : string, diagram_on : Diagram, diagram_off : Diagram, state : boolean, callback : (state : boolean, redraw? : boolean) => any) : setter_function_t {
+        if (this.svg_element[name] != undefined) {
+            // delete the old button
+            let [old_svg_on, old_svg_off] = this.svg_element[name];
+            old_svg_on.remove();
+            old_svg_off.remove();
+        }
+        return this.add_toggle(name, diagram_on, diagram_off, state, callback);
     }
 
     add_toggle(name : string, diagram_on : Diagram, diagram_off : Diagram, state : boolean, callback : (state : boolean, redraw? : boolean) => any) : setter_function_t {
@@ -1141,6 +1153,7 @@ class ButtonHandler {
 
         this.button_svg.appendChild(svg_off);
         this.button_svg.appendChild(svg_on);
+        this.svg_element[name] = [svg_on, svg_off];
 
         this.states[name] = state;
 
@@ -1186,6 +1199,17 @@ class ButtonHandler {
         return setter;
     }
 
+    /** add a new click button if it doesn't exist, otherwise, update diagrams and callback */
+    try_add_click(name : string, diagram : Diagram, diagram_pressed : Diagram, callback : () => any){
+        if (this.svg_element[name] != undefined) {
+            // delete the old button
+            let [old_svg_normal, old_svg_pressed] = this.svg_element[name];
+            old_svg_normal.remove();
+            old_svg_pressed.remove();
+        }
+        this.add_click(name, diagram, diagram_pressed, callback);
+    }
+
     // TODO: handle touch input moving out of the button
     add_click(name : string, diagram : Diagram, diagram_pressed : Diagram, callback : () => any){
         let svg_normal = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -1200,6 +1224,7 @@ class ButtonHandler {
 
         this.button_svg.appendChild(svg_normal);
         this.button_svg.appendChild(svg_pressed);
+        this.svg_element[name] = [svg_normal, svg_pressed];
 
         const set_display = (pressed : boolean) => {
             svg_pressed.setAttribute("display", pressed ? "block" : "none");

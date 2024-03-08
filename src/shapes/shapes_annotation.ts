@@ -1,7 +1,6 @@
-import { Diagram, line, diagram_combine } from '../diagram.js';
+import { Diagram, line, diagram_combine, curve } from '../diagram.js';
 import { arrow, textvar, arc } from '../shapes.js';
 import { Vector2, V2 } from '../vector.js';
-import { str_to_mathematical_italic } from '../unicode_utils.js'
 
 /**
  * Create an annotation vector
@@ -52,7 +51,7 @@ export function angle(p : [Vector2, Vector2, Vector2],
         .add_points([V2(0,0)]).to_polygon();
     if (str == "" || str == undefined){ return angle_arc.position(p2); } // if str is empty, return only the arc
 
-    let angle_text = textvar(str_to_mathematical_italic(str))
+    let angle_text = textvar(str)
         .translate(text_offset);
 
     return diagram_combine(angle_arc, angle_text).position(p2);
@@ -87,6 +86,20 @@ export function angle_smaller(p : [Vector2, Vector2, Vector2],
     return angle(ps, str, radius, text_offset);
 }
 
+/**
+ * Create an annotation for right angle
+ * make sure the angle is 90 degree
+ * @param p three points to define the angle
+ * @param size size of the square
+ */
+export function right_angle(p : [Vector2, Vector2, Vector2], size : number = 1) : Diagram {
+    let [p1, p2, p3] = p;
+    let p1_ = p1.sub(p2).normalize().scale(size).add(p2);
+    let p3_ = p3.sub(p2).normalize().scale(size).add(p2);
+    let p2_ = V2(p1_.x, p3_.y);
+    return curve([p1_, p2_, p3_]);
+}
+
 export function length(p1 : Vector2, p2 : Vector2, str : string, offset : number, 
     tablength? : number, textoffset? : number, tabsymmetric : boolean = true
 ) : Diagram {
@@ -115,6 +128,14 @@ export function length(p1 : Vector2, p2 : Vector2, str : string, offset : number
     return diagram_combine(lines, label);
 }
 
+/**
+ * Create a congruence mark
+ * @param p1 start point of the line
+ * @param p2 end point of the line
+ * @param count number of marks
+ * @param size size of the mark
+ * @param gap gap between the marks
+ */
 export function congruence_mark(p1 : Vector2, p2 : Vector2, count : number, size : number = 1, gap? : number) : Diagram {
     let v = p2.sub(p1)
     let n_angle = Math.atan2(v.x, -v.y);
@@ -125,6 +146,33 @@ export function congruence_mark(p1 : Vector2, p2 : Vector2, count : number, size
     for (let i = 0; i < count; i++){
         let l = line(V2(-size/2, i*gap), V2(size/2, i*gap));
         marks.push(l)
+    }
+    let dg_marks = diagram_combine(...marks);
+    return dg_marks.rotate(n_angle).move_origin('center-center').position(p_mid);
+}
+
+/**
+ * Create a parallel mark
+ * @param p1 start point of the line
+ * @param p2 end point of the line
+ * @param count number of marks
+ * @param size size of the mark
+ * @param gap gap between the marks
+ * @param arrow_angle angle of the arrow
+ */
+export function parallel_mark(p1 : Vector2, p2 : Vector2, count : number, size : number = 1, gap? : number, arrow_angle : number = 0.5) : Diagram {
+    let v = p2.sub(p1)
+    let n_angle = Math.atan2(v.x, -v.y);
+    let p_mid = p1.add(p2).scale(0.5);
+    gap = gap ?? size/2;
+
+    let marks = [];
+    let dy = size/2 * Math.cos(arrow_angle);
+    for (let i = 0; i < count; i++){
+        let p0 = V2(0, i*gap - dy);
+        let l1 = line(V2(-size/2, i*gap), p0)
+        let l2 = line(V2(size/2, i*gap), p0)
+        marks.push(l1.combine(l2));
     }
     let dg_marks = diagram_combine(...marks);
     return dg_marks.rotate(n_angle).move_origin('center-center').position(p_mid);

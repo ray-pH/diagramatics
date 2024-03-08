@@ -389,6 +389,9 @@ export class Diagram {
     public fontfamily(fontfamily : string) : Diagram {
         return this.update_textdata('font-family', fontfamily);
     }
+    public fontstyle(fontstyle : string) : Diagram {
+        return this.update_textdata('font-style', fontstyle);
+    }
     public fontsize(fontsize : number) : Diagram {
         return this.update_textdata('font-size', fontsize.toString());
     }
@@ -929,6 +932,7 @@ export class Path {
  * @returns a diagram
  */
 export function diagram_combine(...diagrams : Diagram[]) : Diagram {
+    if (diagrams.length == 0) { return empty(); }
     let newdiagrams = diagrams.map(d => d.copy_if_not_mutable());
 
     // check if all children is mutable

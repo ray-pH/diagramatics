@@ -111,6 +111,47 @@ export function axes_corner_empty(axes_options? : Partial<axes_options>) : Diagr
 }
 
 /**
+ * Draw xy corner axes without ticks and with break mark in x axis
+ * @param axes_options options for the axes
+ */
+export function axes_corner_empty_xbreak(axes_options? : Partial<axes_options>) : Diagram {
+    let opt = {...default_axes_options, ...axes_options}; // use default if not defined
+    if (opt.bbox == undefined) {
+        // get values from xrange and yrange
+        let [xmin, xmax] = opt.xrange;
+        let [ymin, ymax] = opt.yrange;
+        opt.bbox = [V2(xmin,ymin), V2(xmax,ymax)];
+    }
+
+    let [lowerleft, upperright] = opt.bbox;
+    // get the intersection point
+
+    let xbreak_ysize_ = opt.ticksize * 2;
+
+    if (opt.xticks == undefined) {
+        opt.xticks = get_tick_numbers(opt.xrange[0], opt.xrange[1], false);
+        opt.xticks = opt.xticks.filter(x => x > opt.xrange[0] && x < opt.xrange[1]);
+    }
+    let xbreak_xsize = (opt.xticks![1] - opt.xticks![0])/2;
+    let xbreak_xpos  = opt.xticks![0] - xbreak_xsize;
+    let trans_f = axes_transform(opt);
+
+    // suffix _ means in the transformed coordinate
+    let xbreak_pleft_  = trans_f(V2(xbreak_xpos - xbreak_xsize/2,0));
+    let xbreak_pright_ = trans_f(V2(xbreak_xpos + xbreak_xsize/2,0));
+    let xbreak_xsize_  = xbreak_pright_.x - xbreak_pleft_.x;
+    let xbreak_pbottom_= xbreak_pleft_.add(V2(xbreak_xsize_*1/3, -xbreak_ysize_/2));
+    let xbreak_ptop_   = xbreak_pleft_.add(V2(xbreak_xsize_*2/3, xbreak_ysize_/2));
+    let xbreak_curve   = curve([xbreak_pleft_, xbreak_pbottom_, xbreak_ptop_, xbreak_pright_]);
+
+    let xaxis_left = line(lowerleft, xbreak_pleft_);
+    let xaxis_right = arrow1(xbreak_pright_, V2(upperright.x,lowerleft.y), opt.headsize);
+    let xaxis = diagram_combine(xaxis_left, xbreak_curve, xaxis_right)
+    let yaxis = arrow1(lowerleft, V2(lowerleft.x,upperright.y), opt.headsize);
+    return diagram_combine(xaxis, yaxis).stroke('gray').fill('gray');
+}
+
+/**
  * Create a single tick mark in the x axis
  * @param x x coordinate of the tick mark
  * @param y y coordinate of the tick mark
@@ -254,6 +295,17 @@ export function xycorneraxes(axes_options? : Partial<axes_options>) : Diagram {
     return diagram_combine(axes_corner_empty(opt), xticks(opt, ymin), yticks(opt, xmin));
 }
 
+/**
+ * Draw xy corner axes with ticks and break mark in x axis
+ * @param axes_options options for the axes
+ */
+export function xycorneraxes_xbreak(axes_options? : Partial<axes_options>) : Diagram {
+    let opt = {...default_axes_options, ...axes_options}; // use default if not defined
+    let xmin = opt.xrange[0];
+    let ymin = opt.yrange[0];
+    return diagram_combine(axes_corner_empty_xbreak(opt), xticks(opt, ymin), yticks(opt, xmin));
+}
+
 
 /**
  * Draw xy axes with ticks
@@ -327,6 +379,7 @@ export function xgrid(axes_options? : Partial<axes_options>) : Diagram {
 
 }
 
+//  TODO: add xticks and ytiks as argument
 export function xygrid(axes_options? : Partial<axes_options>) : Diagram {
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
     if (opt.xticks == undefined) {
