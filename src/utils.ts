@@ -128,6 +128,12 @@ export function transpose<T>(arr : T[][]) : (T|undefined)[][] {
 
 // interpolations
 
+/**
+ * Cubic spline interpolation
+ * @param points array of points to interpolate
+ * @param n number of points to interpolate between each pair of points (default 10)
+ * @returns array of interpolated points
+ */
 export function cubic_spline(points: Vector2[], n: number = 10): Vector2[] {
     const n_points = points.length;
     let a: number[] = points.map(p => p.y);
