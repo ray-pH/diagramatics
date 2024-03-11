@@ -16,6 +16,8 @@ export enum DiagramType {
     MultilineText = 'multilinetext',
 }
 
+export const DEFAULT_FONTSIZE = "18";
+
 export type Anchor = 
     'top-left'    | 'top-center'    | 'top-right'    | 
     'center-left' | 'center-center' | 'center-right' | 
@@ -70,6 +72,7 @@ type TextSpanData = {
 }
 export type MultilineTextData = {
     "content" : TextSpanData[],
+    "scale-factor" : number,
 }
 
 function anchor_to_textdata(anchor : Anchor) : Partial<TextData> {
@@ -252,6 +255,22 @@ export class Diagram {
      */
     public apply(func : (d : Diagram) => Diagram) : Diagram {
         return func(this.copy_if_not_mutable());
+    }
+
+    /**
+     * Apply a function to the diagram and all of its children recursively
+     * @param func function to apply
+     * func takes in a diagram and returns a diagram
+     */
+    public apply_recursive(func : (d : Diagram) => Diagram) : Diagram {
+        let newd : Diagram = this.copy_if_not_mutable();
+        // apply to self
+        newd = func(newd);
+        // apply to children
+        for (let i = 0; i < newd.children.length; i++) {
+            newd.children[i] = newd.children[i].apply_recursive(func);
+        }
+        return newd;
     }
 
     /**
@@ -526,6 +545,29 @@ export class Diagram {
         if (origin == undefined) { origin = this.origin; }
         if (typeof scale == 'number') { scale = new Vector2(scale, scale); }
         return this.transform(Transform.scale(scale, origin));
+    }
+
+    /**
+     * Scale texts contained in the diagram by a scale
+     * @param scale scaling factor
+     */
+    public scaletext(scale : number) : Diagram {
+        return this.apply_recursive(d => {
+            switch (d.type) {
+                case DiagramType.Text: {
+                    let fontsize = parseFloat(d.textdata['font-size'] || DEFAULT_FONTSIZE);
+                    let newd = d.copy_if_not_mutable();
+                    newd.textdata['font-size'] = (fontsize * scale).toString();
+                    return newd;
+                }
+                case DiagramType.MultilineText: {
+                    let newd = d.copy_if_not_mutable();
+                    newd.multilinedata['scale-factor'] = (newd.multilinedata['scale-factor'] || 1) * scale;
+                    return newd;
+                }
+                default: return d;
+            }
+        });
     }
 
     /**
@@ -1009,7 +1051,7 @@ export function empty(v : Vector2 = V2(0,0)) : Diagram {
  */
 export function text(str : string) : Diagram {
     let dtext = new Diagram(DiagramType.Text, {
-        textdata : { text : str },
+        textdata : { text : str, "font-size" : DEFAULT_FONTSIZE },
         path : new Path([new Vector2(0, 0)]),
     });
     return dtext;
@@ -1045,7 +1087,7 @@ export function multiline(spans : ([string] | [string,Partial<TextData>])[]) : D
         tspans.push({text, style});
     }
     let dmulti = new Diagram(DiagramType.MultilineText, {
-        multilinedata : { content : tspans },
+        multilinedata : { content : tspans, "scale-factor" : 1 },
         path : new Path([new Vector2(0, 0)]),
     });
     return dmulti;
@@ -1054,7 +1096,7 @@ export function multiline(spans : ([string] | [string,Partial<TextData>])[]) : D
 export function multiline_bb(bbstr : string, linespace? : string) : Diagram {
     let tspans : TextSpanData[] = BB_multiline.from_BBCode(bbstr,linespace) as TextSpanData[];
     let dmulti = new Diagram(DiagramType.MultilineText, {
-        multilinedata : { content : tspans },
+        multilinedata : { content : tspans, "scale-factor" : 1 },
         path : new Path([new Vector2(0, 0)]),
     });
     return dmulti;

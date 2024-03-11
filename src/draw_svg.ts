@@ -1,4 +1,4 @@
-import { Diagram, DiagramType, DiagramStyle, TextData } from "./diagram.js";
+import { Diagram, DiagramType, DiagramStyle, TextData, DEFAULT_FONTSIZE } from "./diagram.js";
 import { tab_color, get_color } from "./color_palette.js";
 import { to_degree } from "./utils.js";
 import { str_to_mathematical_italic, str_to_normal_from_mathematical_italic } from './unicode_utils.js'
@@ -36,7 +36,7 @@ export const _init_default_text_diagram_style : DiagramStyle = {...default_text_
 export const default_textdata : TextData = {
     "text"             : "",
     "font-family"      : "Latin Modern Math, sans-serif",
-    "font-size"        : "18",
+    "font-size"        : DEFAULT_FONTSIZE,
     "font-weight"      : "normal",
     "text-anchor"      : "middle",
     "dy"               : "0.25em",
@@ -284,6 +284,7 @@ function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
 
         if (diagram.multilinedata?.content == undefined) { throw new Error("MultilineText must have multilinedata"); }
         // let current_line : number = 0;
+        let dg_scale_factor = diagram.multilinedata["scale-factor"] ?? 1;
         let is_firstline : boolean = true;
         let is_in_front  : boolean = true;
         let newline_dy   : string  = "1em";
@@ -316,7 +317,7 @@ function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
 
             let scale = tspanstyle["font-scale"] == "auto" ? 
                 calculated_scale : parseFloat(tspanstyle["font-scale"] as string);
-            let font_size = parseFloat(tspanstyle["font-size"] as string) * scale;
+            let font_size = parseFloat(tspanstyle["font-size"] as string) * scale * dg_scale_factor;
 
             if (tspanstyle["tag"]) tspan.setAttribute("_dg_tag", tspanstyle["tag"] as string);
 
