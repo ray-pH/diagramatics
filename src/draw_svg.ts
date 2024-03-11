@@ -1,4 +1,4 @@
-import { Diagram, DiagramType, DiagramStyle, TextData } from "./diagram.js";
+import { Diagram, DiagramType, DiagramStyle, TextData, DEFAULT_FONTSIZE } from "./diagram.js";
 import { tab_color, get_color } from "./color_palette.js";
 import { to_degree } from "./utils.js";
 import { str_to_mathematical_italic, str_to_normal_from_mathematical_italic } from './unicode_utils.js'
@@ -36,7 +36,7 @@ export const _init_default_text_diagram_style : DiagramStyle = {...default_text_
 export const default_textdata : TextData = {
     "text"             : "",
     "font-family"      : "Latin Modern Math, sans-serif",
-    "font-size"        : "18",
+    "font-size"        : DEFAULT_FONTSIZE,
     "font-weight"      : "normal",
     "text-anchor"      : "middle",
     "dy"               : "0.25em",
