@@ -284,6 +284,7 @@ function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
 
         if (diagram.multilinedata?.content == undefined) { throw new Error("MultilineText must have multilinedata"); }
         // let current_line : number = 0;
+        let dg_scale_factor = diagram.multilinedata["scale-factor"] ?? 1;
         let is_firstline : boolean = true;
         let is_in_front  : boolean = true;
         let newline_dy   : string  = "1em";
@@ -316,7 +317,7 @@ function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
 
             let scale = tspanstyle["font-scale"] == "auto" ? 
                 calculated_scale : parseFloat(tspanstyle["font-scale"] as string);
-            let font_size = parseFloat(tspanstyle["font-size"] as string) * scale;
+            let font_size = parseFloat(tspanstyle["font-size"] as string) * scale * dg_scale_factor;
 
             if (tspanstyle["tag"]) tspan.setAttribute("_dg_tag", tspanstyle["tag"] as string);
 

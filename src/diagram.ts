@@ -72,6 +72,7 @@ type TextSpanData = {
 }
 export type MultilineTextData = {
     "content" : TextSpanData[],
+    "scale-factor" : number,
 }
 
 function anchor_to_textdata(anchor : Anchor) : Partial<TextData> {
@@ -557,6 +558,11 @@ export class Diagram {
                     let fontsize = parseFloat(d.textdata['font-size'] || DEFAULT_FONTSIZE);
                     let newd = d.copy_if_not_mutable();
                     newd.textdata['font-size'] = (fontsize * scale).toString();
+                    return newd;
+                }
+                case DiagramType.MultilineText: {
+                    let newd = d.copy_if_not_mutable();
+                    newd.multilinedata['scale-factor'] = (newd.multilinedata['scale-factor'] || 1) * scale;
                     return newd;
                 }
                 default: return d;
@@ -1081,7 +1087,7 @@ export function multiline(spans : ([string] | [string,Partial<TextData>])[]) : D
         tspans.push({text, style});
     }
     let dmulti = new Diagram(DiagramType.MultilineText, {
-        multilinedata : { content : tspans },
+        multilinedata : { content : tspans, "scale-factor" : 1 },
         path : new Path([new Vector2(0, 0)]),
     });
     return dmulti;
@@ -1090,7 +1096,7 @@ export function multiline(spans : ([string] | [string,Partial<TextData>])[]) : D
 export function multiline_bb(bbstr : string, linespace? : string) : Diagram {
     let tspans : TextSpanData[] = BB_multiline.from_BBCode(bbstr,linespace) as TextSpanData[];
     let dmulti = new Diagram(DiagramType.MultilineText, {
-        multilinedata : { content : tspans },
+        multilinedata : { content : tspans, "scale-factor" : 1 },
         path : new Path([new Vector2(0, 0)]),
     });
     return dmulti;
