@@ -12,6 +12,7 @@ export {
     linspace_exc, range_inc,
     transpose, cubic_spline
 } from './utils.js'
+export * as utils from './utils.js'
 
 export {
     draw_to_svg, download_svg_as_svg, download_svg_as_png,
