@@ -33,7 +33,7 @@ export {
     align_vertical, align_horizontal,
     distribute_horizontal, distribute_vertical,
     distribute_horizontal_and_align, distribute_vertical_and_align, 
-    distribute_grid_row,
+    distribute_grid_row, distribute_variable_row,
 } from './alignment.js'
 
 export {
