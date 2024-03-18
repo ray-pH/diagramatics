@@ -68,6 +68,7 @@ export * as numberline from './shapes/shapes_numberline.js'
 export * as table from './shapes/shapes_table.js'
 export * as boxplot from './shapes/shapes_boxplot.js'
 export * as geo_construct from './geo_construct/geo_construct.js'
+export * as tree from './shapes/shapes_tree.js'
 
 // Mics
 export * as encoding from './encoding.js'
