@@ -1,5 +1,6 @@
 import { Diagram, diagram_combine, empty } from './diagram.js';
 import { V2 } from './vector.js';
+import { size } from './shapes/shapes_geometry.js';
 
 type VerticalAlignment   = 'top'  | 'center' | 'bottom';
 type HorizontalAlignment = 'left' | 'center' | 'right';
@@ -187,4 +188,63 @@ export function distribute_grid_row(diagrams : Diagram[], column_count : number,
         }
     }
     return diagram_combine(...grid_diagrams);
+}
+
+/**
+ * Distribute diagrams in a variable width row
+ * if there is a diagram that is wider than the container width, it will be placed in a separate row
+ * @param diagrams diagrams to be distributed
+ * @param container_width width of the container
+ * @param vertical_space space between the diagrams vertically (default = 0)
+ * @param horizontal_space space between the diagrams horizontally (default = 0)
+ * @param vertical_alignment vertical alignment of the diagrams (default = 'center')
+ * alignment can be 'top', 'center', or 'bottom'
+ * @param horizontal_alignment horizontal alignment of the diagrams (default = 'left')
+ * alignment can be 'left', 'center', or 'right'
+ */
+export function distribute_variable_row(diagrams: Diagram[], container_width : number, 
+    vertical_space : number = 0, horizontal_space : number = 0, 
+    vertical_alignment : VerticalAlignment = 'center', 
+    horizontal_alignment : HorizontalAlignment = 'left'
+) : Diagram {
+    if (diagrams.length == 0) { return empty(); }
+
+    let rows : Diagram[] = [];
+    let current_row : Diagram[] = [];
+    let current_row_w = 0;
+
+    function add_diagrams_to_rows(arr : Diagram[]) {
+        let distributed_row_dg = distribute_horizontal_and_align(arr, horizontal_space, vertical_alignment);
+        rows.push(distributed_row_dg);
+        current_row = [];
+        current_row_w = 0;
+    }
+
+    for (let i = 0; i < diagrams.length; i++) {
+        let d = diagrams[i];
+        let w = size(d)[0];
+        if (w > container_width) {
+            if (current_row.length > 0) add_diagrams_to_rows(current_row);
+            current_row.push(d); add_diagrams_to_rows(current_row);
+            continue;
+        }
+
+        if (current_row_w + horizontal_space + w > container_width) add_diagrams_to_rows(current_row);
+
+        current_row.push(d);
+        current_row_w += w;
+    }
+
+    if (current_row.length > 0) add_diagrams_to_rows(current_row);
+
+    // distribute vertically
+    let distributed_diagrams = distribute_vertical_and_align(rows, vertical_space, horizontal_alignment);
+
+    let row_diagrams = []
+    for (let i = 0; i < distributed_diagrams.children.length; i++) {
+        for (let j = 0; j < distributed_diagrams.children[i].children.length; j++) {
+            row_diagrams.push(distributed_diagrams.children[i].children[j]);
+        }
+    }
+    return diagram_combine(...row_diagrams);
 }
