@@ -7,10 +7,12 @@ Diagramatics is a JavaScript/TypeScript library for easily creating interactive 
 # Examples
 
 Here are some examples of the Interactive Diagram made using Diagramatics:
+
 ![Example Pulley](https://raw.githubusercontent.com/ray-pH/diagramatics/main/assets/example1.png)
 ![Example Spring](https://raw.githubusercontent.com/ray-pH/diagramatics/main/assets/example2.png)
 
-The effects are shown in the following Gifs:
+The effects are shown in the following GIFs:
+
 ![Example Pulley](https://raw.githubusercontent.com/ray-pH/diagramatics/main/assets/example1.gif)
 ![Example Spring](https://raw.githubusercontent.com/ray-pH/diagramatics/main/assets/example2.gif)
 
