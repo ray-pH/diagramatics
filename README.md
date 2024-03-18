@@ -2,24 +2,24 @@
 
 # Diagramatics
 
-Diagramatics is a JavaScript/TypeScript library for easily creating interactive diagrams, especially math and physics diagrams. It provides a high-level API for diagram elements creating and interactive controls manipulating.
+Diagramatics is a JavaScript/TypeScript library designed to easily create interactive diagrams, especially in math and physics. It provides a high-level API for creating and manipulating diagram elements and interactive controls.
 
 # Examples
 
-Here are some examples of the Interactive Diagram made using Diagramatics:
+Below are some examples of interactive diagrams created using Diagramatics:
 
 ![Example Pulley](https://raw.githubusercontent.com/ray-pH/diagramatics/main/assets/example1.png)
 ![Example Spring](https://raw.githubusercontent.com/ray-pH/diagramatics/main/assets/example2.png)
 
-The effects are shown in the following GIFs:
+The effects are demonstrated in the following GIFs:
 
 ![Example Pulley](https://raw.githubusercontent.com/ray-pH/diagramatics/main/assets/example1.gif)
 ![Example Spring](https://raw.githubusercontent.com/ray-pH/diagramatics/main/assets/example2.gif)
 
-For more examples, see [Diagramatics Website : Examples](https://photon-ray.xyz/diagramatics-site/examples/).
+For more examples, visit [Diagramatics Website: Examples](https://photon-ray.xyz/diagramatics-site/examples/).
 
 # Usage & Installation
 
-To try the online editor, please click [Diagramatics Website : Editor](https://photon-ray.xyz/diagramatics-site/editor/).
+To try the online editor, please visit [Diagramatics Website: Editor](https://photon-ray.xyz/diagramatics-site/editor/).
 
-To use it in your own project, please read [Diagramatics Website : Guides](https://photon-ray.xyz/diagramatics-site/guides/usage/).
+To use it in your own project, please refer to [Diagramatics Website: Guides](https://photon-ray.xyz/diagramatics-site/guides/usage/).
