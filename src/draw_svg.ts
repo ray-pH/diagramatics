@@ -438,6 +438,9 @@ export function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, ren
 }
 
 /**
+ * WARNING: DEPRECATED
+ * use `draw_to_svg_element` instead
+ *
  * Draw a diagram to an svg element
  * @param outer_svgelement the outer svg element to draw to
  * @param diagram the diagram to draw
@@ -447,7 +450,44 @@ export function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, ren
  */
 export function draw_to_svg(outer_svgelement : SVGSVGElement, diagram : Diagram,
     set_html_attribute : boolean = true, render_text : boolean = true, clear_svg : boolean = true) : void {
+    let options : draw_to_svg_options = {
+        set_html_attribute : set_html_attribute,
+        render_text : render_text,
+        clear_svg : clear_svg,
+    };
+    draw_to_svg_element(outer_svgelement, diagram, options);
+}
 
+export interface draw_to_svg_options {
+    set_html_attribute? : boolean,
+    render_text? : boolean,
+    clear_svg? : boolean,
+    background_color? : string,
+    padding? : number | number[],
+}
+
+// TODO: replace draw_to_svg with the current draw_to_svg_element in the next major version
+
+/**
+ * Draw a diagram to an svg element
+ * @param outer_svgelement the outer svg element to draw to
+ * @param diagram the diagram to draw
+ * @param options the options for drawing
+ * ```typescript
+ * options : {
+ *    set_html_attribute? : boolean (true),
+ *    render_text? : boolean (true),
+ *    clear_svg? : boolean (true),
+ *    background_color? : string (undefined),
+ *    padding? : number | number[] (10),
+ * }
+ * ````
+ */
+export function draw_to_svg_element(outer_svgelement : SVGSVGElement, diagram : Diagram, options : draw_to_svg_options = {}) : void {
+    const set_html_attribute = options.set_html_attribute ?? true;
+    const render_text = options.render_text ?? true;
+    const clear_svg = options.clear_svg ?? true;
+    
     let svgelement : SVGSVGElement | undefined = undefined;
     // check if outer_svgelement has a child with meta=diagram_svg
     for (let i in outer_svgelement.children) {
@@ -475,6 +515,7 @@ export function draw_to_svg(outer_svgelement : SVGSVGElement, diagram : Diagram,
     f_draw_to_svg(svgelement, diagram, render_text);
 
     if (set_html_attribute) {
+        const pad_px = expand_directional_value(options.padding ?? 10);
         // set viewbox to the bounding box
         let bbox = svgelement.getBBox();
         // add padding of 10px to the bounding box (if the graph is small, it'll mess it up)
@@ -482,16 +523,48 @@ export function draw_to_svg(outer_svgelement : SVGSVGElement, diagram : Diagram,
         let svg_width = svgelement.width.baseVal.value;
         let svg_height = svgelement.height.baseVal.value;
         let scale = Math.max(bbox.width / svg_width, bbox.height / svg_height)
-        let pad = 10 * scale;
-        bbox.x -= pad;
-        bbox.y -= pad;
-        bbox.width += 2 * pad;
-        bbox.height += 2 * pad;
+        let pad = pad_px.map(p => p*scale);
+        // [top, right, bottom, left]
+        bbox.x -= pad[3];
+        bbox.y -= pad[0];
+        bbox.width += pad[1] + pad[3];
+        bbox.height += pad[0] + pad[2];
         svgelement.setAttribute("viewBox", `${bbox.x} ${bbox.y} ${bbox.width} ${bbox.height}`);
         // set preserveAspectRatio to xMidYMid meet
         svgelement.setAttribute("preserveAspectRatio", "xMidYMid meet");
     }
+    
+    if (options.background_color) {
+        let bbox = svgelement.getBBox();
+        // if svgelement has viewBox set, use it instead of getBBox
+        if (svgelement.viewBox.baseVal.width !== 0) bbox = svgelement.viewBox.baseVal;
+        
+        // draw a rectangle as the background
+        let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute("x", bbox.x.toString());
+        rect.setAttribute("y", bbox.y.toString());
+        rect.setAttribute("width", bbox.width.toString());
+        rect.setAttribute("height", bbox.height.toString());
+        rect.style.fill = get_color(options.background_color as string, tab_color);
+        rect.style.stroke = "none";
+        
+        // prepend
+        svgelement.insertBefore(rect, svgelement.firstChild);
+    }
 }
+
+/* @return [top, right, bottom, left] */
+function expand_directional_value(padding : number | number[]) : [number,number,number,number] {
+    let p = padding;
+    if (typeof p === 'number') return [p,p,p,p];
+    if (!Array.isArray(p)) return [0,0,0,0];
+    if (p.length === 1) return [p[0], p[0], p[0], p[0]];
+    if (p.length === 2) return [p[0], p[1], p[0], p[1]];
+    if (p.length === 3) return [p[0], p[1], p[2], p[1]];
+    if (p.length >= 4)  return [p[0], p[1], p[2], p[3]];
+    return [0,0,0,0];
+}
+
 
 function is_texstr(s : string) : boolean {
     return s.startsWith("$") && s.endsWith("$");
