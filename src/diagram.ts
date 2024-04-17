@@ -16,7 +16,7 @@ export enum DiagramType {
     MultilineText = 'multilinetext',
 }
 
-export const DEFAULT_FONTSIZE = "18";
+export const DEFAULT_FONTSIZE = "16"; // 16px (12pt) is the web default
 
 export type Anchor = 
     'top-left'    | 'top-center'    | 'top-right'    | 

@@ -190,11 +190,12 @@ function collect_text(diagram : Diagram, type : DiagramType.Text | DiagramType.M
     }
 }
 
-function calculate_text_scale(referencesvgelement : SVGSVGElement) : number {
-    // scale font-size adjusting for referencesvgelement.bbox and size
+/** Calculate the scaling factor for the text based on the reference svg element */
+export function calculate_text_scale(referencesvgelement : SVGSVGElement, padding? : [number, number, number, number]) : number {
+    const pad = expand_directional_value(padding ?? 0)
     let bbox = referencesvgelement.getBBox();
-    let refsvgelement_width = referencesvgelement.width.baseVal.value;
-    let refsvgelement_height = referencesvgelement.height.baseVal.value;
+    let refsvgelement_width = referencesvgelement.width.baseVal.value - pad[1] - pad[3];
+    let refsvgelement_height = referencesvgelement.height.baseVal.value - pad[0] - pad[2];
     return Math.max(bbox.width / refsvgelement_width, bbox.height / refsvgelement_height)
 }
 
@@ -403,11 +404,12 @@ export function get_tagged_svg_element(tag : string, svgelement : SVGElement) : 
  * @param svgelement the svg element to draw to
  * @param diagram the diagram to draw
  * @param render_text whether to render text
- * @param textreferencesvgelement the svg element to use as reference for text scaling
+ * @param text_scaling_factor (optional) the scaling factor for text
+ * @param svgtag (optional) the tag to add to the svg element
  */
 export function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, render_text : boolean = true, 
-    textreferencesvgelement? : SVGSVGElement, svgtag? : string) : void {
-
+    text_scaling_factor? : number, svgtag? : string) : void {
+    
     if (diagram.type == DiagramType.Polygon) {
         draw_polygon(svgelement, diagram, svgtag);
     } else if (diagram.type == DiagramType.Curve){
@@ -418,7 +420,7 @@ export function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, ren
         draw_image(svgelement, diagram, svgtag);
     } else if (diagram.type == DiagramType.Diagram){
         for (let d of diagram.children) {
-            f_draw_to_svg(svgelement, d, false, textreferencesvgelement, svgtag);
+            f_draw_to_svg(svgelement, d, false, undefined, svgtag);
         }
     } else {
         console.warn("Unreachable, unknown diagram type : " + diagram.type);
@@ -427,12 +429,13 @@ export function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, ren
     // draw text last to make the scaling works
     // because the text is scaled based on the bounding box of the svgelement
     if (render_text) {
-        if (textreferencesvgelement == undefined) textreferencesvgelement = svgelement;
+        if (text_scaling_factor == undefined){
+            text_scaling_factor = calculate_text_scale(svgelement);
+        }
         let text_diagrams      : Diagram[] = collect_text(diagram, DiagramType.Text);
         let multiline_diagrams : Diagram[] = collect_text(diagram, DiagramType.MultilineText);
-        let calculated_scale = calculate_text_scale(textreferencesvgelement);
-        draw_texts(svgelement, text_diagrams, calculated_scale, svgtag);
-        draw_multiline_texts(svgelement, multiline_diagrams, calculated_scale, svgtag);
+        draw_texts(svgelement, text_diagrams, text_scaling_factor ?? 1, svgtag);
+        draw_multiline_texts(svgelement, multiline_diagrams, text_scaling_factor ?? 1, svgtag);
     }
     
 }
@@ -464,6 +467,8 @@ export interface draw_to_svg_options {
     clear_svg? : boolean,
     background_color? : string,
     padding? : number | number[],
+    text_scaling_reference_svg? : SVGSVGElement,
+    text_scaling_reference_padding? : number | number[],
 }
 
 // TODO: replace draw_to_svg with the current draw_to_svg_element in the next major version
@@ -480,8 +485,11 @@ export interface draw_to_svg_options {
  *    clear_svg? : boolean (true),
  *    background_color? : string (undefined),
  *    padding? : number | number[] (10),
+ *    text_scaling_reference_svg? : SVGSVGElement (undefined),
+ *    text_scaling_reference_padding? : number | number[] (undefined),
  * }
  * ````
+ * define `text_scaling_reference_svg` and `text_scaling_reference_padding` to scale text based on another svg element
  */
 export function draw_to_svg_element(outer_svgelement : SVGSVGElement, diagram : Diagram, options : draw_to_svg_options = {}) : void {
     const set_html_attribute = options.set_html_attribute ?? true;
@@ -508,11 +516,20 @@ export function draw_to_svg_element(outer_svgelement : SVGSVGElement, diagram : 
         outer_svgelement.appendChild(svgelement);
     }
 
+    let text_scaling_factor : number | undefined = undefined;
+    if (options.text_scaling_reference_svg) {
+        options.text_scaling_reference_padding = options.text_scaling_reference_padding ?? options.padding ?? 10;
+        options.text_scaling_reference_padding = expand_directional_value(options.text_scaling_reference_padding);
+        text_scaling_factor = calculate_text_scale(
+            options.text_scaling_reference_svg,
+            options.text_scaling_reference_padding as [number, number, number, number]
+        );
+    }
+    
     // TODO : for performance, do smart clearing of svg, and not just clear everything
     if (clear_svg) svgelement.innerHTML = "";
 
-
-    f_draw_to_svg(svgelement, diagram, render_text);
+    f_draw_to_svg(svgelement, diagram, render_text, text_scaling_factor);
 
     if (set_html_attribute) {
         const pad_px = expand_directional_value(options.padding ?? 10);
@@ -520,8 +537,8 @@ export function draw_to_svg_element(outer_svgelement : SVGSVGElement, diagram : 
         let bbox = svgelement.getBBox();
         // add padding of 10px to the bounding box (if the graph is small, it'll mess it up)
         // scale 10px based on the width and height of the svg
-        let svg_width = svgelement.width.baseVal.value;
-        let svg_height = svgelement.height.baseVal.value;
+        let svg_width = svgelement.width.baseVal.value - pad_px[1] - pad_px[3];
+        let svg_height = svgelement.height.baseVal.value - pad_px[0] - pad_px[2];
         let scale = Math.max(bbox.width / svg_width, bbox.height / svg_height)
         let pad = pad_px.map(p => p*scale);
         // [top, right, bottom, left]
