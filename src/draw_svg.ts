@@ -190,8 +190,8 @@ function collect_text(diagram : Diagram, type : DiagramType.Text | DiagramType.M
     }
 }
 
-function calculate_text_scale(referencesvgelement : SVGSVGElement) : number {
-    // scale font-size adjusting for referencesvgelement.bbox and size
+/** Calculate the scaling factor for the text based on the reference svg element */
+export function calculate_text_scale(referencesvgelement : SVGSVGElement, padding? : [number, number, number, number]) : number {
     let bbox = referencesvgelement.getBBox();
     let refsvgelement_width = referencesvgelement.width.baseVal.value;
     let refsvgelement_height = referencesvgelement.height.baseVal.value;
@@ -403,11 +403,12 @@ export function get_tagged_svg_element(tag : string, svgelement : SVGElement) : 
  * @param svgelement the svg element to draw to
  * @param diagram the diagram to draw
  * @param render_text whether to render text
- * @param textreferencesvgelement the svg element to use as reference for text scaling
+ * @param text_scaling_factor (optional) the scaling factor for text
+ * @param svgtag (optional) the tag to add to the svg element
  */
 export function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, render_text : boolean = true, 
-    textreferencesvgelement? : SVGSVGElement, svgtag? : string) : void {
-
+    text_scaling_factor? : number, svgtag? : string) : void {
+    
     if (diagram.type == DiagramType.Polygon) {
         draw_polygon(svgelement, diagram, svgtag);
     } else if (diagram.type == DiagramType.Curve){
@@ -418,7 +419,7 @@ export function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, ren
         draw_image(svgelement, diagram, svgtag);
     } else if (diagram.type == DiagramType.Diagram){
         for (let d of diagram.children) {
-            f_draw_to_svg(svgelement, d, false, textreferencesvgelement, svgtag);
+            f_draw_to_svg(svgelement, d, false, undefined, svgtag);
         }
     } else {
         console.warn("Unreachable, unknown diagram type : " + diagram.type);
@@ -427,12 +428,14 @@ export function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, ren
     // draw text last to make the scaling works
     // because the text is scaled based on the bounding box of the svgelement
     if (render_text) {
-        if (textreferencesvgelement == undefined) textreferencesvgelement = svgelement;
+        if (text_scaling_factor == undefined){
+            // if (textreferencesvgelement == undefined) textreferencesvgelement = svgelement;
+            text_scaling_factor = calculate_text_scale(svgelement);
+        }
         let text_diagrams      : Diagram[] = collect_text(diagram, DiagramType.Text);
         let multiline_diagrams : Diagram[] = collect_text(diagram, DiagramType.MultilineText);
-        let calculated_scale = calculate_text_scale(textreferencesvgelement);
-        draw_texts(svgelement, text_diagrams, calculated_scale, svgtag);
-        draw_multiline_texts(svgelement, multiline_diagrams, calculated_scale, svgtag);
+        draw_texts(svgelement, text_diagrams, text_scaling_factor ?? 1, svgtag);
+        draw_multiline_texts(svgelement, multiline_diagrams, text_scaling_factor ?? 1, svgtag);
     }
     
 }
@@ -461,6 +464,7 @@ export function draw_to_svg(outer_svgelement : SVGSVGElement, diagram : Diagram,
 export interface draw_to_svg_options {
     set_html_attribute? : boolean,
     render_text? : boolean,
+    text_scaling_reference_svg? : SVGSVGElement,
     clear_svg? : boolean,
     background_color? : string,
     padding? : number | number[],
@@ -477,6 +481,7 @@ export interface draw_to_svg_options {
  * options : {
  *    set_html_attribute? : boolean (true),
  *    render_text? : boolean (true),
+ *    text_scaling_reference_svg? : SVGSVGElement (undefined),
  *    clear_svg? : boolean (true),
  *    background_color? : string (undefined),
  *    padding? : number | number[] (10),
@@ -508,11 +513,15 @@ export function draw_to_svg_element(outer_svgelement : SVGSVGElement, diagram : 
         outer_svgelement.appendChild(svgelement);
     }
 
+    let text_scaling_factor : number | undefined = undefined;
+    if (options.text_scaling_reference_svg) {
+        text_scaling_factor = calculate_text_scale(options.text_scaling_reference_svg);
+    }
+    
     // TODO : for performance, do smart clearing of svg, and not just clear everything
     if (clear_svg) svgelement.innerHTML = "";
 
-
-    f_draw_to_svg(svgelement, diagram, render_text);
+    f_draw_to_svg(svgelement, diagram, render_text, text_scaling_factor);
 
     if (set_html_attribute) {
         const pad_px = expand_directional_value(options.padding ?? 10);
