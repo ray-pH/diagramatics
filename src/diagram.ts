@@ -220,6 +220,22 @@ export class Diagram {
         newd.tags = [];
         return newd;
     }
+    /**
+    * Check if the diagram contains a tag
+    */
+    public contain_tag(tag : string) : boolean {
+        return this.tags.includes(tag);
+    }
+    /**
+    * Append a tag without creating a new diagram
+    * Since tag appending is a very common operation, 
+    * we provide a mutable version of it for performance reason
+    */
+    public append_tag_mut(tag : string) : Diagram {
+        if (this.contain_tag(tag)) return this;
+        this.tags.push(tag);
+        return this;
+    }
 
     /**
      * Collect all children and subchildren of the diagram
@@ -269,6 +285,24 @@ export class Diagram {
         // apply to children
         for (let i = 0; i < newd.children.length; i++) {
             newd.children[i] = newd.children[i].apply_recursive(func);
+        }
+        return newd;
+    }
+    
+    /**
+    * Apply a function to the diagram and all of its children recursively
+    * The function is only applied to the diagrams that contain a specific tag
+    * @param tag the tag to filter the diagrams
+    * @param func function to apply
+    * func takes in a diagram and returns a diagram
+    */ 
+    public apply_to_tagged_recursive(tag : string, func : (d : Diagram) => Diagram) : Diagram {
+        let newd : Diagram = this.copy_if_not_mutable();
+        // if the diagram has the tag, apply the function to self
+        if (newd.contain_tag(tag)) newd = func(newd);
+        // apply to children
+        for (let i = 0; i < newd.children.length; i++) {
+            newd.children[i] = newd.children[i].apply_to_tagged_recursive(tag, func);
         }
         return newd;
     }
