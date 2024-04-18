@@ -2,6 +2,7 @@ import { Diagram, diagram_combine } from '../diagram.js';
 import { rectangle_corner } from '../shapes.js';
 import { V2, Vector2 } from '../vector.js';
 import { transpose } from '../utils.js';
+import { TAG } from '../tag_names.js';
 
 enum TableOrientation {
     ROWS    = 'rows',
@@ -60,13 +61,13 @@ export function table(diagrams : Diagram[][], padding : number = 0, orientation 
  */
 export function style_cell(table_diagram : Diagram, styles : cell_style[]) : Diagram {
     let newd = table_diagram.copy();
-    if (table_diagram.tags.includes('contain_table')) {
-        let table_index = newd.children.findIndex(d => d.tags.includes('table'));
+    if (table_diagram.tags.includes(TAG.CONTAIN_TABLE)) {
+        let table_index = newd.children.findIndex(d => d.tags.includes(TAG.TABLE));
         let new_table = style_cell(newd.children[table_index], styles);
         newd.children[table_index] = new_table;
         return newd;
     }
-    else if (!table_diagram.tags.includes('table')) { return table_diagram; }
+    else if (!table_diagram.tags.includes(TAG.TABLE)) { return table_diagram; }
 
     for (let style of styles) {
         let [r, c] = style.index;
@@ -112,7 +113,7 @@ export function fixed_size(diagrams : Diagram[][], rowsizes : number[], colsizes
         }
     }
     let diagram_grid_combined = diagram_combine(...diagram_grid);
-    return diagram_combine(table, diagram_grid_combined).append_tag('contain_table');
+    return diagram_combine(table, diagram_grid_combined).append_tag(TAG.CONTAIN_TABLE);
 }
 
 /**
@@ -151,7 +152,7 @@ export function empty_fixed_size(row_count : number, col_count : number,
         y_top = y_bot;
     }
 
-    return diagram_combine(...rows).append_tag('table');
+    return diagram_combine(...rows).append_tag(TAG.TABLE);
 }
 
 /**
@@ -162,15 +163,15 @@ export function empty_fixed_size(row_count : number, col_count : number,
  */
 export function get_points(table_diagram : Diagram) : Vector2[][] {
     let table_diagram_ = table_diagram;
-    if (table_diagram.tags.includes('contain_table')) {
+    if (table_diagram.tags.includes(TAG.CONTAIN_TABLE)) {
         for (let d of table_diagram.children){
-            if (d.tags.includes('table')) {
+            if (d.tags.includes(TAG.TABLE)) {
                 table_diagram_ = d;
                 break;
             }
         }
     }
-    if (!table_diagram_.tags.includes('table')) return [];
+    if (!table_diagram_.tags.includes(TAG.TABLE)) return [];
 
     let rows : Vector2[][] = [];
     for (let row of table_diagram_.children){

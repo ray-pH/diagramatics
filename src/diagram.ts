@@ -1,5 +1,6 @@
 import { Vector2, V2, Transform } from './vector.js';
 import { BB_multiline } from './BBcode.js'
+import { TAG } from './tag_names.js'
 
 function assert(condition : boolean, message : string) : void {
     if (!condition) {
@@ -120,8 +121,9 @@ export class Diagram {
             path?     : Path, 
             children? : Diagram[], 
             textdata? : Partial<TextData>, 
-            imgdata?  : Partial<ImageData> 
-            multilinedata? : Partial<MultilineTextData>
+            imgdata?  : Partial<ImageData>,
+            multilinedata? : Partial<MultilineTextData>,
+            tags?     : string[],
         } = {}
     ) {
         this.type = type_;
@@ -129,6 +131,7 @@ export class Diagram {
         if (args.children) { this.children = args.children; }
         if (args.textdata) { this.textdata = args.textdata; }
         if (args.imgdata)  { this.imgdata  = args.imgdata; }
+        if (args.tags)     { this.tags     = args.tags; }
         if (args.multilinedata) { this.multilinedata = args.multilinedata; }
     }
 
@@ -225,16 +228,6 @@ export class Diagram {
     */
     public contain_tag(tag : string) : boolean {
         return this.tags.includes(tag);
-    }
-    /**
-    * Append a tag without creating a new diagram
-    * Since tag appending is a very common operation, 
-    * we provide a mutable version of it for performance reason
-    */
-    public append_tag_mut(tag : string) : Diagram {
-        if (this.contain_tag(tag)) return this;
-        this.tags.push(tag);
-        return this;
     }
 
     /**
@@ -466,7 +459,7 @@ export class Diagram {
     public text_tovar() : Diagram {
         let newd : Diagram = this.copy_if_not_mutable();
         if (newd.type == DiagramType.Text) {
-            newd = newd.append_tag('textvar');
+            newd = newd.append_tag(TAG.TEXTVAR);
         } else if (newd.type == DiagramType.Diagram) {
             // newd.children = newd.children.map(c => c.text_tovar());
             for (let i = 0; i < newd.children.length; i++)
@@ -1049,7 +1042,7 @@ export function curve(points : Vector2[]) : Diagram {
  * @returns a line diagram
  */
 export function line(start : Vector2, end : Vector2) : Diagram {
-    return curve([start, end]).append_tag('line');
+    return curve([start, end]).append_tag(TAG.LINE);
 }
 
 
