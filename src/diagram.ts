@@ -379,6 +379,14 @@ export class Diagram {
         }
         return newd;
     }
+    
+    /* * Clone style from another diagram */
+    public clone_style_from(diagram : Diagram) : Diagram {
+        return this.apply_recursive(d => {
+            d.style = {...diagram.style};
+            return d;
+        });
+    }
 
     public fill(color : string) : Diagram { 
         return this.update_style('fill', color, [DiagramType.Text]);

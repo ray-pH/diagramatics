@@ -1,7 +1,9 @@
-import { Path, Diagram, DiagramType, } from './diagram.js';
+import { Path, Diagram, DiagramType, diagram_combine, } from './diagram.js';
 import { Vector2, V2, Vdir} from './vector.js';
 import { linspace, linspace_exc, range } from './utils.js';
 import { array_repeat } from './utils.js'
+import { arrow1 } from './shapes.js';
+import { TAG } from './tag_names.js';
 
 type modifierFunction = (d : Diagram) => Diagram
 
@@ -21,7 +23,7 @@ function function_handle_path_type(func : modifierFunction) : modifierFunction {
             // recursively apply to all children
             d.children = d.children.map(c => modified_func(c));
             return d;
-        } else if (d.type == DiagramType.Text) {
+        } else if (d.type == DiagramType.Text || d.type == DiagramType.MultilineText) {
             // do nothing
             return d;
         } else {
@@ -200,3 +202,48 @@ export function round_corner(radius : number | number[] =  1, point_indices? : n
     return function_handle_path_type(func);
 }
 
+
+/**
+ * Add an arrow to the end of a curve
+ * Make sure the diagram this modifier is applied to is a curve
+ * @param headsize size of the arrow head
+ * @param flip flip the arrow position
+ */
+export function add_arrow(headsize : number, flip = false) : modifierFunction {
+    function func(c : Diagram) : Diagram {
+        if (c.path == undefined) return c;
+        let p1 = flip ? c.path.points[0] : c.path.points[c.path.points.length - 1];
+        let p0 = flip ? c.path.points[1] : c.path.points[c.path.points.length - 2];
+        let arrow = arrow1(p0, p1, headsize);
+        return diagram_combine(c, arrow).clone_style_from(c);
+    }
+    return function_handle_path_type(func);
+}
+
+function arrowhead_angle(d : Diagram) : number {
+    if (!d.contain_tag(TAG.ARROW_HEAD)) return NaN;
+    let points = d.path?.points
+    if (points == undefined) return NaN;
+    if (points.length != 3) return NaN;
+    let v_tip   = points[0];
+    let v_base1 = points[1];
+    let v_base2 = points[2];
+    let v_base  = v_base1.add(v_base2).scale(0.5)
+    let v_dir   = v_tip.sub(v_base);
+    return v_dir.angle();
+}
+
+/**
+* Replace arrowhead inside a diagram with another diagram
+* @param new_arrowhead diagram to replace the arrowhead with
+* The arrow will be rotated automatically,
+* The default direction is to the right (+x) with the tip at the origin
+*/
+export function arrowhead_replace(new_arrowhead : Diagram) : modifierFunction {
+    return function func(d : Diagram) : Diagram {
+        return d.apply_to_tagged_recursive(TAG.ARROW_HEAD, (arrowhead : Diagram) => {
+            let angle = arrowhead_angle(arrowhead);
+            return new_arrowhead.copy().rotate(angle).position(arrowhead.origin);
+        })
+    }
+}

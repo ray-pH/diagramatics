@@ -136,22 +136,6 @@ export function line_extend(l : Diagram, len1 : number, len2 : number) : Diagram
 }
 
 /**
- * Add an arrow to the end of a line
- * @param c a curve Diagram
- * @param headsize size of the arrow head
- * @param flip flip the arrow position
- * @returns a new line Diagram with an arrow
- */
-export function curve_add_arrow(c : Diagram, headsize : number, flip = false) : Diagram {
-    if (c.path == undefined) return c;
-    let p1 = flip ? c.path.points[0] : c.path.points[c.path.points.length - 1];
-    let p0 = flip ? c.path.points[1] : c.path.points[c.path.points.length - 2];
-    let arrow = arrow1(p0, p1, headsize);
-    // TODO: clone the style
-    return diagram_combine(c, arrow);
-}
-
-/**
  * Get the size of a diagram
  * @param diagram a diagram
  * @returns the width and height of the diagram
