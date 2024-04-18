@@ -2,6 +2,7 @@ import { Diagram, line, curve, diagram_combine } from '../diagram.js';
 import { Vector2, V2 } from '../vector.js';
 import { linspace, range_inc } from '../utils.js';
 import { arrow1, arrow2, textvar } from '../shapes.js'
+import { TAG } from '../tag_names.js';
 
 /**
  * Options for axes
@@ -78,8 +79,8 @@ export function axes_empty(axes_options? : Partial<axes_options>) : Diagram {
     let xorigin = lowerleft.x + (upperright.x-lowerleft.x)/(opt.xrange[1]-opt.xrange[0])*(0-opt.xrange[0]);
     let yorigin = lowerleft.y + (upperright.y-lowerleft.y)/(opt.yrange[1]-opt.yrange[0])*(0-opt.yrange[0]);
 
-    let xaxis = arrow2(V2(lowerleft.x,yorigin), V2(upperright.x,yorigin), opt.headsize);
-    let yaxis = arrow2(V2(xorigin,lowerleft.y), V2(xorigin,upperright.y), opt.headsize);
+    let xaxis = arrow2(V2(lowerleft.x,yorigin), V2(upperright.x,yorigin), opt.headsize).append_tag(TAG.GRAPH_AXIS);
+    let yaxis = arrow2(V2(xorigin,lowerleft.y), V2(xorigin,upperright.y), opt.headsize).append_tag(TAG.GRAPH_AXIS);
     return diagram_combine(xaxis, yaxis).stroke('gray').fill('gray');
     // return xaxis;
 }
@@ -104,8 +105,8 @@ export function axes_corner_empty(axes_options? : Partial<axes_options>) : Diagr
     let [lowerleft, upperright] = opt.bbox;
     // get the intersection point
 
-    let xaxis = arrow1(lowerleft, V2(upperright.x,lowerleft.y), opt.headsize);
-    let yaxis = arrow1(lowerleft, V2(lowerleft.x,upperright.y), opt.headsize);
+    let xaxis = arrow1(lowerleft, V2(upperright.x,lowerleft.y), opt.headsize).append_tag(TAG.GRAPH_AXIS);
+    let yaxis = arrow1(lowerleft, V2(lowerleft.x,upperright.y), opt.headsize).append_tag(TAG.GRAPH_AXIS);
     return diagram_combine(xaxis, yaxis).stroke('gray').fill('gray');
     // return xaxis;
 }
@@ -146,8 +147,8 @@ export function axes_corner_empty_xbreak(axes_options? : Partial<axes_options>) 
 
     let xaxis_left = line(lowerleft, xbreak_pleft_);
     let xaxis_right = arrow1(xbreak_pright_, V2(upperright.x,lowerleft.y), opt.headsize);
-    let xaxis = diagram_combine(xaxis_left, xbreak_curve, xaxis_right)
-    let yaxis = arrow1(lowerleft, V2(lowerleft.x,upperright.y), opt.headsize);
+    let xaxis = diagram_combine(xaxis_left, xbreak_curve, xaxis_right).append_tag(TAG.GRAPH_AXIS);
+    let yaxis = arrow1(lowerleft, V2(lowerleft.x,upperright.y), opt.headsize).append_tag(TAG.GRAPH_AXIS);
     return diagram_combine(xaxis, yaxis).stroke('gray').fill('gray');
 }
 
@@ -161,14 +162,15 @@ export function xtickmark_empty(x : number, y : number, axes_options? : Partial<
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
     let height = opt.ticksize;
     let pos = axes_transform(opt)(V2(x,y));
-    return line(V2(pos.x,pos.y+height/2), V2(pos.x,pos.y-height/2)).stroke('gray');
+    return line(V2(pos.x,pos.y+height/2), V2(pos.x,pos.y-height/2))
+        .stroke('gray').append_tag(TAG.GRAPH_TICK);
 }
 
 export function xtickmark(x : number, y : number, str : string, axes_options? : Partial<axes_options>) : Diagram {
     let tick = xtickmark_empty(x, y, axes_options);
     let label = textvar(str).move_origin_text("top-center").translate(tick.get_anchor("bottom-center"))
                 .translate(V2(0, -(axes_options?.tick_label_offset || 0)))
-                .textfill('gray');
+                .textfill('gray').append_tag(TAG.GRAPH_TICK_LABEL);
     return diagram_combine(tick, label);
 }
 
@@ -182,13 +184,14 @@ export function ytickmark_empty(y : number, x : number, axes_options? : Partial<
     let opt = {...default_axes_options, ...axes_options}; // use default if not defined
     let height = opt.ticksize;
     let pos = axes_transform(opt)(V2(x,y));
-    return line(V2(pos.x+height/2,pos.y), V2(pos.x-height/2,pos.y)).stroke('gray');
+    return line(V2(pos.x+height/2,pos.y), V2(pos.x-height/2,pos.y))
+        .stroke('gray').append_tag(TAG.GRAPH_TICK);
 }
 export function ytickmark(y : number, x : number, str : string, axes_options? : Partial<axes_options>) : Diagram {
     let tick = ytickmark_empty(y, x, axes_options);
     let label = textvar(str).move_origin_text("center-right").translate(tick.get_anchor("center-left"))
                 .translate(V2(-(axes_options?.tick_label_offset || 0), 0))
-                .textfill('gray');
+                .textfill('gray').append_tag(TAG.GRAPH_TICK_LABEL);
     return diagram_combine(tick, label);
 }
 
@@ -330,7 +333,8 @@ export function xaxis(axes_options? : Partial<axes_options>) : Diagram {
     }
 
     let ax_origin = axes_transform(opt)(V2(0,0));
-    let xaxis = arrow2(V2(opt.bbox[0].x, ax_origin.y), V2(opt.bbox[1].x, ax_origin.y), opt.headsize);
+    let xaxis = arrow2(V2(opt.bbox[0].x, ax_origin.y), V2(opt.bbox[1].x, ax_origin.y), opt.headsize)
+        .append_tag(TAG.GRAPH_AXIS);
     let xtickmarks = xticks(opt, 0);
     return diagram_combine(xaxis, xtickmarks);
 }
@@ -349,7 +353,8 @@ export function yaxis(axes_options? : Partial<axes_options>) : Diagram {
     }
 
     let ax_origin = axes_transform(opt)(V2(0,0));
-    let yaxis = arrow2(V2(ax_origin.x, opt.bbox[0].y), V2(ax_origin.x, opt.bbox[1].y), opt.headsize);
+    let yaxis = arrow2(V2(ax_origin.x, opt.bbox[0].y), V2(ax_origin.x, opt.bbox[1].y), opt.headsize)
+        .append_tag(TAG.GRAPH_AXIS);
     let ytickmarks = yticks(opt, 0);
     return diagram_combine(yaxis, ytickmarks);
 }
@@ -363,7 +368,7 @@ export function ygrid(axes_options? : Partial<axes_options>) : Diagram {
     let ygrid_diagrams = opt.xticks.map(x => 
         line(V2(x,opt.yrange[0]), V2(x,opt.yrange[1])).transform(axes_transform(opt)).stroke('gray')
     );
-    return diagram_combine(...ygrid_diagrams);
+    return diagram_combine(...ygrid_diagrams).append_tag(TAG.GRAPH_GRID);
 }
 
 export function xgrid(axes_options? : Partial<axes_options>) : Diagram {
@@ -375,8 +380,7 @@ export function xgrid(axes_options? : Partial<axes_options>) : Diagram {
     let xgrid_diagrams = opt.yticks.map(y =>
         line(V2(opt.xrange[0],y), V2(opt.xrange[1],y)).transform(axes_transform(opt)).stroke('gray')
     );
-    return diagram_combine(...xgrid_diagrams);
-
+    return diagram_combine(...xgrid_diagrams).append_tag(TAG.GRAPH_GRID);
 }
 
 //  TODO: add xticks and ytiks as argument
