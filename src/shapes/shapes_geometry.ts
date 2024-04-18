@@ -2,6 +2,7 @@ import { Diagram, polygon, line, diagram_combine, curve } from '../diagram.js';
 import { Vector2, V2 } from '../vector.js';
 import { linspace } from '../utils.js';
 import { arrow1 } from '../shapes.js';
+import { TAG } from '../tag_names.js';
 
 // ============================= utilities
 /**
@@ -11,7 +12,7 @@ import { arrow1 } from '../shapes.js';
  */
 export function circle_radius(circle : Diagram) : number {
     let tags = circle.tags;
-    if (!tags.includes('circle')) return -1;
+    if (!tags.includes(TAG.CIRCLE)) return -1;
 
     let center = circle.get_anchor('center-center');
     if (circle.path == undefined) return -1;
@@ -52,7 +53,7 @@ export function circle_tangent_point_from_point(point : Vector2, circle : Diagra
  */
 export function line_points(l : Diagram) : [Vector2, Vector2] {
     let tags = l.tags;
-    if (!tags.includes('line')) return [V2(0,0), V2(0,0)];
+    if (!tags.includes(TAG.LINE)) return [V2(0,0), V2(0,0)];
     if (l.path == undefined) return [V2(0,0), V2(0,0)];
 
     let p0 = l.path.points[0];
@@ -92,7 +93,7 @@ export function line_intersection_x(l : Diagram, xi : number) : Vector2 {
  * if the lines are parallel, return V2(Infinity, Infinity)
  */
 export function line_intersection(l1 : Diagram, l2 : Diagram) : Vector2 {
-    if (!l1.tags.includes('line') || !l2.tags.includes('line')) return V2(Infinity, Infinity);
+    if (!l1.tags.includes(TAG.LINE) || !l2.tags.includes(TAG.LINE)) return V2(Infinity, Infinity);
     let [a1, b1] = line_points(l1);
     let [a2, b2] = line_points(l2);
 
@@ -119,7 +120,7 @@ export function line_intersection(l1 : Diagram, l2 : Diagram) : Vector2 {
  */
 export function line_extend(l : Diagram, len1 : number, len2 : number) : Diagram {
     let tags = l.tags;
-    if (!tags.includes('line')) return l;
+    if (!tags.includes(TAG.LINE)) return l;
     if (l.path == undefined) return l;
 
     let p0 = l.path.points[0];
@@ -132,22 +133,6 @@ export function line_extend(l : Diagram, len1 : number, len2 : number) : Diagram
     if (newl.path == undefined) return l; // to surpress typescript error
     newl.path.points = [p0_new, p1_new];
     return newl;
-}
-
-/**
- * Add an arrow to the end of a line
- * @param c a curve Diagram
- * @param headsize size of the arrow head
- * @param flip flip the arrow position
- * @returns a new line Diagram with an arrow
- */
-export function curve_add_arrow(c : Diagram, headsize : number, flip = false) : Diagram {
-    if (c.path == undefined) return c;
-    let p1 = flip ? c.path.points[0] : c.path.points[c.path.points.length - 1];
-    let p0 = flip ? c.path.points[1] : c.path.points[c.path.points.length - 2];
-    let arrow = arrow1(p0, p1, headsize);
-    // TODO: clone the style
-    return diagram_combine(c, arrow);
 }
 
 /**
