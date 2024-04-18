@@ -60,6 +60,8 @@ export {
     axes_options,
 } from './shapes/shapes_graph.js'
 
+export { TAG } from './tag_names.js'
+
 export * as graph from './shapes/shapes_graph.js'
 export * as geometry from './shapes/shapes_geometry.js'
 export * as annotation from './shapes/shapes_annotation.js'
