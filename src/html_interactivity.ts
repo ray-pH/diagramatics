@@ -807,7 +807,7 @@ class LocatorHandler {
 
     create_locator_diagram_svg(diagram : Diagram, blink : boolean) : SVGSVGElement {
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        f_draw_to_svg(svg, diagram.position(V2(0,0)), true, calculate_text_scale(this.control_svg));
+        f_draw_to_svg(svg, diagram.position(V2(0,0)), true, calculate_text_scale(this.diagram_svg));
         svg.style.cursor = "pointer";
         svg.setAttribute("overflow", "visible");
         if (blink) {
