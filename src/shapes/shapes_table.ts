@@ -108,7 +108,10 @@ export function fixed_size(diagrams : Diagram[][], rowsizes : number[], colsizes
         for (let c = 0; c < col_count; c++) {
             let d = diagram_rows[r][c];
             if (d == undefined) continue;
-            d = d.move_origin('center-center').position(points[r][c]);
+            d = d.move_origin('center-center').position(points[r][c])
+                .append_tags(TAG.TABLE_CONTENT)
+                .append_tags(TAG.ROW_ + r)
+                .append_tags(TAG.COL_ + c);
             diagram_grid.push(d);
         }
     }
@@ -144,7 +147,10 @@ export function empty_fixed_size(row_count : number, col_count : number,
             let y_mid = (y_top + y_bot) / 2;
 
             //TODO: draw line instead of recangles
-            let rect = rectangle_corner(V2(x_left, y_bot), V2(x_right, y_top)).move_origin(V2(x_mid, y_mid));
+            let rect = rectangle_corner(V2(x_left, y_bot), V2(x_right, y_top)).move_origin(V2(x_mid, y_mid))
+                .append_tags(TAG.TABLE_CELL)
+                .append_tags(TAG.ROW_ + r)
+                .append_tags(TAG.COL_ + c);
             cols.push(rect);
             x_left = x_right;
         }
