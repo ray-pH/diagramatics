@@ -76,7 +76,7 @@ export function regular_polygon_side(n : number, sidelength : number = 1) : Diag
  * @returns a Diagram object
  */
 export function circle(radius : number = 1) : Diagram {
-    return regular_polygon(50, radius).append_tag(TAG.CIRCLE);
+    return regular_polygon(50, radius).append_tags(TAG.CIRCLE);
 }
 
 /**
@@ -101,9 +101,9 @@ export function arc(radius : number = 1, angle : number = to_radian(360)) : Diag
  * @returns a Diagram object
  */
 export function arrow(v : Vector2, headsize : number = 1) : Diagram {
-    let line_diagram = line(V2(0,0), v).append_tag(TAG.ARROW_LINE);
+    let line_diagram = line(V2(0,0), v).append_tags(TAG.ARROW_LINE);
     let raw_triangle = polygon([V2(0,0), V2(-headsize, headsize/2), V2(-headsize, -headsize/2)]);
-    let head_triangle = raw_triangle.rotate(v.angle()).position(v).append_tag(TAG.ARROW_HEAD);
+    let head_triangle = raw_triangle.rotate(v.angle()).position(v).append_tags(TAG.ARROW_HEAD);
     return diagram_combine(line_diagram, head_triangle);
 }
 
@@ -126,11 +126,11 @@ export function arrow1(start : Vector2, end : Vector2, headsize : number = 1) : 
  * @returns a Diagram object
  */
 export function arrow2(start : Vector2, end : Vector2, headsize : number = 1) : Diagram {
-    let line_diagram = line(start, end).append_tag(TAG.ARROW_LINE);
+    let line_diagram = line(start, end).append_tags(TAG.ARROW_LINE);
     let direction    = end.sub(start);
     let raw_triangle = polygon([V2(0,0), V2(-headsize, headsize/2), V2(-headsize, -headsize/2)]);
-    let head_triangle  = raw_triangle.rotate(direction.angle()).position(end).append_tag(TAG.ARROW_HEAD);
-    let head_triangle2 = raw_triangle.rotate(direction.angle()+Math.PI).position(start).append_tag(TAG.ARROW_HEAD);
+    let head_triangle  = raw_triangle.rotate(direction.angle()).position(end).append_tags(TAG.ARROW_HEAD);
+    let head_triangle2 = raw_triangle.rotate(direction.angle()+Math.PI).position(start).append_tags(TAG.ARROW_HEAD);
     return diagram_combine(line_diagram, head_triangle, head_triangle2);
 }
 
@@ -140,5 +140,5 @@ export function arrow2(start : Vector2, end : Vector2, headsize : number = 1) : 
  * @returns a Diagram object
  */
 export function textvar(str : string) : Diagram {
-    return text(str).append_tag(TAG.TEXTVAR);
+    return text(str).append_tags(TAG.TEXTVAR);
 }
