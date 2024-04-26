@@ -113,7 +113,7 @@ export function fixed_size(diagrams : Diagram[][], rowsizes : number[], colsizes
         }
     }
     let diagram_grid_combined = diagram_combine(...diagram_grid);
-    return diagram_combine(table, diagram_grid_combined).append_tag(TAG.CONTAIN_TABLE);
+    return diagram_combine(table, diagram_grid_combined).append_tags(TAG.CONTAIN_TABLE);
 }
 
 /**
@@ -152,7 +152,7 @@ export function empty_fixed_size(row_count : number, col_count : number,
         y_top = y_bot;
     }
 
-    return diagram_combine(...rows).append_tag(TAG.TABLE);
+    return diagram_combine(...rows).append_tags(TAG.TABLE);
 }
 
 /**

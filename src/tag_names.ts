@@ -7,6 +7,10 @@ export enum TAG {
     CIRCLE = "circle",
     TEXTVAR = "textvar",
     
+    // prefix
+    ROW_ = "row_",
+    COL_ = "col_",
+    
     // arrow
     ARROW_LINE = "arrow_line",
     ARROW_HEAD = "arrow_head",
@@ -14,6 +18,8 @@ export enum TAG {
     // table
     TABLE = "table",
     CONTAIN_TABLE = "contain_table",
+    TABLE_CELL = "table_cell",
+    TABLE_CONTENT = "table_content",
     
     //graph
     GRAPH_AXIS = "graph_axis_line",

@@ -199,26 +199,28 @@ export class Diagram {
     }
 
     /**
-     * Append a tag to the diagram
+     * Append tags to the diagram
      */
-    public append_tag(tag : string) : Diagram {
+    public append_tags(tags : string | string[]) : Diagram {
         let newd = this.copy_if_not_mutable();
-        if(newd.tags.includes(tag)) return newd;
-        newd.tags.push(tag);
+        if (!Array.isArray(tags)) tags = [tags];
+        for (let tag of tags){
+            if(!newd.tags.includes(tag)) newd.tags.push(tag);
+        }
         return newd;
     }
     /**
-     * Remove a tag from the diagram
+     * Remove tags from the diagram
      */
-    public remove_tag(tag : string) : Diagram {
+    public remove_tags(tags : string | string[]) : Diagram {
         let newd = this.copy_if_not_mutable();
-        newd.tags = newd.tags.filter(t => t != tag);
+        newd.tags = newd.tags.filter(t => !tags.includes(t));
         return newd;
     }
     /**
      * Reset all tags of the diagram
      */
-    public reset_tag() : Diagram {
+    public reset_tags() : Diagram {
         let newd = this.copy_if_not_mutable();
         newd.tags = [];
         return newd;
@@ -228,6 +230,12 @@ export class Diagram {
     */
     public contain_tag(tag : string) : boolean {
         return this.tags.includes(tag);
+    }
+    public contain_all_tags(tags : string[]) : boolean {
+        for (let tag of tags){
+            if (!this.tags.includes(tag)) return false;
+        }
+        return true;
     }
 
     /**
@@ -285,17 +293,19 @@ export class Diagram {
     /**
     * Apply a function to the diagram and all of its children recursively
     * The function is only applied to the diagrams that contain a specific tag
-    * @param tag the tag to filter the diagrams
+    * @param tags the tag to filter the diagrams
     * @param func function to apply
     * func takes in a diagram and returns a diagram
     */ 
-    public apply_to_tagged_recursive(tag : string, func : (d : Diagram) => Diagram) : Diagram {
+    public apply_to_tagged_recursive(tags : string | string[], func : (d : Diagram) => Diagram) : Diagram {
+        if (!Array.isArray(tags)) tags = [tags];
+        
         let newd : Diagram = this.copy_if_not_mutable();
         // if the diagram has the tag, apply the function to self
-        if (newd.contain_tag(tag)) newd = func(newd);
+        if (newd.contain_all_tags(tags)) newd = func(newd);
         // apply to children
         for (let i = 0; i < newd.children.length; i++) {
-            newd.children[i] = newd.children[i].apply_to_tagged_recursive(tag, func);
+            newd.children[i] = newd.children[i].apply_to_tagged_recursive(tags, func);
         }
         return newd;
     }
@@ -467,7 +477,7 @@ export class Diagram {
     public text_tovar() : Diagram {
         let newd : Diagram = this.copy_if_not_mutable();
         if (newd.type == DiagramType.Text) {
-            newd = newd.append_tag(TAG.TEXTVAR);
+            newd = newd.append_tags(TAG.TEXTVAR);
         } else if (newd.type == DiagramType.Diagram) {
             // newd.children = newd.children.map(c => c.text_tovar());
             for (let i = 0; i < newd.children.length; i++)
@@ -478,7 +488,7 @@ export class Diagram {
     public text_totext() : Diagram {
         let newd : Diagram = this.copy_if_not_mutable();
         if (newd.type == DiagramType.Text) {
-            newd = newd.remove_tag('textvar');
+            newd = newd.remove_tags('textvar');
         } else if (newd.type == DiagramType.Diagram) {
             // newd.children = newd.children.map(c => c.text_totext());
             for (let i = 0; i < newd.children.length; i++)
@@ -1050,7 +1060,7 @@ export function curve(points : Vector2[]) : Diagram {
  * @returns a line diagram
  */
 export function line(start : Vector2, end : Vector2) : Diagram {
-    return curve([start, end]).append_tag(TAG.LINE);
+    return curve([start, end]).append_tags(TAG.LINE);
 }
 
 
