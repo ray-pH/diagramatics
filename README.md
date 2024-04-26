@@ -11,7 +11,7 @@ Below are some examples of interactive diagrams created using Diagramatics:
 ![Example Pulley](https://raw.githubusercontent.com/ray-pH/diagramatics/main/assets/example1.png)
 ![Example Spring](https://raw.githubusercontent.com/ray-pH/diagramatics/main/assets/example2.png)
 
-The effects are demonstrated in the following GIFs:
+The interaction are shown in the following GIFs:
 
 ![Example Pulley](https://raw.githubusercontent.com/ray-pH/diagramatics/main/assets/example1.gif)
 ![Example Spring](https://raw.githubusercontent.com/ray-pH/diagramatics/main/assets/example2.gif)
