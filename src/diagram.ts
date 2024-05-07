@@ -796,6 +796,17 @@ export class Diagram {
             throw new Error("Unreachable, unknown diagram type : " + this.type);
         }
     }
+    
+    /**
+    * Reverse the order of the points in the path
+    */
+    public reverse_path() {
+        let newd = this.copy_if_not_mutable();
+        if (newd.path) {
+            newd.path = newd.path?.reverse();
+        }
+        return newd;
+    }
 
     /**
      * Get the point on the path at t
@@ -926,6 +937,15 @@ export class Path {
     }
     copy_if_not_mutable() : Path {
         return this.mutable ? this : this.copy();
+    }
+    
+    /**
+    * Reverse the order of the points in the path
+    */
+    public reverse() : Path {
+        let newp : Path = this.copy_if_not_mutable();
+        newp.points = newp.points.reverse();
+        return newp;
     }
 
     /**

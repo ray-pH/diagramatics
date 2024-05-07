@@ -10,7 +10,7 @@ export {
     to_degree, to_radian,
     linspace, range, array_repeat,
     linspace_exc, range_inc,
-    transpose, cubic_spline
+    transpose
 } from './utils.js'
 export * as utils from './utils.js'
 
@@ -72,6 +72,7 @@ export * as table from './shapes/shapes_table.js'
 export * as boxplot from './shapes/shapes_boxplot.js'
 export * as geo_construct from './geo_construct/geo_construct.js'
 export * as tree from './shapes/shapes_tree.js'
+export * as curves from './shapes/shapes_curves.js'
 
 // Mics
 export * as encoding from './encoding.js'
