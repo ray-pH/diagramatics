@@ -110,11 +110,35 @@ function draw_curve(svgelement : SVGSVGElement, diagram : Diagram, svgtag? : str
     }
 }
 
+
+function is_dataURL(url : string) : boolean {
+    // Regular expression to check for data URL
+    const dataUrlPattern = /^data:image\/(png|jpeg|jpg|gif|svg\+xml);base64,/;
+    return dataUrlPattern.test(url);
+}
+
+const _IMAGE_DATAURL_CACHE_MAP = new Map<string, string>();
+
 /**
  * Convert image href to data url
  * This is necessary so that the image diagram can be downloaded as png
  */
 function set_image_href_dataURL(img : SVGImageElement, src : string) : void{
+    // if it is already a dataURL, just set it
+    if (is_dataURL(src)) {
+        img.setAttribute("href", src);
+        img.setAttribute("xlink:href", src);
+        return;
+    }
+    
+    // if it's already cached, just set it
+    if (_IMAGE_DATAURL_CACHE_MAP.has(src)){
+        const dataURL = _IMAGE_DATAURL_CACHE_MAP.get(src)!;
+        img.setAttribute("href", dataURL);
+        img.setAttribute("xlink:href", dataURL);
+        return;
+    }
+    
     let canvas    = document.createElement("canvas");
     let ctx       = canvas.getContext('2d');
 
@@ -129,8 +153,10 @@ function set_image_href_dataURL(img : SVGImageElement, src : string) : void{
         // most browser already deprecate xlink:href because of SVG 2.0
         // but other browser and image viewer/editor still only support xlink:href
         // might be removed in the future
-        img.setAttribute("href", canvas.toDataURL("image/png"));
-        img.setAttribute("xlink:href", canvas.toDataURL("image/png"));
+        const dataURL = canvas.toDataURL("image/png");
+        img.setAttribute("href", dataURL);
+        img.setAttribute("xlink:href", dataURL);
+        _IMAGE_DATAURL_CACHE_MAP.set(src, dataURL);
         canvas.remove();
     }
     base_image.src = src;
