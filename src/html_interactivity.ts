@@ -51,6 +51,8 @@ export class Interactive {
         = (_) => {};
     public display_precision : undefined | number = 5;
     intervals : {[key : string] : any} = {};         
+    
+    public registeredEventListenerRemoveFunctions : (() => void)[] = [];
 
     /**
      * @param control_container_div the div that contains the control elements
@@ -135,6 +137,23 @@ export class Interactive {
         this.dragAndDropHandler?.setViewBox();
         this.dragAndDropHandler?.drawSvg();
     }
+    
+    private registerEventListener(
+        element: EventTarget, 
+        type: keyof GlobalEventHandlersEventMap, 
+        callback: EventListenerOrEventListenerObject | null,
+        options? : boolean | AddEventListenerOptions,
+    ) {
+        element.addEventListener(type, callback, options);
+        const removeFunction = () => element.removeEventListener(type, callback);
+        this.registeredEventListenerRemoveFunctions.push(removeFunction);
+    }
+    
+    public removeRegisteredEventListener() {
+        this.registeredEventListenerRemoveFunctions.forEach(f => f());
+        this.registeredEventListenerRemoveFunctions = [];
+    }
+    
 
     get_svg_element(metaname : string) : SVGSVGElement {
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
@@ -187,11 +206,11 @@ export class Interactive {
         if (this.locatorHandler == undefined) {
             let locatorHandler = new LocatorHandler(control_svg, diagram_svg);
             this.locatorHandler = locatorHandler;
-            this.diagram_outer_svg.addEventListener('mousemove'  , (evt) => { locatorHandler.drag(evt);    });
-            this.diagram_outer_svg.addEventListener('mouseup'    , (evt) => { locatorHandler.endDrag(evt); });
-            this.diagram_outer_svg.addEventListener('touchmove'  , (evt) => { locatorHandler.drag(evt);    });
-            this.diagram_outer_svg.addEventListener('touchend'   , (evt) => { locatorHandler.endDrag(evt); });
-            this.diagram_outer_svg.addEventListener('touchcancel', (evt) => { locatorHandler.endDrag(evt); });
+            this.registerEventListener(this.diagram_outer_svg, 'mousemove',  (evt:any) => { locatorHandler.drag(evt)});
+            this.registerEventListener(this.diagram_outer_svg, 'mouseup',    (evt:any) => { locatorHandler.endDrag(evt)});
+            this.registerEventListener(this.diagram_outer_svg, 'touchmove',  (evt:any) => { locatorHandler.drag(evt)});
+            this.registerEventListener(this.diagram_outer_svg, 'touchend',   (evt:any) => { locatorHandler.endDrag(evt)});
+            this.registerEventListener(this.diagram_outer_svg, 'touchcancel',(evt:any) => { locatorHandler.endDrag(evt)});
         }
 
 
@@ -211,11 +230,11 @@ export class Interactive {
             for (let i = 0; i < blinking_outers.length; i++)
                 (this.locatorHandler as LocatorHandler).addBlinkingCircleOuter(blinking_outers[i])
         }
-        locator_svg.addEventListener('mousedown', (evt) => { 
-            (this.locatorHandler as LocatorHandler).startDrag(evt, variable_name, locator_svg);
+        this.registerEventListener(locator_svg, 'mousedown', (evt:any) => {
+            this.locatorHandler!.startDrag(evt, variable_name, locator_svg);
         });
-        locator_svg.addEventListener('touchstart', (evt) => { 
-            (this.locatorHandler as LocatorHandler).startDrag(evt, variable_name, locator_svg);
+        this.registerEventListener(locator_svg, 'touchstart', (evt:any) => {
+            this.locatorHandler!.startDrag(evt, variable_name, locator_svg);
         });
         control_svg.appendChild(locator_svg);
 
@@ -269,11 +288,11 @@ export class Interactive {
         if (this.locatorHandler == undefined) {
             let locatorHandler = new LocatorHandler(control_svg, diagram_svg);
             this.locatorHandler = locatorHandler;
-            this.diagram_outer_svg.addEventListener('mousemove'  , (evt) => { locatorHandler.drag(evt);    });
-            this.diagram_outer_svg.addEventListener('mouseup'    , (evt) => { locatorHandler.endDrag(evt); });
-            this.diagram_outer_svg.addEventListener('touchmove'  , (evt) => { locatorHandler.drag(evt);    });
-            this.diagram_outer_svg.addEventListener('touchend'   , (evt) => { locatorHandler.endDrag(evt); });
-            this.diagram_outer_svg.addEventListener('touchcancel', (evt) => { locatorHandler.endDrag(evt); });
+            this.registerEventListener(this.diagram_outer_svg, 'mousemove',  (evt:any) => { locatorHandler.drag(evt); })
+            this.registerEventListener(this.diagram_outer_svg, 'mouseup',    (evt:any) => { locatorHandler.endDrag(evt); })
+            this.registerEventListener(this.diagram_outer_svg, 'touchmove',  (evt:any) => { locatorHandler.drag(evt); })
+            this.registerEventListener(this.diagram_outer_svg, 'touchend',   (evt:any) => { locatorHandler.endDrag(evt); })
+            this.registerEventListener(this.diagram_outer_svg, 'touchcancel',(evt:any) => { locatorHandler.endDrag(evt); })
         }
 
 
@@ -287,11 +306,11 @@ export class Interactive {
         // ============== Circle element
 
         let locator_svg = this.locatorHandler!.create_locator_diagram_svg(diagram, blink);
-        locator_svg.addEventListener('mousedown', (evt) => { 
-            (this.locatorHandler as LocatorHandler).startDrag(evt, variable_name, locator_svg);
+        this.registerEventListener(locator_svg, 'mousedown', (evt:any) => {
+            this.locatorHandler!.startDrag(evt, variable_name, locator_svg);
         });
-        locator_svg.addEventListener('touchstart', (evt) => { 
-            (this.locatorHandler as LocatorHandler).startDrag(evt, variable_name, locator_svg);
+        this.registerEventListener(locator_svg, 'touchstart', (evt:any) => {
+            this.locatorHandler!.startDrag(evt, variable_name, locator_svg);
         });
         control_svg.appendChild(locator_svg);
 
@@ -434,11 +453,11 @@ export class Interactive {
         if (this.dragAndDropHandler == undefined) {
             let dragAndDropHandler = new DragAndDropHandler(dnd_svg, diagram_svg);
             this.dragAndDropHandler = dragAndDropHandler;
-            this.diagram_outer_svg.addEventListener('mousemove'  , (evt) => { dragAndDropHandler.drag(evt);    });
-            this.diagram_outer_svg.addEventListener('mouseup'    , (evt) => { dragAndDropHandler.endDrag(evt); });
-            this.diagram_outer_svg.addEventListener('touchmove'  , (evt) => { dragAndDropHandler.drag(evt);    });
-            this.diagram_outer_svg.addEventListener('touchend'   , (evt) => { dragAndDropHandler.endDrag(evt); });
-            this.diagram_outer_svg.addEventListener('touchcancel', (evt) => { dragAndDropHandler.endDrag(evt); });
+            this.registerEventListener(this.diagram_outer_svg, 'mousemove',  (evt:any) => {dragAndDropHandler.drag(evt);});
+            this.registerEventListener(this.diagram_outer_svg, 'mouseup',    (evt:any) => {dragAndDropHandler.endDrag(evt);});
+            this.registerEventListener(this.diagram_outer_svg, 'touchmove',  (evt:any) => {dragAndDropHandler.drag(evt);});
+            this.registerEventListener(this.diagram_outer_svg, 'touchend',   (evt:any) => {dragAndDropHandler.endDrag(evt);});
+            this.registerEventListener(this.diagram_outer_svg, 'touchcancel',(evt:any) => {dragAndDropHandler.endDrag(evt);});
         }
     }
 
