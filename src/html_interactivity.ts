@@ -453,11 +453,12 @@ export class Interactive {
         if (this.dragAndDropHandler == undefined) {
             let dragAndDropHandler = new DragAndDropHandler(dnd_svg, diagram_svg);
             this.dragAndDropHandler = dragAndDropHandler;
-            this.registerEventListener(this.diagram_outer_svg, 'mousemove',  (evt:any) => {dragAndDropHandler.drag(evt);});
-            this.registerEventListener(this.diagram_outer_svg, 'mouseup',    (evt:any) => {dragAndDropHandler.endDrag(evt);});
-            this.registerEventListener(this.diagram_outer_svg, 'touchmove',  (evt:any) => {dragAndDropHandler.drag(evt);});
-            this.registerEventListener(this.diagram_outer_svg, 'touchend',   (evt:any) => {dragAndDropHandler.endDrag(evt);});
-            this.registerEventListener(this.diagram_outer_svg, 'touchcancel',(evt:any) => {dragAndDropHandler.endDrag(evt);});
+            // this.registerEventListener(this.diagram_outer_svg, 'mousemove',  (evt:any) => {dragAndDropHandler.drag(evt);});
+            this.registerEventListener(document, 'mousemove',  (evt:any) => {dragAndDropHandler.drag(evt);});
+            this.registerEventListener(document, 'mouseup',    (evt:any) => {dragAndDropHandler.endDrag(evt);});
+            this.registerEventListener(document, 'touchmove',  (evt:any) => {dragAndDropHandler.drag(evt);});
+            this.registerEventListener(document, 'touchend',   (evt:any) => {dragAndDropHandler.endDrag(evt);});
+            this.registerEventListener(document, 'touchcancel',(evt:any) => {dragAndDropHandler.endDrag(evt);});
         }
     }
 
