@@ -1119,7 +1119,7 @@ class DragAndDropHandler {
         this.draggedElementGhost.style.pointerEvents = "none";
         this.draggedElementGhost.setAttribute("opacity", "0.5");
         this.draggedElementGhost.setAttribute("class", dnd_type.ghost);
-        this.dnd_svg.prepend(this.draggedElementGhost);
+        this.dnd_svg.append(this.draggedElementGhost);
     }
 
     get_dnd_element_data_from_evt(evt : DnDEvent) : {name : string, type : string} | null {
