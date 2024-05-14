@@ -580,6 +580,7 @@ export function draw_to_svg_element(outer_svgelement : SVGSVGElement, diagram : 
         svgelement.setAttribute("viewBox", `${bbox.x} ${bbox.y} ${bbox.width} ${bbox.height}`);
         // set preserveAspectRatio to xMidYMid meet
         svgelement.setAttribute("preserveAspectRatio", "xMidYMid meet");
+        outer_svgelement.style.overflow = "visible";
     }
     
     if (options.background_color) {

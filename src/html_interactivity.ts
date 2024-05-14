@@ -174,6 +174,7 @@ export class Interactive {
             svg_element.setAttribute("meta", metaname);
             svg_element.setAttribute("width", "100%");
             svg_element.setAttribute("height", "100%");
+            if (metaname == control_svg_name.dnd) svg_element.style.overflow = "visible";
             this.diagram_outer_svg.appendChild(svg_element);
         }
 
