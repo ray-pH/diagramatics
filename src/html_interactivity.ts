@@ -1147,8 +1147,9 @@ class DragAndDropHandler {
         if (window.TouchEvent && evt instanceof TouchEvent) { 
             let evt_touch = evt.touches[0];
             element = document.elementFromPoint(evt_touch.clientX, evt_touch.clientY) as HTMLElement;
-        } else if (!(evt instanceof TouchEvent)) {
-            element = document.elementFromPoint(evt.clientX, evt.clientY) as HTMLElement;
+        } else {
+            const evt_ = evt as MouseEvent
+            element = document.elementFromPoint(evt_.clientX, evt_.clientY) as HTMLElement;
         }
         if (element == null) return null;
 
