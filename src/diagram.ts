@@ -185,6 +185,7 @@ export class Diagram {
 
     /**
      * Copy the diagram
+     * @return { Diagram }
      */
     public copy() : Diagram {
         // do deepcopy with JSON
