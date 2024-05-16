@@ -1032,7 +1032,7 @@ class DragAndDropHandler {
     add_container_svg(name : string, diagram: Diagram) {
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         f_draw_to_svg(svg, diagram.position(V2(0,0)), 
-            false, calculate_text_scale(this.dnd_svg), dnd_type.container);
+            false, calculate_text_scale(this.diagram_svg), dnd_type.container);
         let position = diagram.origin;
         svg.setAttribute("overflow", "visible");
         svg.setAttribute("x", position.x.toString());
@@ -1046,7 +1046,7 @@ class DragAndDropHandler {
 
     add_draggable_svg(name : string, diagram : Diagram) {
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        f_draw_to_svg(svg, diagram.position(V2(0,0)), true, calculate_text_scale(this.dnd_svg), dnd_type.draggable);
+        f_draw_to_svg(svg, diagram.position(V2(0,0)), true, calculate_text_scale(this.diagram_svg), dnd_type.draggable);
         let position = diagram.origin;
         svg.setAttribute("overflow", "visible");
         svg.setAttribute("x", position.x.toString());
