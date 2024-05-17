@@ -1,7 +1,7 @@
 import { Diagram, diagram_combine } from '../diagram.js';
 import { rectangle_corner } from '../shapes.js';
 import { V2, Vector2 } from '../vector.js';
-import { transpose } from '../utils.js';
+import { transpose, expand_directional_value } from '../utils.js';
 import { TAG } from '../tag_names.js';
 
 enum TableOrientation {
@@ -20,16 +20,17 @@ export type cell_style = { index : [number,number], fill? : string, stroke? : st
  * @param min_colsize minimum size of each column
  * @returns a diagram of the table with the diagrams inside
  */
-export function table(diagrams : Diagram[][], padding : number = 0, orientation : TableOrientation = TableOrientation.ROWS, 
+export function table(diagrams : Diagram[][], padding : number | number[] = 0, orientation : TableOrientation = TableOrientation.ROWS, 
     min_rowsize : number = 0, min_colsize : number = 0) : Diagram {
     // if the orientation is columns, then we just transpose the rows and columns
     let diagram_rows = orientation == TableOrientation.ROWS ? diagrams : transpose(diagrams);
 
+    const pad = expand_directional_value(padding);
     function f_size(d? : Diagram) : [number, number] {
         if (d == undefined) return [min_colsize, min_rowsize];
         let [bottomleft, topright] = d.bounding_box();
-        let width  = topright.x - bottomleft.x + 2*padding;
-        let height = topright.y - bottomleft.y + 2*padding;
+        let width  = topright.x - bottomleft.x + pad[1] + pad[3];
+        let height = topright.y - bottomleft.y + pad[0] + pad[2];
         return [width, height];
     }
 

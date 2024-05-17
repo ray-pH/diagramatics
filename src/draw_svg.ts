@@ -1,6 +1,6 @@
 import { Diagram, DiagramType, DiagramStyle, TextData, DEFAULT_FONTSIZE } from "./diagram.js";
 import { tab_color, get_color } from "./color_palette.js";
-import { to_degree } from "./utils.js";
+import { to_degree, expand_directional_value } from "./utils.js";
 import { str_to_mathematical_italic, str_to_normal_from_mathematical_italic } from './unicode_utils.js'
 import { TAG } from "./tag_names.js";
 
@@ -353,6 +353,8 @@ function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
 
             if (tspanstyle["tag"]) tspan.setAttribute("_dg_tag", tspanstyle["tag"] as string);
 
+            tspan.style.whiteSpace = "pre";
+            // if we do style.whiteSpace in `textsvg`, it doesnt work in Apple's webkit
             tspan.setAttribute("dx", tspanstyle.dx as string);
             tspan.setAttribute("dy", tspanstyle.dy as string);
             tspan.setAttribute("font-style", tspanstyle["font-style"] as string);
@@ -601,19 +603,6 @@ export function draw_to_svg_element(outer_svgelement : SVGSVGElement, diagram : 
         svgelement.insertBefore(rect, svgelement.firstChild);
     }
 }
-
-/* @return [top, right, bottom, left] */
-function expand_directional_value(padding : number | number[]) : [number,number,number,number] {
-    let p = padding;
-    if (typeof p === 'number') return [p,p,p,p];
-    if (!Array.isArray(p)) return [0,0,0,0];
-    if (p.length === 1) return [p[0], p[0], p[0], p[0]];
-    if (p.length === 2) return [p[0], p[1], p[0], p[1]];
-    if (p.length === 3) return [p[0], p[1], p[2], p[1]];
-    if (p.length >= 4)  return [p[0], p[1], p[2], p[3]];
-    return [0,0,0,0];
-}
-
 
 function is_texstr(s : string) : boolean {
     return s.startsWith("$") && s.endsWith("$");
