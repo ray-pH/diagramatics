@@ -353,6 +353,8 @@ function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
 
             if (tspanstyle["tag"]) tspan.setAttribute("_dg_tag", tspanstyle["tag"] as string);
 
+            tspan.style.whiteSpace = "pre";
+            // if we do style.whiteSpace in `textsvg`, it doesnt work in Apple's webkit
             tspan.setAttribute("dx", tspanstyle.dx as string);
             tspan.setAttribute("dy", tspanstyle.dy as string);
             tspan.setAttribute("font-style", tspanstyle["font-style"] as string);
