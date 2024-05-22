@@ -1,4 +1,4 @@
-import { Diagram, DiagramType } from './diagram.js';
+import { Diagram, DiagramType, diagram_combine, empty } from './diagram.js';
 import { str_to_mathematical_italic } from './unicode_utils.js'
 import { Vector2, V2 } from './vector.js';
 import { get_color, tab_color } from './color_palette.js';
@@ -43,9 +43,9 @@ export class Interactive {
     public custom_svg : SVGSVGElement | undefined = undefined;
     public button_svg : SVGSVGElement | undefined = undefined;
 
-    private locatorHandler? : LocatorHandler = undefined;
-    private dragAndDropHandler? : DragAndDropHandler = undefined;
-    private buttonHandler? : ButtonHandler = undefined;
+    public locatorHandler? : LocatorHandler = undefined;
+    public dragAndDropHandler? : DragAndDropHandler = undefined;
+    public buttonHandler? : ButtonHandler = undefined;
     // no support for canvas yet
 
     public draw_function : (inp_object : inpVariables_t, setter_object? : inpSetter_t) => any 
@@ -879,6 +879,7 @@ type DragAndDropContainerData = {
     diagram : Diagram,
     content : string[],
     capacity : number,
+    config : dnd_container_positioning,
     position_function : (index : number, sizelist : [number,number][]) => Vector2
 }
 type DragAndDropDraggableData = {
@@ -929,7 +930,13 @@ class DragAndDropHandler {
         let position_function = capacity == 1?
             (_index : number) => diagram.origin :
             DragAndDropHandler.generate_position_function(diagram, position_config, capacity);
-        this.containers[name] = {name, diagram, position : diagram.origin, content : [], capacity, position_function};
+        this.containers[name] = {
+            name, diagram, 
+            position : diagram.origin, 
+            content : [], 
+            config : position_config,
+            capacity, position_function
+        };
     }
 
     static generate_position_function(diagram : Diagram, config : dnd_container_positioning, capacity : number) 
@@ -996,6 +1003,15 @@ class DragAndDropHandler {
         }
     }
     
+    get_container_content_size(container_name : string) : [number,number] {
+        const container = this.containers[container_name];
+        if (container == undefined) return [NaN, NaN];
+        const pad = (container.config as any).padding ?? 0;
+        const content_diagrams = container.content.map(name => this.draggables[name]?.diagram ?? empty());
+        const [width, height] = size(diagram_combine(...content_diagrams));
+        return [width + 2*pad, height + 2*pad];
+    }
+    
     private replace_draggable_svg(name : string, diagram : Diagram) {
         let draggable = this.draggables[name];
         if (draggable == undefined) return;
@@ -1019,7 +1035,7 @@ class DragAndDropHandler {
         }
 
         const diagram_size = size(diagram);
-        this.draggables[name] = {name, diagram, diagram_size, position : diagram.origin, container : container_name};
+        this.draggables[name] = {name, diagram : diagram.mut() , diagram_size, position : diagram.origin, container : container_name};
         this.containers[container_name].content.push(name);
     }
 
@@ -1037,7 +1053,7 @@ class DragAndDropHandler {
 
         const diagram_size = size(diagram);
         this.containers[initial_container_name].content.push(name);
-        this.draggables[name] = {name, diagram, diagram_size, position : diagram.origin, container : initial_container_name};
+        this.draggables[name] = {name, diagram : diagram.mut() , diagram_size, position : diagram.origin, container : initial_container_name};
     }
 
     registerCallback(name : string, callback : (pos : Vector2) => any){
@@ -1134,6 +1150,7 @@ class DragAndDropHandler {
         for (let i = 0; i < container.content.length; i++) {
             let draggable = this.draggables[container.content[i]];
             let pos = container.position_function(i, sizelist);
+            draggable.diagram = draggable.diagram.position(pos);
             draggable.position = pos;
             draggable.svgelement?.setAttribute("x", pos.x.toString());
             draggable.svgelement?.setAttribute("y", (-pos.y).toString());
