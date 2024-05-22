@@ -4,6 +4,7 @@ import { Vector2, V2 } from './vector.js';
 import { get_color, tab_color } from './color_palette.js';
 import { f_draw_to_svg, calculate_text_scale } from './draw_svg.js';
 import { rectangle_corner } from './shapes.js';
+import { size } from './shapes/shapes_geometry.js';
 
 function format_number(val : number, prec : number) {
     let fixed = val.toFixed(prec);
@@ -878,13 +879,14 @@ type DragAndDropContainerData = {
     diagram : Diagram,
     content : string[],
     capacity : number,
-    position_function : (index : number) => Vector2
+    position_function : (index : number, sizelist : [number,number][]) => Vector2
 }
 type DragAndDropDraggableData = {
     name : string,
     position : Vector2,
     svgelement? : SVGElement,
     diagram : Diagram,
+    diagram_size : [number, number],
     container : string,
 }
 type DragAndDropData = {container:string, content:string[]}[]
@@ -897,8 +899,10 @@ enum dnd_type {
 
 //TODO: add more
 type dnd_container_positioning =
-    {type:"horizontal"} |
-    {type:"vertical"} |
+    {type:"horizontal-uniform"} |
+    {type:"vertical-uniform"} |
+    {type:"horizontal", padding:number} |
+    {type:"vertical", padding:number} |
     {type:"grid", value:[number, number]}
 
 class DragAndDropHandler {
@@ -915,7 +919,7 @@ class DragAndDropHandler {
 
     public add_container(name : string, diagram : Diagram
         , capacity : number = 1
-        , position_config : dnd_container_positioning = {type:"horizontal"}
+        , position_config : dnd_container_positioning = {type:"horizontal-uniform"}
     ) {
         if (this.containers[name] != undefined) {
             this.replace_container_svg(name, diagram);
@@ -929,24 +933,24 @@ class DragAndDropHandler {
     }
 
     static generate_position_function(diagram : Diagram, config : dnd_container_positioning, capacity : number) 
-    : (index : number) => Vector2 {
+    : (index : number, sizelist : [number,number][]) => Vector2 {
         let bbox = diagram.bounding_box();
         let p_center = diagram.origin;
         switch (config.type){
-            case "horizontal": {
+            case "horizontal-uniform": {
                 let width = bbox[1].x - bbox[0].x;
                 let dx = width / capacity;
                 let x0 = bbox[0].x + dx / 2;
                 let y  = p_center.y;
-                return (index : number) => V2(x0 + dx * index, y);
+                return (index : number, _) => V2(x0 + dx * index, y);
             }
-            case "vertical": {
+            case "vertical-uniform": {
                 //NOTE: top to bottom
                 let height = bbox[1].y - bbox[0].y;
                 let dy = height / capacity;
                 let x  = p_center.x;
                 let y0 = bbox[1].y - dy / 2;
-                return (index : number) => V2(x, y0 - dy * index);
+                return (index : number, _) => V2(x, y0 - dy * index);
             }
             case "grid" : {
                 let [nx,ny] = config.value;
@@ -956,9 +960,36 @@ class DragAndDropHandler {
                 let dy = height / ny;
                 let x0 = bbox[0].x + dx / 2;
                 let y0 = bbox[1].y - dy / 2;
-                return (index : number) => {
+                return (index : number, _) => {
                     let x = x0 + dx * (index % nx);
                     let y = y0 - dy * Math.floor(index / nx);
+                    return V2(x, y);
+                }
+            }
+            // TODO: figure out a way to not do this in O(N^2)
+            case "vertical" : {
+                return (index : number, sizelist : [number,number][]) => {
+                    const pad = config.padding ?? 0;
+                    const x  = p_center.x;
+                    let y = bbox[1].y - pad;
+                    const n = Math.min(index, sizelist.length-1)
+                    for (let i = 0; i < n; i++){
+                        y -= sizelist[i][1] + pad;
+                    }
+                    y -= sizelist[n][1] / 2;
+                    return V2(x, y);
+                }
+            }
+            case "horizontal" : {
+                return (index : number, sizelist : [number,number][]) => {
+                    const pad = config.padding ?? 0;
+                    const y  = p_center.y;
+                    let x = bbox[0].x + pad;
+                    const n = Math.min(index, sizelist.length-1)
+                    for (let i = 0; i < n; i++){
+                        x += sizelist[i][0] + pad;
+                    }
+                    x += sizelist[n][0] / 2;
                     return V2(x, y);
                 }
             }
@@ -987,7 +1018,8 @@ class DragAndDropHandler {
             return;
         }
 
-        this.draggables[name] = {name, diagram, position : diagram.origin, container : container_name};
+        const diagram_size = size(diagram);
+        this.draggables[name] = {name, diagram, diagram_size, position : diagram.origin, container : container_name};
         this.containers[container_name].content.push(name);
     }
 
@@ -1003,8 +1035,9 @@ class DragAndDropHandler {
             container_diagram = this.diagram_container_from_draggable(diagram);
         this.add_container(initial_container_name, container_diagram);
 
+        const diagram_size = size(diagram);
         this.containers[initial_container_name].content.push(name);
-        this.draggables[name] = {name, diagram, position : diagram.origin, container : initial_container_name};
+        this.draggables[name] = {name, diagram, diagram_size, position : diagram.origin, container : initial_container_name};
     }
 
     registerCallback(name : string, callback : (pos : Vector2) => any){
@@ -1097,9 +1130,10 @@ class DragAndDropHandler {
         let container = this.containers[container_name];
         if (container == undefined) return;
 
+        const sizelist = container.content.map((name) => this.draggables[name]?.diagram_size ?? [0,0]);
         for (let i = 0; i < container.content.length; i++) {
             let draggable = this.draggables[container.content[i]];
-            let pos = container.position_function(i);
+            let pos = container.position_function(i, sizelist);
             draggable.position = pos;
             draggable.svgelement?.setAttribute("x", pos.x.toString());
             draggable.svgelement?.setAttribute("y", (-pos.y).toString());
