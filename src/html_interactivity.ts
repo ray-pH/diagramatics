@@ -917,7 +917,10 @@ class DragAndDropHandler {
         , capacity : number = 1
         , position_config : dnd_container_positioning = {type:"horizontal"}
     ) {
-        if (this.containers[name] != undefined) throw Error(`container with name ${name} already exists`);
+        if (this.containers[name] != undefined) {
+            this.replace_container_svg(name, diagram);
+            return;
+        }
 
         let position_function = capacity == 1?
             (_index : number) => diagram.origin :
@@ -961,16 +964,38 @@ class DragAndDropHandler {
             }
         }
     }
+    
+    private replace_draggable_svg(name : string, diagram : Diagram) {
+        let draggable = this.draggables[name];
+        if (draggable == undefined) return;
+        draggable.svgelement?.remove();
+        this.add_draggable_svg(name, diagram);
+        this.reposition_container_content(draggable.container)
+    }
+    private replace_container_svg(name : string, diagram : Diagram) {
+        let container = this.containers[name];
+        if (container == undefined) return;
+        container.svgelement?.remove();
+        this.add_container_svg(name, diagram);
+        this.reposition_container_content(name);
+    }
 
     public add_draggable_to_container(name : string, diagram : Diagram, container_name : string) {
-        if (this.draggables[name] != undefined) throw Error(`draggable with name ${name} already exists`);
+        if (this.draggables[name] != undefined) {
+            this.replace_draggable_svg(name, diagram);
+            this.move_draggable_to_container(name, container_name);
+            return;
+        }
 
         this.draggables[name] = {name, diagram, position : diagram.origin, container : container_name};
         this.containers[container_name].content.push(name);
     }
 
     public add_draggable_with_container(name : string, diagram : Diagram, container_diagram? : Diagram) {
-        if (this.draggables[name] != undefined) throw Error(`draggable with name ${name} already exists`);
+        if (this.draggables[name] != undefined) {
+            this.replace_draggable_svg(name, diagram);
+            return;
+        }
         // add a container as initial container for the draggable
         let initial_container_name = `_container0_${name}`;
 
