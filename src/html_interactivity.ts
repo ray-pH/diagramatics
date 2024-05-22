@@ -3,8 +3,9 @@ import { str_to_mathematical_italic } from './unicode_utils.js'
 import { Vector2, V2 } from './vector.js';
 import { get_color, tab_color } from './color_palette.js';
 import { f_draw_to_svg, calculate_text_scale } from './draw_svg.js';
-import { rectangle_corner } from './shapes.js';
+import { rectangle, rectangle_corner } from './shapes.js';
 import { size } from './shapes/shapes_geometry.js';
+import { HorizontalAlignment, VerticalAlignment, distribute_variable_row } from './alignment.js';
 
 function format_number(val : number, prec : number) {
     let fixed = val.toFixed(prec);
@@ -471,7 +472,9 @@ export class Interactive {
      * @param capacity capacity of the container (default is 1)
      * @param config configuration of the container positioning
      * the configuration is an object with the following format:
-     * `{type:"horizontal"}` or `{type:"vertical"}` or `{type:"grid", value:[number, number]}`
+     * `{type:"horizontal-uniform"}`, `{type:"vertical-uniform"}`, `{type:"grid", value:[number, number]}`
+     * `{type:"horizontal", padding:number}`, `{type:"vertical", padding:number}`
+     * `{type:"flex-row", padding:number, vertical_alignment:VerticalAlignment, horizontal_alignment:HorizontalAlignment}`
     */
     public dnd_container(name : string, diagram : Diagram, capacity : number = 1, config? : dnd_container_positioning) {
         this.init_drag_and_drop();
@@ -904,6 +907,7 @@ type dnd_container_positioning =
     {type:"vertical-uniform"} |
     {type:"horizontal", padding:number} |
     {type:"vertical", padding:number} |
+    {type:"flex-row", padding:number, vertical_alignment?:VerticalAlignment, horizontal_alignment?:HorizontalAlignment} |
     {type:"grid", value:[number, number]}
 
 class DragAndDropHandler {
@@ -988,8 +992,8 @@ class DragAndDropHandler {
                 }
             }
             case "horizontal" : {
+                const pad = config.padding ?? 0;
                 return (index : number, sizelist : [number,number][]) => {
-                    const pad = config.padding ?? 0;
                     const y  = p_center.y;
                     let x = bbox[0].x + pad;
                     const n = Math.min(index, sizelist.length-1)
@@ -999,6 +1003,37 @@ class DragAndDropHandler {
                     x += sizelist[n][0] / 2;
                     return V2(x, y);
                 }
+            }
+            case "flex-row" : {
+                const pad = config.padding ?? 0;
+                const container_width = bbox[1].x - bbox[0].x - 2*pad;
+                return (index : number, sizelist : [number,number][]) => {
+                    const size_rects = sizelist.map(([w,h]) => rectangle(w,h));
+                    let distributed = distribute_variable_row(
+                        size_rects, container_width, pad, pad,
+                        config.vertical_alignment, config.horizontal_alignment
+                    ).mut()
+                    switch (config.horizontal_alignment){
+                        case 'center' :{
+                            distributed = distributed
+                                .move_origin('top-center').position(V2(p_center.x, bbox[1].y-pad));
+                        } break;
+                        case 'right' : {
+                            distributed = distributed
+                                .move_origin('top-right').position(V2(bbox[1].x-pad, bbox[1].y-pad));
+                        } break;
+                        case 'center':
+                        default: {
+                            distributed = distributed
+                                .move_origin('top-left').position(V2(bbox[0].x+pad, bbox[1].y-pad));
+                        }
+                    }
+                    const pos = distributed.children.map(d => d.origin);
+                    return pos[index] ?? p_center;
+                }
+            }
+            default : {
+                return (_1,_2) => p_center;
             }
         }
     }
