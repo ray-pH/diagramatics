@@ -2,8 +2,8 @@ import { Diagram, diagram_combine, empty } from './diagram.js';
 import { V2 } from './vector.js';
 import { size } from './shapes/shapes_geometry.js';
 
-type VerticalAlignment   = 'top'  | 'center' | 'bottom';
-type HorizontalAlignment = 'left' | 'center' | 'right';
+export type VerticalAlignment   = 'top'  | 'center' | 'bottom';
+export type HorizontalAlignment = 'left' | 'center' | 'right';
 
 /**
  * Align diagrams vertically
