@@ -1059,6 +1059,8 @@ class DragAndDropHandler {
         if (container == undefined) return;
         container.svgelement?.remove();
         this.add_container_svg(name, diagram);
+        container.position_function = 
+          DragAndDropHandler.generate_position_function(diagram, container.config, container.capacity);
         this.reposition_container_content(name);
     }
 
