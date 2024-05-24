@@ -44,9 +44,9 @@ export class Interactive {
     public custom_svg : SVGSVGElement | undefined = undefined;
     public button_svg : SVGSVGElement | undefined = undefined;
 
-    public locatorHandler? : LocatorHandler = undefined;
-    public dragAndDropHandler? : DragAndDropHandler = undefined;
-    public buttonHandler? : ButtonHandler = undefined;
+    private locatorHandler? : LocatorHandler = undefined;
+    private dragAndDropHandler? : DragAndDropHandler = undefined;
+    private buttonHandler? : ButtonHandler = undefined;
     // no support for canvas yet
 
     public draw_function : (inp_object : inpVariables_t, setter_object? : inpSetter_t) => any 
@@ -558,6 +558,14 @@ export class Interactive {
      */
     public set_dnd_data(data : DragAndDropData) : void {
         this.dragAndDropHandler?.setData(data);
+    }
+    
+    /**
+    * Get the content size of a container
+    */
+    public  get_dnd_container_content_size(container_name : string) : [number,number] {
+       if (!this.dragAndDropHandler) return [NaN,NaN];
+       return this.dragAndDropHandler.get_container_content_size(container_name);
     }
 
     /**
