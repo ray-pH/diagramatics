@@ -939,8 +939,10 @@ class DragAndDropHandler {
     draggedElementGhost : SVGElement | null = null;
     dropped_outside_callback : ((name : string) => any) | null = null;
     sort_content : boolean = false;
+    dom_to_id_map : WeakMap<HTMLElement|SVGElement, string>;
 
     constructor(public dnd_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
+        this.dom_to_id_map = new WeakMap();
     }
 
     public add_container(name : string, diagram : Diagram
@@ -1183,10 +1185,10 @@ class DragAndDropHandler {
         svg.setAttribute("x", position.x.toString());
         svg.setAttribute("y", (-position.y).toString());
         svg.setAttribute("class", dnd_type.container);
-        svg.setAttribute("id", name);
         this.dnd_svg.prepend(svg);
 
         this.containers[name].svgelement = svg;
+        this.dom_to_id_map.set(svg, name);
     }
 
     add_draggable_svg(name : string, diagram : Diagram) {
@@ -1197,7 +1199,6 @@ class DragAndDropHandler {
         svg.setAttribute("x", position.x.toString());
         svg.setAttribute("y", (-position.y).toString());
         svg.setAttribute("class", dnd_type.draggable);
-        svg.setAttribute("id", name);
         svg.setAttribute("draggable", "true");
 
         svg.onmousedown = (evt) => {
@@ -1211,6 +1212,7 @@ class DragAndDropHandler {
 
         this.dnd_svg.append(svg);
         this.draggables[name].svgelement = svg;
+        this.dom_to_id_map.set(svg, name);
     }
 
     reposition_container_content(container_name : string){
@@ -1310,12 +1312,12 @@ class DragAndDropHandler {
 
         if (dg_tag == dnd_type.container) {
             let parent = element.parentElement; if (parent == null) return null;
-            let name = parent.getAttribute("id"); if (name == null) return null;
+            let name = this.dom_to_id_map.get(parent); if (name == null) return null;
             return {name, type : dnd_type.container};
         }
         if (dg_tag == dnd_type.draggable) {
             let parent = element.parentElement; if (parent == null) return null;
-            let name = parent.getAttribute("id"); if (name == null) return null;
+            let name = this.dom_to_id_map.get(parent);  if (name == null) return null;
             return {name, type : dnd_type.draggable};
         }
         return null;
