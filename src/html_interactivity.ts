@@ -5,7 +5,8 @@ import { get_color, tab_color } from './color_palette.js';
 import { f_draw_to_svg, calculate_text_scale } from './draw_svg.js';
 import { rectangle, rectangle_corner } from './shapes.js';
 import { size } from './shapes/shapes_geometry.js';
-import { HorizontalAlignment, VerticalAlignment, distribute_variable_row } from './alignment.js';
+import { HorizontalAlignment, VerticalAlignment, distribute_horizontal_and_align, distribute_variable_row, distribute_vertical_and_align } from './alignment.js';
+import { range } from './utils.js';
 
 function format_number(val : number, prec : number) {
     let fixed = val.toFixed(prec);
@@ -903,7 +904,6 @@ type DragAndDropContainerData = {
     content : string[],
     capacity : number,
     config : dnd_container_positioning,
-    position_function : (index : number, sizelist : [number,number][]) => Vector2
 }
 type DragAndDropDraggableData = {
     name : string,
@@ -954,20 +954,17 @@ class DragAndDropHandler {
             return;
         }
 
-        let position_function = capacity == 1?
-            (_index : number) => diagram.origin :
-            DragAndDropHandler.generate_position_function(diagram, position_config, capacity);
         this.containers[name] = {
             name, diagram, 
             position : diagram.origin, 
             content : [], 
             config : position_config,
-            capacity, position_function
+            capacity
         };
     }
 
-    static generate_position_function(diagram : Diagram, config : dnd_container_positioning, capacity : number) 
-    : (index : number, sizelist : [number,number][]) => Vector2 {
+    generate_position_map(diagram : Diagram, config : dnd_container_positioning, capacity : number, content : string[]) 
+    : Vector2[] {
         let bbox = diagram.bounding_box();
         let p_center = diagram.origin;
         switch (config.type){
@@ -976,7 +973,7 @@ class DragAndDropHandler {
                 let dx = width / capacity;
                 let x0 = bbox[0].x + dx / 2;
                 let y  = p_center.y;
-                return (index : number, _) => V2(x0 + dx * index, y);
+                return range(0, capacity).map(i => V2(x0 + dx*i, y));
             }
             case "vertical-uniform": {
                 //NOTE: top to bottom
@@ -984,7 +981,7 @@ class DragAndDropHandler {
                 let dy = height / capacity;
                 let x  = p_center.x;
                 let y0 = bbox[1].y - dy / 2;
-                return (index : number, _) => V2(x, y0 - dy * index);
+                return range(0, capacity).map(i => V2(x, y0 - dy*i));
             }
             case "grid" : {
                 let [nx,ny] = config.value;
@@ -994,69 +991,56 @@ class DragAndDropHandler {
                 let dy = height / ny;
                 let x0 = bbox[0].x + dx / 2;
                 let y0 = bbox[1].y - dy / 2;
-                return (index : number, _) => {
-                    let x = x0 + dx * (index % nx);
-                    let y = y0 - dy * Math.floor(index / nx);
+                return range(0, capacity).map(i => {
+                    let x = x0 + dx * (i % nx);
+                    let y = y0 - dy * Math.floor(i / nx);
                     return V2(x, y);
-                }
+                });
             }
-            // TODO: figure out a way to not do this in O(N^2)
             case "vertical" : {
-                return (index : number, sizelist : [number,number][]) => {
-                    const pad = config.padding ?? 0;
-                    const x  = p_center.x;
-                    let y = bbox[1].y - pad;
-                    const n = Math.min(index, sizelist.length-1)
-                    for (let i = 0; i < n; i++){
-                        y -= sizelist[i][1] + pad;
-                    }
-                    y -= sizelist[n][1] / 2;
-                    return V2(x, y);
-                }
+                const sizelist = content.map((name) => this.draggables[name]?.diagram_size ?? [0,0]);
+                const size_rects = sizelist.map(([w,h]) => rectangle(w,h).mut());
+                const distributed = distribute_vertical_and_align(size_rects, config.padding).mut()
+                    .move_origin('top-center').position(diagram.get_anchor('top-center'))
+                    .translate(V2(0,-config.padding));
+                return distributed.children.map(d => d.origin);
             }
             case "horizontal" : {
-                const pad = config.padding ?? 0;
-                return (index : number, sizelist : [number,number][]) => {
-                    const y  = p_center.y;
-                    let x = bbox[0].x + pad;
-                    const n = Math.min(index, sizelist.length-1)
-                    for (let i = 0; i < n; i++){
-                        x += sizelist[i][0] + pad;
-                    }
-                    x += sizelist[n][0] / 2;
-                    return V2(x, y);
-                }
+                const sizelist = content.map((name) => this.draggables[name]?.diagram_size ?? [0,0]);
+                const size_rects = sizelist.map(([w,h]) => rectangle(w,h).mut());
+                const distributed = distribute_horizontal_and_align(size_rects, config.padding).mut()
+                    .move_origin('center-left').position(diagram.get_anchor('center-left'))
+                    .translate(V2(config.padding,0));
+                return distributed.children.map(d => d.origin);
             }
             case "flex-row" : {
                 const pad = config.padding ?? 0;
                 const container_width = bbox[1].x - bbox[0].x - 2*pad;
-                return (index : number, sizelist : [number,number][]) => {
-                    const size_rects = sizelist.map(([w,h]) => rectangle(w,h));
-                    let distributed = distribute_variable_row(
-                        size_rects, container_width, pad, pad,
-                        config.vertical_alignment, config.horizontal_alignment
-                    ).mut()
-                    switch (config.horizontal_alignment){
-                        case 'center' :{
-                            distributed = distributed
-                                .move_origin('top-center').position(V2(p_center.x, bbox[1].y-pad));
-                        } break;
-                        case 'right' : {
-                            distributed = distributed
-                                .move_origin('top-right').position(V2(bbox[1].x-pad, bbox[1].y-pad));
-                        } break;
-                        case 'center':
-                        default: {
-                            distributed = distributed
-                                .move_origin('top-left').position(V2(bbox[0].x+pad, bbox[1].y-pad));
-                        }
+                const sizelist = content.map((name) => this.draggables[name]?.diagram_size ?? [0,0]);
+                const size_rects = sizelist.map(([w,h]) => rectangle(w,h).mut());
+                let distributed = distribute_variable_row(
+                    size_rects, container_width, pad, pad,
+                    config.vertical_alignment, config.horizontal_alignment
+                ).mut()
+                switch (config.horizontal_alignment){
+                    case 'center' :{
+                        distributed = distributed
+                            .move_origin('top-center').position(V2(p_center.x, bbox[1].y-pad));
+                    } break;
+                    case 'right' : {
+                        distributed = distributed
+                            .move_origin('top-right').position(V2(bbox[1].x-pad, bbox[1].y-pad));
+                    } break;
+                    case 'center':
+                    default: {
+                        distributed = distributed
+                            .move_origin('top-left').position(V2(bbox[0].x+pad, bbox[1].y-pad));
                     }
-                    const pos = distributed.children.map(d => d.origin);
-                    return pos[index] ?? p_center;
                 }
+                return distributed.children.map(d => d.origin);
             }
             default : {
-                return (_1,_2) => p_center;
+                return [];
             }
         }
     }
@@ -1082,8 +1066,6 @@ class DragAndDropHandler {
         if (container == undefined) return;
         container.svgelement?.remove();
         this.add_container_svg(name, diagram);
-        container.position_function = 
-          DragAndDropHandler.generate_position_function(diagram, container.config, container.capacity);
         this.reposition_container_content(name);
     }
 
@@ -1220,11 +1202,11 @@ class DragAndDropHandler {
         if (container == undefined) return;
         
         if (this.sort_content) container.content.sort()
+        const position_map = this.generate_position_map(container.diagram, container.config, container.capacity, container.content);
 
-        const sizelist = container.content.map((name) => this.draggables[name]?.diagram_size ?? [0,0]);
         for (let i = 0; i < container.content.length; i++) {
             let draggable = this.draggables[container.content[i]];
-            let pos = container.position_function(i, sizelist);
+            let pos = position_map[i] ?? container.diagram.origin;
             draggable.diagram = draggable.diagram.position(pos);
             draggable.position = pos;
             draggable.svgelement?.setAttribute("x", pos.x.toString());
