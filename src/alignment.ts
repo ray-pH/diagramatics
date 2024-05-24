@@ -232,7 +232,7 @@ export function distribute_variable_row(diagrams: Diagram[], container_width : n
         if (current_row_w + horizontal_space + w > container_width) add_diagrams_to_rows(current_row);
 
         current_row.push(d);
-        current_row_w += w;
+        current_row_w += w + horizontal_space;
     }
 
     if (current_row.length > 0) add_diagrams_to_rows(current_row);
