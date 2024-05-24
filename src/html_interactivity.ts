@@ -567,6 +567,18 @@ export class Interactive {
        if (!this.dragAndDropHandler) return [NaN,NaN];
        return this.dragAndDropHandler.get_container_content_size(container_name);
     }
+    
+    /**
+     * Set whether the content of the container should be sorted or not
+     */
+    public set_dnd_content_sort(sort_content : boolean) : void {
+        if (!this.dragAndDropHandler) return;
+        this.dragAndDropHandler.sort_content = sort_content;
+    }
+    
+    public remove_dnd_draggable(name : string) {
+        this.dragAndDropHandler?.remove_draggable(name);
+    }
 
     /**
      * Create a custom interactive object
@@ -926,6 +938,7 @@ class DragAndDropHandler {
     draggedElementName : string | null = null;
     draggedElementGhost : SVGElement | null = null;
     dropped_outside_callback : ((name : string) => any) | null = null;
+    sort_content : boolean = false;
 
     constructor(public dnd_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
     }
@@ -1100,6 +1113,15 @@ class DragAndDropHandler {
         this.containers[initial_container_name].content.push(name);
         this.draggables[name] = {name, diagram : diagram.mut() , diagram_size, position : diagram.origin, container : initial_container_name};
     }
+    
+    public remove_draggable(name : string) : void {
+        for (let container_name in this.containers) {
+            const container = this.containers[container_name];
+            container.content = container.content.filter(e => e != name);
+        }
+        this.draggables[name].svgelement?.remove();
+        delete this.draggables[name];
+    }
 
     registerCallback(name : string, callback : (pos : Vector2) => any){
         this.callbacks[name] = callback;
@@ -1115,10 +1137,14 @@ class DragAndDropHandler {
         this.dnd_svg.setAttribute("preserveAspectRatio", this.diagram_svg.getAttribute("preserveAspectRatio") as string);
     }
     drawSvg(){
-        for (let name in this.containers)
+        for (let name in this.containers){
+            if (this.containers[name].svgelement) continue;
             this.add_container_svg(name, this.containers[name].diagram);
-        for (let name in this.draggables)
+        }
+        for (let name in this.draggables){
+            if (this.draggables[name].svgelement) continue;
             this.add_draggable_svg(name, this.draggables[name].diagram);
+        }
         for (let name in this.containers)
             this.reposition_container_content(name);
     }
@@ -1190,6 +1216,8 @@ class DragAndDropHandler {
     reposition_container_content(container_name : string){
         let container = this.containers[container_name];
         if (container == undefined) return;
+        
+        if (this.sort_content) container.content.sort()
 
         const sizelist = container.content.map((name) => this.draggables[name]?.diagram_size ?? [0,0]);
         for (let i = 0; i < container.content.length; i++) {
