@@ -1267,6 +1267,9 @@ class DragAndDropHandler {
         }
         if (element == null) return null;
 
+        if (element.localName == "tspan") element = element.parentElement;
+        if (element == null) return null;
+        
         let dg_tag = element.getAttribute("_dg_tag"); if (dg_tag == null) return null;
 
         if (dg_tag == dnd_type.container) {
