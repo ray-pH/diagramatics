@@ -179,6 +179,7 @@ function draw_image(svgelement : SVGSVGElement, diagram : Diagram, embed_image :
     if (diagram.path == undefined) return;
     if (diagram.path.points.length != 4) return;
 
+    // it's calculated like this to be able to apply linear transformation
     // path: bottom-left, bottom-right, top-right, top-left
     // width  : 0-1
     // height : 1-2
