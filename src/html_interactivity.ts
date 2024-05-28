@@ -594,7 +594,7 @@ export class Interactive {
         let control_svg = this.get_svg_element(control_svg_name.custom);
 
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        f_draw_to_svg(svg, diagram, true, calculate_text_scale(diagram_svg));
+        f_draw_to_svg(svg, diagram, true, false, calculate_text_scale(diagram_svg));
         svg.setAttribute("overflow", "visible");
         svg.setAttribute("class", classlist.join(" "));
         svg.setAttribute("id",id);
@@ -853,7 +853,7 @@ class LocatorHandler {
 
     create_locator_diagram_svg(diagram : Diagram, blink : boolean) : SVGSVGElement {
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        f_draw_to_svg(svg, diagram.position(V2(0,0)), true, calculate_text_scale(this.diagram_svg));
+        f_draw_to_svg(svg, diagram.position(V2(0,0)), true, false, calculate_text_scale(this.diagram_svg));
         svg.style.cursor = "pointer";
         svg.setAttribute("overflow", "visible");
         if (blink) {
@@ -1161,7 +1161,7 @@ class DragAndDropHandler {
     add_container_svg(name : string, diagram: Diagram) {
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         f_draw_to_svg(svg, diagram.position(V2(0,0)), 
-            false, calculate_text_scale(this.diagram_svg), dnd_type.container);
+            false, false, calculate_text_scale(this.diagram_svg), dnd_type.container);
         let position = diagram.origin;
         svg.setAttribute("overflow", "visible");
         svg.setAttribute("x", position.x.toString());
@@ -1175,7 +1175,7 @@ class DragAndDropHandler {
 
     add_draggable_svg(name : string, diagram : Diagram) {
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        f_draw_to_svg(svg, diagram.position(V2(0,0)), true, calculate_text_scale(this.diagram_svg), dnd_type.draggable);
+        f_draw_to_svg(svg, diagram.position(V2(0,0)), true, false, calculate_text_scale(this.diagram_svg), dnd_type.draggable);
         let position = diagram.origin;
         svg.setAttribute("overflow", "visible");
         svg.setAttribute("x", position.x.toString());
@@ -1389,12 +1389,12 @@ class ButtonHandler {
 
     add_toggle(name : string, diagram_on : Diagram, diagram_off : Diagram, state : boolean, callback : (state : boolean, redraw? : boolean) => any) : setter_function_t {
         let svg_off = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        f_draw_to_svg(svg_off, diagram_off, true, calculate_text_scale(this.diagram_svg));
+        f_draw_to_svg(svg_off, diagram_off, true, false, calculate_text_scale(this.diagram_svg));
         svg_off.setAttribute("overflow", "visible");
         svg_off.style.cursor = "pointer";
 
         let svg_on = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        f_draw_to_svg(svg_on, diagram_on, true, calculate_text_scale(this.diagram_svg));
+        f_draw_to_svg(svg_on, diagram_on, true, false, calculate_text_scale(this.diagram_svg));
         svg_on.setAttribute("overflow", "visible");
         svg_on.style.cursor = "pointer";
 
@@ -1460,12 +1460,12 @@ class ButtonHandler {
     // TODO: handle touch input moving out of the button
     add_click(name : string, diagram : Diagram, diagram_pressed : Diagram, callback : () => any){
         let svg_normal = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        f_draw_to_svg(svg_normal, diagram, true, calculate_text_scale(this.diagram_svg));
+        f_draw_to_svg(svg_normal, diagram, true, false, calculate_text_scale(this.diagram_svg));
         svg_normal.setAttribute("overflow", "visible");
         svg_normal.style.cursor = "pointer";
 
         let svg_pressed = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        f_draw_to_svg(svg_pressed, diagram_pressed, true, calculate_text_scale(this.diagram_svg));
+        f_draw_to_svg(svg_pressed, diagram_pressed, true, false, calculate_text_scale(this.diagram_svg));
         svg_pressed.setAttribute("overflow", "visible");
         svg_pressed.style.cursor = "pointer";
 

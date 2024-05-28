@@ -142,7 +142,7 @@ function set_image_href_dataURL(img : SVGImageElement, src : string) : void{
         return;
     }
     
-    _IMAGE_DATAURL_CACHE_MAP.set(src, undefined);
+    // _IMAGE_DATAURL_CACHE_MAP.set(src, undefined);
     let canvas    = document.createElement("canvas");
     let ctx       = canvas.getContext('2d');
 
@@ -167,7 +167,11 @@ function set_image_href_dataURL(img : SVGImageElement, src : string) : void{
 
 }
 
-function draw_image(svgelement : SVGSVGElement, diagram : Diagram, svgtag? : string) : void {
+/**
+ * if `embed_image` is `true`, the image will be embedded as dataURL
+ * this allow the image to be downloaded as SVG with the image embedded
+ */
+function draw_image(svgelement : SVGSVGElement, diagram : Diagram, embed_image : boolean, svgtag? : string) : void {
     let image = document.createElementNS("http://www.w3.org/2000/svg", "image");
     image.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
     if (diagram.imgdata.src == undefined) return;
@@ -192,7 +196,11 @@ function draw_image(svgelement : SVGSVGElement, diagram : Diagram, svgtag? : str
     let xpos = diagram.path.points[3].x;
     let ypos = -diagram.path.points[3].y;
 
-    set_image_href_dataURL(image, diagram.imgdata.src);
+    if (embed_image) {
+        set_image_href_dataURL(image, diagram.imgdata.src);
+    } else {
+        image.setAttribute("href", diagram.imgdata.src);
+    }
     image.setAttribute("width", width.toString());
     image.setAttribute("height", height.toString());
     image.setAttribute("transform", `matrix(${a} ${b} ${c} ${d} ${xpos} ${ypos})`);
@@ -437,10 +445,12 @@ export function get_tagged_svg_element(tag : string, svgelement : SVGElement) : 
  * @param svgelement the svg element to draw to
  * @param diagram the diagram to draw
  * @param render_text whether to render text
+ * @param embed_image (optional) whether to embed images
+ * this allow the image to be downloaded as SVG with the image embedded
  * @param text_scaling_factor (optional) the scaling factor for text
  * @param svgtag (optional) the tag to add to the svg element
  */
-export function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, render_text : boolean = true, 
+export function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, render_text : boolean = true, embed_image : boolean = false,
     text_scaling_factor? : number, svgtag? : string) : void {
     
     if (diagram.type == DiagramType.Polygon) {
@@ -450,10 +460,10 @@ export function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, ren
     } else if (diagram.type == DiagramType.Text || diagram.type == DiagramType.MultilineText){
         // do nothing
     } else if (diagram.type == DiagramType.Image){
-        draw_image(svgelement, diagram, svgtag);
+        draw_image(svgelement, diagram, embed_image, svgtag);
     } else if (diagram.type == DiagramType.Diagram){
         for (let d of diagram.children) {
-            f_draw_to_svg(svgelement, d, false, undefined, svgtag);
+            f_draw_to_svg(svgelement, d, false, embed_image, undefined, svgtag);
         }
     } else {
         console.warn("Unreachable, unknown diagram type : " + diagram.type);
@@ -498,6 +508,7 @@ export interface draw_to_svg_options {
     set_html_attribute? : boolean,
     render_text? : boolean,
     clear_svg? : boolean,
+    embed_image? : boolean,
     background_color? : string,
     padding? : number | number[],
     text_scaling_reference_svg? : SVGSVGElement,
@@ -516,6 +527,7 @@ export interface draw_to_svg_options {
  *    set_html_attribute? : boolean (true),
  *    render_text? : boolean (true),
  *    clear_svg? : boolean (true),
+ *    embed_image? : boolean (false),
  *    background_color? : string (undefined),
  *    padding? : number | number[] (10),
  *    text_scaling_reference_svg? : SVGSVGElement (undefined),
@@ -528,6 +540,7 @@ export function draw_to_svg_element(outer_svgelement : SVGSVGElement, diagram : 
     const set_html_attribute = options.set_html_attribute ?? true;
     const render_text = options.render_text ?? true;
     const clear_svg = options.clear_svg ?? true;
+    const embed_image = options.embed_image ?? false;
     
     let svgelement : SVGSVGElement | undefined = undefined;
     // check if outer_svgelement has a child with meta=diagram_svg
@@ -562,7 +575,7 @@ export function draw_to_svg_element(outer_svgelement : SVGSVGElement, diagram : 
     // TODO : for performance, do smart clearing of svg, and not just clear everything
     if (clear_svg) svgelement.innerHTML = "";
 
-    f_draw_to_svg(svgelement, diagram, render_text, text_scaling_factor);
+    f_draw_to_svg(svgelement, diagram, render_text, embed_image, text_scaling_factor);
 
     if (set_html_attribute) {
         const pad_px = expand_directional_value(options.padding ?? 10);
