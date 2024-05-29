@@ -477,7 +477,7 @@ export class Interactive {
      * `{type:"horizontal", padding:number}`, `{type:"vertical", padding:number}`
      * `{type:"flex-row", padding:number, vertical_alignment:VerticalAlignment, horizontal_alignment:HorizontalAlignment}`
     */
-    public dnd_container(name : string, diagram : Diagram, capacity : number = 1, config? : dnd_container_positioning) {
+    public dnd_container(name : string, diagram : Diagram, capacity? : number, config? : dnd_container_positioning) {
         this.init_drag_and_drop();
         this.dragAndDropHandler?.add_container(name, diagram, capacity, config);
     }
@@ -946,11 +946,10 @@ class DragAndDropHandler {
     }
 
     public add_container(name : string, diagram : Diagram
-        , capacity : number = 1
-        , position_config : dnd_container_positioning = {type:"horizontal-uniform"}
+        , capacity? : number , position_config? : dnd_container_positioning
     ) {
         if (this.containers[name] != undefined) {
-            this.replace_container_svg(name, diagram);
+            this.replace_container_svg(name, diagram, capacity, position_config);
             return;
         }
 
@@ -958,8 +957,8 @@ class DragAndDropHandler {
             name, diagram, 
             position : diagram.origin, 
             content : [], 
-            config : position_config,
-            capacity
+            config : position_config ?? {type:"horizontal-uniform"},
+            capacity : capacity ?? 1
         };
     }
 
@@ -1058,13 +1057,18 @@ class DragAndDropHandler {
         let draggable = this.draggables[name];
         if (draggable == undefined) return;
         draggable.svgelement?.remove();
+        draggable.diagram = diagram;
+        draggable.diagram_size = size(diagram);
         this.add_draggable_svg(name, diagram);
         this.reposition_container_content(draggable.container)
     }
-    private replace_container_svg(name : string, diagram : Diagram) {
+    private replace_container_svg(name : string, diagram : Diagram, capacity? : number, config? : dnd_container_positioning) {
         let container = this.containers[name];
         if (container == undefined) return;
         container.svgelement?.remove();
+        container.diagram = diagram;
+        if (capacity) container.capacity = capacity;
+        if (config) container.config = config;
         this.add_container_svg(name, diagram);
         this.reposition_container_content(name);
     }
