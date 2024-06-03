@@ -3,7 +3,7 @@
   "version": "1.4.0",
   "type": "module",
   "description": "Interactive Diagram Maker",
-  "main": "dist/index.js",
+  "main": "dist/diagramatics.js",
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
