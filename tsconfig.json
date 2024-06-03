@@ -5,7 +5,7 @@
     "target": "es6",
     "module": "es6",
     "lib": ["es2021", "dom"],
-    "declaration": true,
+    "declaration": false,
     "outDir": "./dist",
     "noEmit": false,
     "strict": true,
