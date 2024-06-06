@@ -535,6 +535,15 @@ export class Interactive {
     public dnd_register_drop_outside_callback(callback : (name : string) => any) {
         this.dragAndDropHandler?.register_dropped_outside_callback(callback);
     }
+    
+    /**
+     * Register a validation function when a draggable is moved to a container
+     * If the function return false, the draggable will not be moved
+     * @param fun validation function
+    */
+    public dnd_register_move_validation_function(fun: (draggable_name: string, target_name: string) => boolean) {
+        this.dragAndDropHandler?.register_move_validation_function(fun);
+    }
 
     /**
      * Move a draggable to a container
@@ -938,6 +947,7 @@ class DragAndDropHandler {
     draggedElementName : string | null = null;
     draggedElementGhost : SVGElement | null = null;
     dropped_outside_callback : ((name : string) => any) | null = null;
+    move_validation_function : ((draggable_name: string, target_name: string) => boolean) | null = null;
     sort_content : boolean = false;
     dom_to_id_map : WeakMap<HTMLElement|SVGElement, string>;
 
@@ -1118,6 +1128,10 @@ class DragAndDropHandler {
     register_dropped_outside_callback(callback : (name : string) => any){
         this.dropped_outside_callback = callback;
     }
+    
+    register_move_validation_function(fun: (draggable_name: string, target_name: string) => boolean){
+        this.move_validation_function = fun;
+    }
 
     setViewBox() {
         // set viewBox and preserveAspectRatio of control_svg to be the same as diagram_svg
@@ -1242,6 +1256,10 @@ class DragAndDropHandler {
     }
 
     try_move_draggable_to_container(draggable_name : string, container_name : string) {
+        if (this.move_validation_function) {
+            const valid = this.move_validation_function(draggable_name, container_name);
+            if (!valid) return;
+        }
         let draggable = this.draggables[draggable_name];
         let container = this.containers[container_name];
         if (container.content.length + 1 <= container.capacity) {
