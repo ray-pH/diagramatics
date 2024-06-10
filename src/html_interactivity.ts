@@ -533,6 +533,7 @@ export class Interactive {
      * @param callback callback function
      */
     public dnd_register_drop_outside_callback(callback : (name : string) => any) {
+        this.init_drag_and_drop();
         this.dragAndDropHandler?.register_dropped_outside_callback(callback);
     }
     
@@ -542,6 +543,7 @@ export class Interactive {
      * @param fun validation function
     */
     public dnd_register_move_validation_function(fun: (draggable_name: string, target_name: string) => boolean) {
+        this.init_drag_and_drop();
         this.dragAndDropHandler?.register_move_validation_function(fun);
     }
 
