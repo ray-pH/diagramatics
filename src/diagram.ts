@@ -67,7 +67,7 @@ type ExtraTspanStyle = {
     "textvar" : boolean,
     "tag" : string,
 }
-type TextSpanData = {
+export type TextSpanData = {
     "text"  : string,
     "style" : Partial<TextData> & Partial<DiagramStyle> & Partial<ExtraTspanStyle>,
 }
@@ -1159,8 +1159,9 @@ export function multiline(spans : ([string] | [string,Partial<TextData>])[]) : D
     return dmulti;
 }
 
-export function multiline_bb(bbstr : string, linespace? : string) : Diagram {
+export function multiline_bb(bbstr : string, linespace? : string, split_by_word : boolean = false) : Diagram {
     let tspans : TextSpanData[] = BB_multiline.from_BBCode(bbstr,linespace) as TextSpanData[];
+    if (split_by_word) tspans = BB_multiline.split_tspans_by_words(tspans);
     let dmulti = new Diagram(DiagramType.MultilineText, {
         multilinedata : { content : tspans, "scale-factor" : 1 },
         path : new Path([new Vector2(0, 0)]),
