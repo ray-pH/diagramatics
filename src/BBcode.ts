@@ -1,3 +1,4 @@
+import type { TextSpanData } from "./diagram";
 // BBCode parser for multiline text object
 //
 
@@ -91,13 +92,13 @@ export class BB_Lexer {
 }
 
 export class BB_multiline {
-    static from_BBCode(text : string, linespace : string = "1em") {
+    static from_BBCode(text : string, linespace : string = "1em") : TextSpanData[] {
         let tspans : {text : string, style : {}}[]  = []
         let tag_stack : { [key: string]: string }[] = [];
         let tokens = BB_Lexer.parse(text);
         if (tokens === null) {
             console.error("Invalid BBCode");
-            return;
+            return [];
         }
         for (let token of tokens) {
             switch (token.type) {
@@ -112,12 +113,12 @@ export class BB_multiline {
                 case BB_TokenType.CLOSE_TAG: {
                     if (tag_stack.length === 0) {
                         console.error("Invalid BBCode");
-                        return;
+                        return [];
                     }
                     let tag_top = tag_stack[tag_stack.length - 1];
                     if (tag_top['_tag_name'] !== token.attributes['_tag_name']) {
                         console.error("Invalid BBCode");
-                        return;
+                        return [];
                     }
                     tag_stack.pop();
                 } break;
@@ -129,6 +130,19 @@ export class BB_multiline {
         }
 
         return tspans;
+    }
+    
+    static split_tspans_by_words(text_span_data: TextSpanData[]) : TextSpanData[] {
+      let new_text_span_data : TextSpanData[] = [];
+      for (let span of text_span_data){
+        const text = span.text;
+        let words = text.split(" ");
+        for (let i = 0; i < words.length-1; i++) words[i] += " ";
+        for (let word of words){
+          new_text_span_data.push({text: word, style: JSON.parse(JSON.stringify(span.style))});
+        }
+      }
+      return new_text_span_data;
     }
 
     static build_style(tag_stack : { [key: string]: string }[]) {
@@ -149,4 +163,3 @@ export class BB_multiline {
         return style;
     }
 }
-
