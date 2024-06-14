@@ -105,7 +105,9 @@ export class BB_multiline {
                 case BB_TokenType.OPEN_TAG: {
                     // if the token is [br] then add a new line
                     if (token.attributes['_tag_name'] === "br") {
-                        tspans.push({text: "\n", style: {dy: linespace}});
+                        const style = BB_multiline.build_style(tag_stack);
+                        const dy = style['_line-height'] ?? linespace;
+                        tspans.push({text: "\n", style: {dy}});
                         break;
                     }
                     tag_stack.push(token.attributes);
@@ -146,18 +148,19 @@ export class BB_multiline {
     }
 
     static build_style(tag_stack : { [key: string]: string }[]) {
-        let style : any = {};
+        let style : {[key: string]: any} = {};
         for (let tag of tag_stack) {
             switch (tag['_tag_name']) {
-                case "b"     : style["font-weight"] = "bold"; break;
-                case "i"     : style["font-style"] = "italic"; break;
-                case "color" : style["fill"] = tag["color"]; break;
-                case "size"  : style["font-size"] = tag["size"]; break;
-                case "dx"    : style["dx"] = tag["dx"]; break;
-                case "dy"    : style["dy"] = tag["dy"]; break;
-                case "font"  : style["font-family"] = tag["font"]; break;
-                case "var"   : style["textvar"] = true; break;
-                case "tag"   : style["tag"] = tag["tag"]; break;
+                case "b"          : style["font-weight"] = "bold"; break;
+                case "i"          : style["font-style"] = "italic"; break;
+                case "color"      : style["fill"] = tag["color"]; break;
+                case "size"       : style["font-size"] = tag["size"]; break;
+                case "dx"         : style["dx"] = tag["dx"]; break;
+                case "dy"         : style["dy"] = tag["dy"]; break;
+                case "font"       : style["font-family"] = tag["font"]; break;
+                case "var"        : style["textvar"] = true; break;
+                case "tag"        : style["tag"] = tag["tag"]; break;
+                case "lineheight" : style["_line-height"] = tag["lineheight"]; break;
             }
         }
         return style;
