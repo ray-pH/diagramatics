@@ -8,6 +8,8 @@ import { size } from './shapes/shapes_geometry.js';
 import { HorizontalAlignment, VerticalAlignment, distribute_horizontal_and_align, distribute_variable_row, distribute_vertical_and_align } from './alignment.js';
 import { range } from './utils.js';
 
+type BBox = [Vector2, Vector2]
+
 function format_number(val : number, prec : number) {
     let fixed = val.toFixed(prec);
     // remove trailing zeros
@@ -472,6 +474,8 @@ export class Interactive {
      * `{type:"horizontal-uniform"}`, `{type:"vertical-uniform"}`, `{type:"grid", value:[number, number]}`
      * `{type:"horizontal", padding:number}`, `{type:"vertical", padding:number}`
      * `{type:"flex-row", padding:number, vertical_alignment:VerticalAlignment, horizontal_alignment:HorizontalAlignment}`
+     *
+     * you can also add custom region box for the target by adding `custom_region_box: [Vector2, Vector2]` in the config
     */
     public dnd_container(name : string, diagram : Diagram, capacity? : number, config? : dnd_container_positioning) {
         this.init_drag_and_drop();
@@ -954,13 +958,16 @@ enum dnd_type {
 }
 
 //TODO: add more
-type dnd_container_positioning =
+type dnd_container_positioning_type =
     {type:"horizontal-uniform"} |
     {type:"vertical-uniform"} |
     {type:"horizontal", padding:number} |
     {type:"vertical", padding:number} |
     {type:"flex-row", padding:number, vertical_alignment?:VerticalAlignment, horizontal_alignment?:HorizontalAlignment} |
     {type:"grid", value:[number, number]}
+type dnd_container_positioning = dnd_container_positioning_type & {
+    custom_region_box?: [Vector2, Vector2]
+}
 
 class DragAndDropHandler {
     containers : {[key : string] : DragAndDropContainerData} = {};
@@ -978,8 +985,9 @@ class DragAndDropHandler {
         this.dom_to_id_map = new WeakMap();
     }
 
-    public add_container(name : string, diagram : Diagram
-        , capacity? : number , position_config? : dnd_container_positioning
+    public add_container(
+        name : string, diagram : Diagram, 
+        capacity? : number , position_config? : dnd_container_positioning,
     ) {
         if (this.containers[name] != undefined) {
             this.replace_container_svg(name, diagram, capacity, position_config);
@@ -995,10 +1003,9 @@ class DragAndDropHandler {
         };
     }
 
-    generate_position_map(diagram : Diagram, config : dnd_container_positioning, capacity : number, content : string[]) 
+    generate_position_map(bbox : BBox, config : dnd_container_positioning, capacity : number, content : string[]) 
     : Vector2[] {
-        let bbox = diagram.bounding_box();
-        let p_center = diagram.origin;
+        const p_center = bbox[0].add(bbox[1]).scale(0.5);
         switch (config.type){
             case "horizontal-uniform": {
                 let width = bbox[1].x - bbox[0].x;
@@ -1030,18 +1037,20 @@ class DragAndDropHandler {
                 });
             }
             case "vertical" : {
+                const p_top_center = V2(p_center.x, bbox[1].y);
                 const sizelist = content.map((name) => this.draggables[name]?.diagram_size ?? [0,0]);
                 const size_rects = sizelist.map(([w,h]) => rectangle(w,h).mut());
                 const distributed = distribute_vertical_and_align(size_rects, config.padding).mut()
-                    .move_origin('top-center').position(diagram.get_anchor('top-center'))
+                    .move_origin('top-center').position(p_top_center)
                     .translate(V2(0,-config.padding));
                 return distributed.children.map(d => d.origin);
             }
             case "horizontal" : {
+                const p_center_left = V2(bbox[0].x, p_center.y);
                 const sizelist = content.map((name) => this.draggables[name]?.diagram_size ?? [0,0]);
                 const size_rects = sizelist.map(([w,h]) => rectangle(w,h).mut());
                 const distributed = distribute_horizontal_and_align(size_rects, config.padding).mut()
-                    .move_origin('center-left').position(diagram.get_anchor('center-left'))
+                    .move_origin('center-left').position(p_center_left)
                     .translate(V2(config.padding,0));
                 return distributed.children.map(d => d.origin);
             }
@@ -1239,7 +1248,8 @@ class DragAndDropHandler {
         if (container == undefined) return;
         
         if (this.sort_content) container.content.sort()
-        const position_map = this.generate_position_map(container.diagram, container.config, container.capacity, container.content);
+        const bbox = container.config.custom_region_box ?? container.diagram.bounding_box();
+        const position_map = this.generate_position_map(bbox, container.config, container.capacity, container.content);
 
         for (let i = 0; i < container.content.length; i++) {
             let draggable = this.draggables[container.content[i]];
