@@ -1,10 +1,36 @@
-import { Diagram, polygon, line, diagram_combine, curve } from '../diagram.js';
+import { Diagram, DiagramType } from '../diagram.js';
 import { Vector2, V2 } from '../vector.js';
-import { linspace } from '../utils.js';
-import { arrow1 } from '../shapes.js';
 import { TAG } from '../tag_names.js';
 
 // ============================= utilities
+/**
+ * Calculate the area of a polygon
+ * @param p a polygon Diagram
+ * if p is a Diagram with children, calculate the sum of the areas of the children
+ * @returns area of the polygon
+*/
+export function area(p : Diagram) : number {
+    if (p.type == DiagramType.Polygon) {
+        return calculate_polygon_area(p.path?.points ?? []);
+    }
+    else if (p.type == DiagramType.Diagram) {
+        return p.children.reduce((acc, c) => acc + area(c), 0);
+    } else {
+        return 0;
+    }
+}
+function calculate_polygon_area(vertices: Vector2[]) : number {
+    let area = 0;
+    const n = vertices.length;
+    for (let i = 0; i < n; i++) {
+        const j = (i + 1) % n;
+        const xi = vertices[i].x; const yi = vertices[i].y;
+        const xj = vertices[j].x; const yj = vertices[j].y;
+        area += xi * yj - xj * yi;
+    }
+    return Math.abs(area) / 2;
+}
+
 /**
  * Get the radius of a circle
  * @param circle a circle Diagram
