@@ -48,6 +48,7 @@ export {
 } from './html_interactivity.js'
 
 export * as mod from './modifier.js'
+export * as boolean from './boolean.js'
 
 // Extra Shapes
 export { 
