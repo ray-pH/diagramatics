@@ -56,7 +56,10 @@ export function reset_default_styles() : void {
         (default_textdata as any)[s] = (_init_default_textdata as any)[s];
 }
 
-function draw_polygon(svgelement : SVGSVGElement, diagram : Diagram, svgtag? : string) : void {
+function draw_polygon(
+    svgelement : SVGSVGElement, target_element : SVGSVGElement|SVGGElement,
+    diagram : Diagram, svgtag? : string
+) : void {
     // get properties
     let style = {...default_diagram_style, ...diagram.style}; // use default if not defined
     style.fill = get_color(style.fill as string, tab_color);
@@ -72,7 +75,7 @@ function draw_polygon(svgelement : SVGSVGElement, diagram : Diagram, svgtag? : s
     // polygon.style.stroke = color_stroke;
     // use tab_color color palette
 
-    svgelement.appendChild(polygon);
+    target_element.appendChild(polygon);
     if (diagram.path != undefined) {
         for (let i = 0; i < diagram.path.points.length; i++) {
             let p = diagram.path.points[i];
@@ -85,7 +88,10 @@ function draw_polygon(svgelement : SVGSVGElement, diagram : Diagram, svgtag? : s
 }
 
 
-function draw_curve(svgelement : SVGSVGElement, diagram : Diagram, svgtag? : string) : void {
+function draw_curve(
+    svgelement : SVGSVGElement, target_element : SVGSVGElement|SVGGElement,
+    diagram : Diagram, svgtag? : string
+) : void {
     // get properties
     let style = {...default_diagram_style, ...diagram.style}; // use default if not defined
     style.fill = "none";
@@ -98,7 +104,7 @@ function draw_curve(svgelement : SVGSVGElement, diagram : Diagram, svgtag? : str
     }
     if (svgtag != undefined) polyline.setAttribute("_dg_tag", svgtag);
 
-    svgelement.appendChild(polyline);
+    target_element.appendChild(polyline);
     if (diagram.path != undefined) {
         for (let i = 0; i < diagram.path.points.length; i++) {
             let p = diagram.path.points[i];
@@ -171,7 +177,10 @@ function set_image_href_dataURL(img : SVGImageElement, src : string) : void{
  * if `embed_image` is `true`, the image will be embedded as dataURL
  * this allow the image to be downloaded as SVG with the image embedded
  */
-function draw_image(svgelement : SVGSVGElement, diagram : Diagram, embed_image : boolean, svgtag? : string) : void {
+function draw_image(
+    target_element: SVGSVGElement|SVGGElement,
+    diagram : Diagram, embed_image : boolean, svgtag? : string
+) : void {
     let image = document.createElementNS("http://www.w3.org/2000/svg", "image");
     image.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
     if (diagram.imgdata.src == undefined) return;
@@ -208,7 +217,7 @@ function draw_image(svgelement : SVGSVGElement, diagram : Diagram, embed_image :
     image.setAttribute("preserveAspectRatio", "none");
     if (svgtag != undefined) image.setAttribute("_dg_tag", svgtag);
 
-    svgelement.appendChild(image);
+    target_element.appendChild(image);
 }
 
 /**
@@ -244,8 +253,11 @@ export function calculate_text_scale(referencesvgelement : SVGSVGElement, paddin
  * @param diagrams the list of text diagrams to draw
  * @param calculated_scale the calculated scale for the text
  */
-function draw_texts(svgelement : SVGSVGElement, diagrams : Diagram[], 
-    calculated_scale : number, svgtag? : string) : void {
+function draw_texts(
+    target_element: SVGSVGElement|SVGGElement,
+    diagrams : Diagram[], 
+    calculated_scale : number, svgtag? : string
+) : void {
     for (let diagram of diagrams) {
         let style = {...default_text_diagram_style, ...diagram.style}; // use default if not defined
         style.fill = get_color(style.fill as string, tab_color);
@@ -292,7 +304,7 @@ function draw_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
         text.innerHTML = text_content;
 
         // add to svgelement
-        svgelement.appendChild(text);
+        target_element.appendChild(text);
     }
 }
 
@@ -301,8 +313,10 @@ function draw_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
  * @param diagrams the list of text diagrams to draw
  * @param calculated_scale the calculated scale for the text
  */
-function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[], 
-    calculated_scale : number, svgtag? : string) : void {
+function draw_multiline_texts(
+    target_element : SVGSVGElement|SVGGElement,
+    diagrams : Diagram[],  calculated_scale : number, svgtag? : string
+) : void {
     for (let diagram of diagrams) {
     //     let style = {...default_text_diagram_style, ...diagram.style}; // use default if not defined
     //     style.fill = get_color(style.fill as string, tab_color);
@@ -416,7 +430,7 @@ function draw_multiline_texts(svgelement : SVGSVGElement, diagrams : Diagram[],
         // text.innerHTML = text_content;
         //
         // // add to svgelement
-        svgelement.appendChild(textsvg);
+        target_element.appendChild(textsvg);
     }
 }
 
@@ -451,20 +465,22 @@ export function get_tagged_svg_element(tag : string, svgelement : SVGElement) : 
  * @param text_scaling_factor (optional) the scaling factor for text
  * @param svgtag (optional) the tag to add to the svg element
  */
-export function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, render_text : boolean = true, embed_image : boolean = false,
-    text_scaling_factor? : number, svgtag? : string) : void {
-    
+export function f_draw_to_svg(
+    svgelement : SVGSVGElement, target_element: SVGSVGElement|SVGGElement,
+    diagram : Diagram, render_text : boolean = true, embed_image : boolean = false,
+    text_scaling_factor? : number, svgtag? : string
+) : void {
     if (diagram.type == DiagramType.Polygon) {
-        draw_polygon(svgelement, diagram, svgtag);
+        draw_polygon(svgelement, target_element, diagram, svgtag);
     } else if (diagram.type == DiagramType.Curve){
-        draw_curve(svgelement, diagram, svgtag);
+        draw_curve(svgelement, target_element, diagram, svgtag);
     } else if (diagram.type == DiagramType.Text || diagram.type == DiagramType.MultilineText){
         // do nothing
     } else if (diagram.type == DiagramType.Image){
-        draw_image(svgelement, diagram, embed_image, svgtag);
+        draw_image(target_element, diagram, embed_image, svgtag);
     } else if (diagram.type == DiagramType.Diagram){
         for (let d of diagram.children) {
-            f_draw_to_svg(svgelement, d, false, embed_image, undefined, svgtag);
+            f_draw_to_svg(svgelement, target_element, d, false, embed_image, undefined, svgtag);
         }
     } else {
         console.warn("Unreachable, unknown diagram type : " + diagram.type);
@@ -478,8 +494,8 @@ export function f_draw_to_svg(svgelement : SVGSVGElement, diagram : Diagram, ren
         }
         let text_diagrams      : Diagram[] = collect_text(diagram, DiagramType.Text);
         let multiline_diagrams : Diagram[] = collect_text(diagram, DiagramType.MultilineText);
-        draw_texts(svgelement, text_diagrams, text_scaling_factor ?? 1, svgtag);
-        draw_multiline_texts(svgelement, multiline_diagrams, text_scaling_factor ?? 1, svgtag);
+        draw_texts(target_element, text_diagrams, text_scaling_factor ?? 1, svgtag);
+        draw_multiline_texts(target_element, multiline_diagrams, text_scaling_factor ?? 1, svgtag);
     }
     
 }
@@ -576,7 +592,7 @@ export function draw_to_svg_element(outer_svgelement : SVGSVGElement, diagram : 
     // TODO : for performance, do smart clearing of svg, and not just clear everything
     if (clear_svg) svgelement.innerHTML = "";
 
-    f_draw_to_svg(svgelement, diagram, render_text, embed_image, text_scaling_factor);
+    f_draw_to_svg(svgelement, svgelement, diagram, render_text, embed_image, text_scaling_factor);
 
     if (set_html_attribute) {
         const pad_px = expand_directional_value(options.padding ?? 10);

@@ -251,15 +251,13 @@ export class Interactive {
             let track = track_diagram.path.points;
             setter = (pos : Vector2) => {
                 let coord = closest_point_from_points(pos, track);
-                locator_svg.setAttributeNS(null, "x", coord.x.toString());
-                locator_svg.setAttributeNS(null, "y", (-coord.y).toString());
+                locator_svg.setAttribute("transform", `translate(${coord.x},${-coord.y})`)
                 return coord;
             }
         }
         else{
             setter = (pos : Vector2) => {
-                locator_svg.setAttributeNS(null, "x", pos.x.toString());
-                locator_svg.setAttributeNS(null, "y", (-pos.y).toString());
+                locator_svg.setAttribute("transform", `translate(${pos.x},${-pos.y})`)
                 return pos;
             }
         }
@@ -327,15 +325,13 @@ export class Interactive {
             let track = track_diagram.path.points;
             setter = (pos : Vector2) => {
                 let coord = closest_point_from_points(pos, track);
-                locator_svg.setAttributeNS(null, "x", coord.x.toString());
-                locator_svg.setAttributeNS(null, "y", (-coord.y).toString());
+                locator_svg.setAttribute("transform", `translate(${coord.x},${-coord.y})`)
                 return coord;
             }
         }
         else{
             setter = (pos : Vector2) => {
-                locator_svg.setAttributeNS(null, "x", pos.x.toString());
-                locator_svg.setAttributeNS(null, "y", (-pos.y).toString());
+                locator_svg.setAttribute("transform", `translate(${pos.x},${-pos.y})`)
                 return pos;
             }
         }
@@ -593,6 +589,9 @@ export class Interactive {
     }
 
     /**
+     * @deprecated (use `Interactive.custom_object_g()` instead)
+     * This method will be removed in the next major release
+     *
      * Create a custom interactive object
      * @param id id of the object
      * @param classlist list of classes of the object
@@ -605,7 +604,7 @@ export class Interactive {
         let control_svg = this.get_svg_element(control_svg_name.custom);
 
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        f_draw_to_svg(svg, diagram, true, false, calculate_text_scale(diagram_svg));
+        f_draw_to_svg(svg, svg, diagram, true, false, calculate_text_scale(diagram_svg));
         svg.setAttribute("overflow", "visible");
         svg.setAttribute("class", classlist.join(" "));
         svg.setAttribute("id",id);
@@ -613,6 +612,29 @@ export class Interactive {
         control_svg.appendChild(svg);
         this.custom_svg = control_svg;
         return svg;
+    }
+    
+    /**
+     * Create a custom interactive object
+     * @param id id of the object
+     * @param classlist list of classes of the object
+     * @param diagram diagram of the object
+     * @returns the <g> svg element of the object
+     */
+    public custom_object_g(id : string, classlist: string[], diagram : Diagram) : SVGGElement {
+        if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
+        let diagram_svg = this.get_diagram_svg();
+        let control_svg = this.get_svg_element(control_svg_name.custom);
+
+        let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        f_draw_to_svg(control_svg, g, diagram, true, false, calculate_text_scale(diagram_svg));
+        g.setAttribute("overflow", "visible");
+        g.setAttribute("class", classlist.join(" "));
+        g.setAttribute("id",id);
+
+        control_svg.appendChild(g);
+        this.custom_svg = control_svg;
+        return g;
     }
 
     private init_button() {
@@ -862,24 +884,24 @@ class LocatorHandler {
         if (this.first_touch_callback != null) this.first_touch_callback();
     }
 
-    create_locator_diagram_svg(diagram : Diagram, blink : boolean) : SVGSVGElement {
-        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        f_draw_to_svg(svg, diagram.position(V2(0,0)), true, false, calculate_text_scale(this.diagram_svg));
-        svg.style.cursor = "pointer";
-        svg.setAttribute("overflow", "visible");
+    create_locator_diagram_svg(diagram : Diagram, blink : boolean) : SVGGElement {
+        let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        f_draw_to_svg(this.control_svg, g, diagram.position(V2(0,0)), true, false, calculate_text_scale(this.diagram_svg));
+        g.style.cursor = "pointer";
+        g.setAttribute("overflow", "visible");
         if (blink) {
-            svg.classList.add("diagramatics-locator-blink");
-            this.addBlinkingCircleOuter(svg);
+            g.classList.add("diagramatics-locator-blink");
+            this.addBlinkingCircleOuter(g);
         }
-        return svg;
+        return g;
     }
 
-    static create_locator_circle_pointer_svg(radius : number, value : Vector2, color : string, blink : boolean) : SVGSVGElement {
-        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    static create_locator_circle_pointer_svg(radius : number, value : Vector2, color : string, blink : boolean) : SVGGElement {
+        let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
         // set svg overflow to visible
-        svg.setAttribute("overflow", "visible");
+        g.setAttribute("overflow", "visible");
         // set cursor to be pointer when hovering
-        svg.style.cursor = "pointer";
+        g.style.cursor = "pointer";
 
         let circle_outer = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         let circle_inner = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -898,11 +920,10 @@ class LocatorHandler {
         circle_inner.setAttribute("stroke", "none");
         circle_inner.classList.add("diagramatics-locator-inner");
 
-        svg.appendChild(circle_outer);
-        svg.appendChild(circle_inner);
-        svg.setAttribute("x", value.x.toString());
-        svg.setAttribute("y", (-value.y).toString());
-        return svg;
+        g.appendChild(circle_outer);
+        g.appendChild(circle_inner);
+        g.setAttribute("transform", `translate(${value.x},${-value.y})`)
+        return g;
     }
 
 }
@@ -1179,42 +1200,38 @@ class DragAndDropHandler {
     }
 
     add_container_svg(name : string, diagram: Diagram) {
-        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        f_draw_to_svg(svg, diagram.position(V2(0,0)), 
+        let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        f_draw_to_svg(this.dnd_svg, g, diagram.position(V2(0,0)), 
             false, false, calculate_text_scale(this.diagram_svg), dnd_type.container);
         let position = diagram.origin;
-        svg.setAttribute("overflow", "visible");
-        svg.setAttribute("x", position.x.toString());
-        svg.setAttribute("y", (-position.y).toString());
-        svg.setAttribute("class", dnd_type.container);
-        this.dnd_svg.prepend(svg);
+        g.setAttribute("transform", `translate(${position.x},${-position.y})`)
+        g.setAttribute("class", dnd_type.container);
+        this.dnd_svg.prepend(g);
 
-        this.containers[name].svgelement = svg;
-        this.dom_to_id_map.set(svg, name);
+        this.containers[name].svgelement = g;
+        this.dom_to_id_map.set(g, name);
     }
 
     add_draggable_svg(name : string, diagram : Diagram) {
-        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        f_draw_to_svg(svg, diagram.position(V2(0,0)), true, false, calculate_text_scale(this.diagram_svg), dnd_type.draggable);
+        let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        f_draw_to_svg(this.dnd_svg, g, diagram.position(V2(0,0)), true, false, calculate_text_scale(this.diagram_svg), dnd_type.draggable);
         let position = diagram.origin;
-        svg.setAttribute("overflow", "visible");
-        svg.setAttribute("x", position.x.toString());
-        svg.setAttribute("y", (-position.y).toString());
-        svg.setAttribute("class", dnd_type.draggable);
-        svg.setAttribute("draggable", "true");
+        g.setAttribute("transform", `translate(${position.x},${-position.y})`)
+        g.setAttribute("class", dnd_type.draggable);
+        g.setAttribute("draggable", "true");
 
-        svg.onmousedown = (evt) => {
+        g.onmousedown = (evt) => {
             this.draggedElementName = name;
             this.startDrag(evt);
         }
-        svg.ontouchstart = (evt) => {
+        g.ontouchstart = (evt) => {
             this.draggedElementName = name;
             this.startDrag(evt);
         }
 
-        this.dnd_svg.append(svg);
-        this.draggables[name].svgelement = svg;
-        this.dom_to_id_map.set(svg, name);
+        this.dnd_svg.append(g);
+        this.draggables[name].svgelement = g;
+        this.dom_to_id_map.set(g, name);
     }
 
     reposition_container_content(container_name : string){
@@ -1229,8 +1246,7 @@ class DragAndDropHandler {
             let pos = position_map[i] ?? container.diagram.origin;
             draggable.diagram = draggable.diagram.position(pos);
             draggable.position = pos;
-            draggable.svgelement?.setAttribute("x", pos.x.toString());
-            draggable.svgelement?.setAttribute("y", (-pos.y).toString());
+            draggable.svgelement?.setAttribute("transform", `translate(${pos.x},${-pos.y})`);
         }
     }
     remove_draggable_from_container(draggable_name : string, container_name : string) {
@@ -1349,8 +1365,7 @@ class DragAndDropHandler {
         }
 
         let coord = getMousePosition(evt, this.dnd_svg);
-        this.draggedElementGhost.setAttribute("x", coord.x.toString());
-        this.draggedElementGhost.setAttribute("y", (-coord.y).toString());
+        this.draggedElementGhost.setAttribute("transform", `translate(${coord.x},${-coord.y})`);
     }
 
     endDrag(_evt : DnDEvent) {
@@ -1394,7 +1409,7 @@ class DragAndDropHandler {
 class ButtonHandler {
     // callbacks : {[key : string] : (state : boolean) => any} = {};
     states : {[key : string] : boolean} = {};
-    svg_element : {[key : string] : [SVGSVGElement,SVGSVGElement]} = {};
+    svg_g_element : {[key : string] : [SVGGElement,SVGGElement]} = {};
     touchdownName : string | null = null;
 
     constructor(public button_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
@@ -1402,9 +1417,9 @@ class ButtonHandler {
 
     /** add a new toggle button if it doesn't exist, otherwise, update diagrams and callback */
     try_add_toggle(name : string, diagram_on : Diagram, diagram_off : Diagram, state : boolean, callback : (state : boolean, redraw? : boolean) => any) : setter_function_t {
-        if (this.svg_element[name] != undefined) {
+        if (this.svg_g_element[name] != undefined) {
             // delete the old button
-            let [old_svg_on, old_svg_off] = this.svg_element[name];
+            let [old_svg_on, old_svg_off] = this.svg_g_element[name];
             old_svg_on.remove();
             old_svg_off.remove();
         }
@@ -1412,25 +1427,25 @@ class ButtonHandler {
     }
 
     add_toggle(name : string, diagram_on : Diagram, diagram_off : Diagram, state : boolean, callback : (state : boolean, redraw? : boolean) => any) : setter_function_t {
-        let svg_off = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        f_draw_to_svg(svg_off, diagram_off, true, false, calculate_text_scale(this.diagram_svg));
-        svg_off.setAttribute("overflow", "visible");
-        svg_off.style.cursor = "pointer";
+        let g_off = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        f_draw_to_svg(this.button_svg, g_off, diagram_off, true, false, calculate_text_scale(this.diagram_svg));
+        g_off.setAttribute("overflow", "visible");
+        g_off.style.cursor = "pointer";
 
-        let svg_on = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        f_draw_to_svg(svg_on, diagram_on, true, false, calculate_text_scale(this.diagram_svg));
-        svg_on.setAttribute("overflow", "visible");
-        svg_on.style.cursor = "pointer";
+        let g_on = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        f_draw_to_svg(this.button_svg, g_on, diagram_on, true, false, calculate_text_scale(this.diagram_svg));
+        g_on.setAttribute("overflow", "visible");
+        g_on.style.cursor = "pointer";
 
-        this.button_svg.appendChild(svg_off);
-        this.button_svg.appendChild(svg_on);
-        this.svg_element[name] = [svg_on, svg_off];
+        this.button_svg.appendChild(g_off);
+        this.button_svg.appendChild(g_on);
+        this.svg_g_element[name] = [g_on, g_off];
 
         this.states[name] = state;
 
         const set_display = (state : boolean) => {
-            svg_on.setAttribute("display", state ? "block" : "none");
-            svg_off.setAttribute("display", state ? "none" : "block");
+            g_on.setAttribute("display", state ? "block" : "none");
+            g_off.setAttribute("display", state ? "none" : "block");
         }
         set_display(this.states[name]);
 
@@ -1440,28 +1455,28 @@ class ButtonHandler {
             set_display(this.states[name]);
         }
 
-        svg_on.onclick = (e) => { 
+        g_on.onclick = (e) => { 
             e.preventDefault();
             update_state(false); 
         };
-        svg_off.onclick = (e) => { 
+        g_off.onclick = (e) => { 
             e.preventDefault();
             update_state(true); 
         };
-        svg_on.ontouchstart = (e) => { 
+        g_on.ontouchstart = (e) => { 
             e.preventDefault();
             this.touchdownName = name; 
         };
-        svg_off.ontouchstart = (e) => { 
+        g_off.ontouchstart = (e) => { 
             e.preventDefault();
             this.touchdownName = name; 
         };
 
-        svg_on.ontouchend = () => { 
+        g_on.ontouchend = () => { 
             if (this.touchdownName == name) update_state(false); 
             this.touchdownName = null;
         };
-        svg_off.ontouchend = () => { 
+        g_off.ontouchend = () => { 
             if (this.touchdownName == name) update_state(true); 
             this.touchdownName = null;
         };
@@ -1472,9 +1487,9 @@ class ButtonHandler {
 
     /** add a new click button if it doesn't exist, otherwise, update diagrams and callback */
     try_add_click(name : string, diagram : Diagram, diagram_pressed : Diagram, callback : () => any){
-        if (this.svg_element[name] != undefined) {
+        if (this.svg_g_element[name] != undefined) {
             // delete the old button
-            let [old_svg_normal, old_svg_pressed] = this.svg_element[name];
+            let [old_svg_normal, old_svg_pressed] = this.svg_g_element[name];
             old_svg_normal.remove();
             old_svg_pressed.remove();
         }
@@ -1483,62 +1498,62 @@ class ButtonHandler {
 
     // TODO: handle touch input moving out of the button
     add_click(name : string, diagram : Diagram, diagram_pressed : Diagram, callback : () => any){
-        let svg_normal = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        f_draw_to_svg(svg_normal, diagram, true, false, calculate_text_scale(this.diagram_svg));
-        svg_normal.setAttribute("overflow", "visible");
-        svg_normal.style.cursor = "pointer";
+        let g_normal = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        f_draw_to_svg(this.button_svg, g_normal, diagram, true, false, calculate_text_scale(this.diagram_svg));
+        g_normal.setAttribute("overflow", "visible");
+        g_normal.style.cursor = "pointer";
 
-        let svg_pressed = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        f_draw_to_svg(svg_pressed, diagram_pressed, true, false, calculate_text_scale(this.diagram_svg));
-        svg_pressed.setAttribute("overflow", "visible");
-        svg_pressed.style.cursor = "pointer";
+        let g_pressed = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        f_draw_to_svg(this.button_svg, g_pressed, diagram_pressed, true, false, calculate_text_scale(this.diagram_svg));
+        g_pressed.setAttribute("overflow", "visible");
+        g_pressed.style.cursor = "pointer";
 
-        this.button_svg.appendChild(svg_normal);
-        this.button_svg.appendChild(svg_pressed);
-        this.svg_element[name] = [svg_normal, svg_pressed];
+        this.button_svg.appendChild(g_normal);
+        this.button_svg.appendChild(g_pressed);
+        this.svg_g_element[name] = [g_normal, g_pressed];
 
         const set_display = (pressed : boolean) => {
-            svg_pressed.setAttribute("display", pressed ? "block" : "none");
-            svg_normal.setAttribute("display", pressed ? "none" : "block");
+            g_pressed.setAttribute("display", pressed ? "block" : "none");
+            g_normal.setAttribute("display", pressed ? "none" : "block");
         }
         set_display(false);
 
-        svg_normal.onmousedown = (e) => {
+        g_normal.onmousedown = (e) => {
             e.preventDefault();
             this.touchdownName = name;
             set_display(true);
         }
-        svg_normal.onmouseup = (e) => {
+        g_normal.onmouseup = (e) => {
             e.preventDefault();
             this.touchdownName = null;
         }
-        svg_pressed.onmouseleave = (_e) => { set_display(false); }
-        svg_pressed.onmousedown = (e) => {
+        g_pressed.onmouseleave = (_e) => { set_display(false); }
+        g_pressed.onmousedown = (e) => {
             e.preventDefault();
             this.touchdownName = name;
         }
-        svg_pressed.onmouseup = (_e) => {
+        g_pressed.onmouseup = (_e) => {
             if (this.touchdownName == name) callback();
             this.touchdownName = null;
             set_display(false);
         }
 
-        svg_normal.ontouchstart = (e) => { 
+        g_normal.ontouchstart = (e) => { 
             e.preventDefault();
             this.touchdownName = name; 
             set_display(true);
         };
-        svg_normal.ontouchend = (_e) => {
+        g_normal.ontouchend = (_e) => {
             if (this.touchdownName == name) callback();
             this.touchdownName = null;
             set_display(false);
         }
-        svg_pressed.ontouchstart = (e) => { 
+        g_pressed.ontouchstart = (e) => { 
             e.preventDefault();
             this.touchdownName = name; 
             set_display(true);
         };
-        svg_pressed.ontouchend = (_e) => {
+        g_pressed.ontouchend = (_e) => {
             if (this.touchdownName == name) callback();
             this.touchdownName = null;
             set_display(false);
