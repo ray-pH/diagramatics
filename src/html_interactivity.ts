@@ -612,6 +612,10 @@ export class Interactive {
         svg.setAttribute("overflow", "visible");
         svg.setAttribute("class", classlist.join(" "));
         svg.setAttribute("id",id);
+        
+        control_svg.setAttribute("viewBox", diagram_svg.getAttribute("viewBox") as string);
+        control_svg.setAttribute("preserveAspectRatio", diagram_svg.getAttribute("preserveAspectRatio") as string);
+        control_svg.style.overflow = "visible";
 
         control_svg.appendChild(svg);
         this.custom_svg = control_svg;
@@ -635,6 +639,10 @@ export class Interactive {
         g.setAttribute("overflow", "visible");
         g.setAttribute("class", classlist.join(" "));
         g.setAttribute("id",id);
+        
+        control_svg.setAttribute("viewBox", diagram_svg.getAttribute("viewBox") as string);
+        control_svg.setAttribute("preserveAspectRatio", diagram_svg.getAttribute("preserveAspectRatio") as string);
+        control_svg.style.overflow = "visible";
 
         control_svg.appendChild(g);
         this.custom_svg = control_svg;
