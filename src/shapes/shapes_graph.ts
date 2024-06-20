@@ -197,6 +197,11 @@ export function ytickmark(y : number, x : number, str : string, axes_options? : 
 
 // ======= BEGIN utility to calculate ticks
 
+/// TODO: find a smarter way to calculate this
+function tweak_interval(interval: number) : number {
+  if (0.1 < interval && interval < 2) return 1;
+  return interval;
+}
 function get_tick_interval(min : number, max : number) : number {
     let range = max-min;
     let range_order = Math.floor(Math.log10(range));
@@ -205,10 +210,10 @@ function get_tick_interval(min : number, max : number) : number {
     // choose the interval so that the number of ticks is between the biggest one but less than 10
     for (let i = 0; i < tick_counts.length; i++) {
         if (tick_counts[i] <= 10) {
-            return interval_to_try[i];
+            return tweak_interval(interval_to_try[i]);
         }
     }
-    return interval_to_try.slice(-1)[0];
+    return tweak_interval(interval_to_try.slice(-1)[0]);
 }
 
 function get_tick_numbers_range(min : number, max : number) : number[] {
