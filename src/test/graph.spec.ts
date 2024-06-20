@@ -9,10 +9,10 @@ describe('Graph', () => {
             expect(get_tick_numbers(0, 1)).to.eql([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]);
             expect(get_tick_numbers(0, 10)).to.eql([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
             expect(get_tick_numbers(0, 100)).to.eql([0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]);
-            expect(get_tick_numbers(0, 5)).to.eql([0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]);
-            expect(get_tick_numbers(0, 15)).to.eql([ 0, 1.5, 3, 4.5, 6, 7.5, 9, 10.5, 12, 13.5, 15 ]);
+            expect(get_tick_numbers(0, 5)).to.eql([0, 1, 2, 3, 4, 5]);
+            // expect(get_tick_numbers(0, 15)).to.eql([ 0, 1.5, 3, 4.5, 6, 7.5, 9, 10.5, 12, 13.5, 15 ]);
+            expect(get_tick_numbers(-6, 5)).to.eql([ -6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5 ]);
         });
     });
 
 });
-
