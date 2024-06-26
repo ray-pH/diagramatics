@@ -476,8 +476,10 @@ export class Interactive {
      * `{type:"flex-row", padding:number, vertical_alignment:VerticalAlignment, horizontal_alignment:HorizontalAlignment}`
      *
      * you can also add custom region box for the target by adding `custom_region_box: [Vector2, Vector2]` in the config
+     *
+     * you can also add a sorting function for the target by adding `sorting_function: (a: string, b: string) => number`
     */
-    public dnd_container(name : string, diagram : Diagram, capacity? : number, config? : dnd_container_positioning) {
+    public dnd_container(name : string, diagram : Diagram, capacity? : number, config? : dnd_container_config) {
         this.init_drag_and_drop();
         this.dragAndDropHandler?.add_container(name, diagram, capacity, config);
     }
@@ -947,7 +949,7 @@ type DragAndDropContainerData = {
     diagram : Diagram,
     content : string[],
     capacity : number,
-    config : dnd_container_positioning,
+    config : dnd_container_config,
 }
 type DragAndDropDraggableData = {
     name : string,
@@ -973,8 +975,9 @@ type dnd_container_positioning_type =
     {type:"vertical", padding:number} |
     {type:"flex-row", padding:number, vertical_alignment?:VerticalAlignment, horizontal_alignment?:HorizontalAlignment} |
     {type:"grid", value:[number, number]}
-type dnd_container_positioning = dnd_container_positioning_type & {
+type dnd_container_config = dnd_container_positioning_type & {
     custom_region_box?: [Vector2, Vector2]
+    sorting_function?: (a : string, b : string) => number
 }
 
 class DragAndDropHandler {
@@ -995,10 +998,10 @@ class DragAndDropHandler {
 
     public add_container(
         name : string, diagram : Diagram, 
-        capacity? : number , position_config? : dnd_container_positioning,
+        capacity? : number , config? : dnd_container_config,
     ) {
         if (this.containers[name] != undefined) {
-            this.replace_container_svg(name, diagram, capacity, position_config);
+            this.replace_container_svg(name, diagram, capacity, config);
             return;
         }
 
@@ -1006,12 +1009,12 @@ class DragAndDropHandler {
             name, diagram, 
             position : diagram.origin, 
             content : [], 
-            config : position_config ?? {type:"horizontal-uniform"},
+            config : config ?? {type:"horizontal-uniform"},
             capacity : capacity ?? 1
         };
     }
 
-    generate_position_map(bbox : BBox, config : dnd_container_positioning, capacity : number, content : string[]) 
+    generate_position_map(bbox : BBox, config : dnd_container_config, capacity : number, content : string[]) 
     : Vector2[] {
         const p_center = bbox[0].add(bbox[1]).scale(0.5);
         switch (config.type){
@@ -1112,7 +1115,7 @@ class DragAndDropHandler {
         this.add_draggable_svg(name, diagram);
         this.reposition_container_content(draggable.container)
     }
-    private replace_container_svg(name : string, diagram : Diagram, capacity? : number, config? : dnd_container_positioning) {
+    private replace_container_svg(name : string, diagram : Diagram, capacity? : number, config? : dnd_container_config) {
         let container = this.containers[name];
         if (container == undefined) return;
         container.svgelement?.remove();
@@ -1255,7 +1258,11 @@ class DragAndDropHandler {
         let container = this.containers[container_name];
         if (container == undefined) return;
         
-        if (this.sort_content) container.content.sort()
+        if (this.sort_content){
+            container.content.sort()
+        } else if (container.config?.sorting_function) {
+            container.content.sort(container.config.sorting_function);
+        }
         const bbox = container.config.custom_region_box ?? container.diagram.bounding_box();
         const position_map = this.generate_position_map(bbox, container.config, container.capacity, container.content);
 
