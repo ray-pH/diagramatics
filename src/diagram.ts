@@ -926,6 +926,10 @@ export class Diagram {
             throw new Error("Unreachable, unknown diagram type : " + this.type);
         }
     }
+    
+    public is_empty() : boolean {
+        return this.contain_tag(TAG.EMPTY);
+    }
 }
 
 export class Path {
@@ -1106,7 +1110,7 @@ export function polygon(points: Vector2[]) : Diagram {
  * @returns an empty diagram
  */
 export function empty(v : Vector2 = V2(0,0)) : Diagram {
-    let emp = curve([v])
+    let emp = curve([v]).append_tags(TAG.EMPTY);
     return emp;
 }
 

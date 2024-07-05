@@ -164,6 +164,9 @@ function get_round_corner_arc_points(radius : number, points : [Vector2,Vector2,
  * ```
  */
 export function round_corner(radius : number | number[] =  1, point_indices? : number[], count : number = 40) : modifierFunction {
+    // if radius is 0, return the identity function
+    if (radius == 0) return (d) => d;
+    
     // if radius is a number, create an array of length one
     if (typeof radius == "number") radius = [radius];
 

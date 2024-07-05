@@ -51,6 +51,7 @@ export function table(diagrams : Diagram[][], padding : number | number[] = 0, o
 }
 
 /**
+ * WARNING: Deprecated, use tags instead
  * Style the cells of a table
  * @param table_diagram a diagram of a table
  * @param styles an array of cell styles
@@ -101,7 +102,8 @@ export function fixed_size(diagrams : Diagram[][], rowsizes : number[], colsizes
     let row_count = diagram_rows.length;
     let col_count = Math.max(...diagram_rows.map(row => row.length));
 
-    let table = empty_fixed_size(row_count, col_count, rowsizes, colsizes);
+    const empty_map = get_empty_map(diagrams);
+    let table = empty_fixed_size(row_count, col_count, rowsizes, colsizes, empty_map);
     let points = get_points(table);
 
     let diagram_grid : Diagram[] = [];
@@ -120,6 +122,20 @@ export function fixed_size(diagrams : Diagram[][], rowsizes : number[], colsizes
     return diagram_combine(table, diagram_grid_combined).append_tags(TAG.CONTAIN_TABLE);
 }
 
+function get_empty_map(diagrams : Diagram[][]) : boolean[][] {
+    let row_count = diagrams.length;
+    let col_count = Math.max(...diagrams.map(row => row.length));
+    let empty_indices_map : boolean[][] = Array(row_count).fill(false).map(() => Array(col_count).fill(false));
+    for (let r = 0; r < row_count; r++) {
+        for (let c = 0; c < col_count; c++) {
+            const d = diagrams[r][c];
+            if (d == undefined || d?.is_empty?.()) 
+                empty_indices_map[r][c] = true;
+        }
+    }
+    return empty_indices_map;
+}
+
 /**
  * Create an empty table with fixed size
  * @param row_count number of rows
@@ -131,7 +147,8 @@ export function fixed_size(diagrams : Diagram[][], rowsizes : number[], colsizes
  * if `colsizes.length` is less than `col_count`, the last value will be repeated
  */
 export function empty_fixed_size(row_count : number, col_count : number, 
-    rowsizes : number[], colsizes : number[]) : Diagram 
+    rowsizes : number[], colsizes : number[], empty_map : boolean[][]
+) : Diagram 
 {
     while (rowsizes.length < row_count) { rowsizes.push(rowsizes[rowsizes.length-1]); }
     while (colsizes.length < col_count) { colsizes.push(colsizes[colsizes.length-1]); }
@@ -152,6 +169,7 @@ export function empty_fixed_size(row_count : number, col_count : number,
                 .append_tags(TAG.TABLE_CELL)
                 .append_tags(TAG.ROW_ + r)
                 .append_tags(TAG.COL_ + c);
+            if (empty_map[r][c]) rect = rect.append_tags(TAG.EMPTY_CELL);
             cols.push(rect);
             x_left = x_right;
         }

@@ -3,6 +3,7 @@
 */
 
 export enum TAG {
+    EMPTY = "empty",
     LINE = "line",
     CIRCLE = "circle",
     TEXTVAR = "textvar",
@@ -20,6 +21,7 @@ export enum TAG {
     CONTAIN_TABLE = "contain_table",
     TABLE_CELL = "table_cell",
     TABLE_CONTENT = "table_content",
+    EMPTY_CELL = "empty_cell",
     
     //graph
     GRAPH_AXIS = "graph_axis_line",
