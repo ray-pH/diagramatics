@@ -3,6 +3,7 @@
 */
 
 export enum TAG {
+    EMPTY = "empty",
     LINE = "line",
     CIRCLE = "circle",
     TEXTVAR = "textvar",
