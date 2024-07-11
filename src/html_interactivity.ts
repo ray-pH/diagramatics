@@ -1278,8 +1278,9 @@ class DragAndDropHandler {
         this.containers[container_name].content = 
             this.containers[container_name].content.filter((name) => name != draggable_name);
     }
-    move_draggable_to_container(draggable_name : string, container_name : string) {
+    move_draggable_to_container(draggable_name : string, container_name : string, ignore_callback = false) {
         let draggable = this.draggables[draggable_name];
+        if (draggable == undefined) return;
 
         // ignore if the draggable is already in the container
         if (draggable.container == container_name) return;
@@ -1294,6 +1295,7 @@ class DragAndDropHandler {
         this.reposition_container_content(container_name);
         this.reposition_container_content(original_container_name);
 
+        if (ignore_callback) return;
         let draggedElement = this.draggables[draggable_name];
         this.callbacks[draggedElement.name](draggedElement.position);
     }
@@ -1312,8 +1314,8 @@ class DragAndDropHandler {
             // swap
             let original_container_name = draggable.container;
             let other_draggable_name = container.content[0];
+            this.move_draggable_to_container(draggable_name, container_name, true);
             this.move_draggable_to_container(other_draggable_name, original_container_name);
-            this.move_draggable_to_container(draggable_name, container_name);
         }
     }
 
