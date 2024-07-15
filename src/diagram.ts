@@ -310,6 +310,22 @@ export class Diagram {
         }
         return newd;
     }
+    
+    /**
+    * Get all the diagrams that contain a specific tag
+    * @param tags the tag to filter the diagrams
+    * @return a list of diagrams
+    */
+    public get_tagged_elements(tags : string | string[] ) : Diagram[] {
+        if (!Array.isArray(tags)) tags = [tags];
+        let result = [];
+        
+        if (this.contain_all_tags(tags)) result.push(this.copy_if_not_mutable());
+        for (let i = 0; i < this.children.length; i++) {
+            result = result.concat(this.children[i].get_tagged_elements(tags));
+        }
+        return result;
+    }
 
     /**
      * Combine another diagram with this diagram
