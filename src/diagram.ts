@@ -66,6 +66,8 @@ type ExtraTspanStyle = {
     "dx" : string,
     "textvar" : boolean,
     "tag" : string,
+    "baseline-shift" : string,
+    "font-size-scale-factor": number,
 }
 export type TextSpanData = {
     "text"  : string,

@@ -372,7 +372,9 @@ function draw_multiline_texts(
 
             let scale = tspanstyle["font-scale"] == "auto" ? 
                 calculated_scale : parseFloat(tspanstyle["font-scale"] as string);
-            let font_size = parseFloat(tspanstyle["font-size"] as string) * scale * dg_scale_factor;
+            let font_size_scale_factor = tspanstyle["font-size-scale-factor"] ?? 1;
+            let font_size = parseFloat(tspanstyle["font-size"] as string) 
+                * scale * dg_scale_factor * font_size_scale_factor;
 
             if (tspanstyle["tag"]) tspan.setAttribute("_dg_tag", tspanstyle["tag"] as string);
 
@@ -389,6 +391,9 @@ function draw_multiline_texts(
             tspan.style["fill"] = get_color(tspanstyle.fill as string, tab_color);
             tspan.style["stroke"] = get_color(tspanstyle.stroke as string, tab_color);
             tspan.style["opacity"] = tspanstyle.opacity as string;
+            // if baseline-shift is defined, set it
+            if (tspanstyle["baseline-shift"]) 
+                tspan.setAttribute("baseline-shift", tspanstyle["baseline-shift"] as string);
 
             let text = tspandata.text;
             if (tspanstyle["textvar"]) text = str_to_mathematical_italic(text);
