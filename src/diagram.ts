@@ -68,6 +68,7 @@ type ExtraTspanStyle = {
     "tag" : string,
     "baseline-shift" : string,
     "font-size-scale-factor": number,
+    "is-prev-word" : boolean, // tag to indicate that this is part of the previous word
 }
 export type TextSpanData = {
     "text"  : string,

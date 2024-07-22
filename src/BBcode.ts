@@ -164,10 +164,12 @@ export class BB_multiline {
                 case "sup": {
                     style["baseline-shift"] = "super";
                     style["font-size-scale-factor"] = 0.7;
+                    style["is-prev-word"] = true;
                 } break;
                 case "sub": {
                     style["baseline-shift"] = "-20%";
                     style["font-size-scale-factor"] = 0.7;
+                    style["is-prev-word"] = true;
                 } break;
             }
         }
