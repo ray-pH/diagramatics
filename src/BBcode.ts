@@ -161,6 +161,16 @@ export class BB_multiline {
                 case "var"        : style["textvar"] = true; break;
                 case "tag"        : style["tag"] = tag["tag"]; break;
                 case "lineheight" : style["_line-height"] = tag["lineheight"]; break;
+                case "sup": {
+                    style["baseline-shift"] = "super";
+                    style["font-size-scale-factor"] = 0.7;
+                    style["is-prev-word"] = true;
+                } break;
+                case "sub": {
+                    style["baseline-shift"] = "-20%";
+                    style["font-size-scale-factor"] = 0.7;
+                    style["is-prev-word"] = true;
+                } break;
             }
         }
         return style;
