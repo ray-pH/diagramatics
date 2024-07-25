@@ -201,7 +201,11 @@ export class Interactive {
      * @param color color of the locator
      * @param track_diagram if provided, the locator will snap to the closest point on the diagram
      */
-    public locator(variable_name : string, value : Vector2, radius : number, color : string = 'blue', track_diagram? : Diagram, blink : boolean = true){
+    public locator(
+        variable_name : string, value : Vector2, radius : number, color : string = 'blue', 
+        track_diagram? : Diagram, blink : boolean = true,
+        callback?: (locator_name: string, position: Vector2) => any,
+    ){
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
         this.inp_variables[variable_name] = value;
 
@@ -221,11 +225,12 @@ export class Interactive {
 
 
         // ============== callback
-        const callback = (pos : Vector2, redraw : boolean = true) => {
+        const f_callback = (pos : Vector2, redraw : boolean = true) => {
             this.inp_variables[variable_name] = pos;
+            if (callback) callback(variable_name, pos);
             if (redraw) this.draw();
         }
-        this.locatorHandler.registerCallback(variable_name, callback);
+        this.locatorHandler.registerCallback(variable_name, f_callback);
 
         // ============== Circle element
 
@@ -267,7 +272,7 @@ export class Interactive {
 
         // set initial position
         let init_pos = setter(value);
-        callback(init_pos, false);
+        f_callback(init_pos, false);
     }
 
 
@@ -280,8 +285,13 @@ export class Interactive {
      * @param diagram diagram of the locator
      * @param track_diagram if provided, the locator will snap to the closest point on the diagram
      * @param blink if true, the locator will blink
+     * @param callback callback function that will be called when the locator is moved
      */
-    public locator_custom(variable_name : string, value : Vector2, diagram : Diagram, track_diagram? : Diagram, blink : boolean = true){
+    public locator_custom(
+        variable_name : string, value : Vector2, diagram : Diagram, 
+        track_diagram? : Diagram, blink : boolean = true,
+        callback?: (locator_name: string, position: Vector2) => any,
+    ){
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
         this.inp_variables[variable_name] = value;
 
@@ -301,13 +311,14 @@ export class Interactive {
 
 
         // ============== callback
-        const callback = (pos : Vector2, redraw : boolean = true) => {
+        const f_callback = (pos : Vector2, redraw : boolean = true) => {
             this.inp_variables[variable_name] = pos;
+            if (callback) callback(variable_name, pos);
             if (redraw) this.draw();
         }
-        this.locatorHandler.registerCallback(variable_name, callback);
+        this.locatorHandler.registerCallback(variable_name, f_callback);
 
-        // ============== Circle element
+        // ============== SVG element
 
         let locator_svg = this.locatorHandler!.create_locator_diagram_svg(diagram, blink);
         this.registerEventListener(locator_svg, 'mousedown', (evt:any) => {
@@ -341,7 +352,7 @@ export class Interactive {
 
         // set initial position
         let init_pos = setter(value);
-        callback(init_pos, false);
+        f_callback(init_pos, false);
     }
 
     /**
