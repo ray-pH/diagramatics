@@ -234,7 +234,7 @@ export class Interactive {
 
         // ============== Circle element
 
-        let locator_svg = LocatorHandler.create_locator_circle_pointer_svg(radius, value, color, blink);
+        let locator_svg = this.locatorHandler.create_locator_circle_pointer_svg(variable_name, radius, value, color, blink);
         if(blink){
             // store the circle_outer into the LocatorHandler so that we can turn it off later
             let blinking_outers = locator_svg.getElementsByClassName("diagramatics-locator-blink");
@@ -320,7 +320,7 @@ export class Interactive {
 
         // ============== SVG element
 
-        let locator_svg = this.locatorHandler!.create_locator_diagram_svg(diagram, blink);
+        let locator_svg = this.locatorHandler!.create_locator_diagram_svg(variable_name, diagram, blink);
         this.registerEventListener(locator_svg, 'mousedown', (evt:any) => {
             this.locatorHandler!.startDrag(evt, variable_name, locator_svg);
         });
@@ -844,6 +844,7 @@ class LocatorHandler {
     callbacks : {[key : string] : (pos : Vector2) => any} = {};
     setter    : {[key : string] : (pos : Vector2) => any} = {};
     // store blinking circle_outer so that we can turn it off
+    svg_elements: {[key : string] : SVGElement} = {};
     blinking_circle_outers : Element[] = [];
     first_touch_callback : Function | null = null;
 
@@ -909,7 +910,9 @@ class LocatorHandler {
         if (this.first_touch_callback != null) this.first_touch_callback();
     }
 
-    create_locator_diagram_svg(diagram : Diagram, blink : boolean) : SVGGElement {
+    create_locator_diagram_svg(name: string, diagram : Diagram, blink : boolean) : SVGGElement {
+        this.svg_elements[name]?.remove();
+        
         let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
         f_draw_to_svg(this.control_svg, g, diagram.position(V2(0,0)), true, false, calculate_text_scale(this.diagram_svg));
         g.style.cursor = "pointer";
@@ -918,10 +921,13 @@ class LocatorHandler {
             g.classList.add("diagramatics-locator-blink");
             this.addBlinkingCircleOuter(g);
         }
+        this.svg_elements[name] = g;
         return g;
     }
 
-    static create_locator_circle_pointer_svg(radius : number, value : Vector2, color : string, blink : boolean) : SVGGElement {
+    create_locator_circle_pointer_svg(name: string, radius : number, value : Vector2, color : string, blink : boolean) : SVGGElement {
+        this.svg_elements[name]?.remove();
+        
         let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
         // set svg overflow to visible
         g.setAttribute("overflow", "visible");
@@ -948,6 +954,8 @@ class LocatorHandler {
         g.appendChild(circle_outer);
         g.appendChild(circle_inner);
         g.setAttribute("transform", `translate(${value.x},${-value.y})`)
+        
+        this.svg_elements[name] = g;
         return g;
     }
 
