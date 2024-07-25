@@ -227,7 +227,7 @@ export class Interactive {
         // ============== callback
         const f_callback = (pos : Vector2, redraw : boolean = true) => {
             this.inp_variables[variable_name] = pos;
-            if (callback) callback(variable_name, pos);
+            if (callback && redraw) callback(variable_name, pos);
             if (redraw) this.draw();
         }
         this.locatorHandler.registerCallback(variable_name, f_callback);
@@ -313,7 +313,8 @@ export class Interactive {
         // ============== callback
         const f_callback = (pos : Vector2, redraw : boolean = true) => {
             this.inp_variables[variable_name] = pos;
-            if (callback) callback(variable_name, pos);
+            // don't call the callback on the initialization;
+            if (callback && redraw) callback(variable_name, pos);
             if (redraw) this.draw();
         }
         this.locatorHandler.registerCallback(variable_name, f_callback);
