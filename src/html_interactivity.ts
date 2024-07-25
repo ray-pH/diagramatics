@@ -272,7 +272,7 @@ export class Interactive {
 
         // set initial position
         let init_pos = setter(value);
-        f_callback(init_pos, false);
+        this.locatorHandler.setPos(variable_name, init_pos);
     }
 
 
@@ -352,7 +352,7 @@ export class Interactive {
 
         // set initial position
         let init_pos = setter(value);
-        f_callback(init_pos, false);
+        this.locatorHandler.setPos(variable_name, init_pos);
     }
 
     /**
@@ -841,19 +841,31 @@ class LocatorHandler {
 
     selectedElement  : SVGElement | null = null;
     selectedVariable : string | null = null;
-    callbacks : {[key : string] : (pos : Vector2) => any} = {};
+    mouseOffset : Vector2 = V2(0,0);
+    callbacks : {[key : string] : (pos : Vector2, redraw?: boolean) => any} = {};
     setter    : {[key : string] : (pos : Vector2) => any} = {};
     // store blinking circle_outer so that we can turn it off
     svg_elements: {[key : string] : SVGElement} = {};
     blinking_circle_outers : Element[] = [];
     first_touch_callback : Function | null = null;
+    element_pos : {[key : string] : Vector2} = {};
 
     constructor(public control_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
     }
 
-    startDrag(_ : LocatorEvent, variable_name : string, selectedElement : SVGElement) {
+    startDrag(evt : LocatorEvent, variable_name : string, selectedElement : SVGElement) {
         this.selectedElement  = selectedElement;
         this.selectedVariable = variable_name;
+        
+        if (evt instanceof MouseEvent) { evt.preventDefault(); }
+        if (window.TouchEvent && evt instanceof TouchEvent) { evt.preventDefault(); }
+        let coord = getMousePosition(evt, this.control_svg);
+        let mousepos = V2(coord.x, coord.y);
+        let elementpos = this.element_pos[variable_name];
+        if (elementpos){
+            this.mouseOffset = elementpos.sub(mousepos);
+        }
+        
         this.handleBlinking();
     }
     drag(evt : LocatorEvent) {
@@ -865,7 +877,8 @@ class LocatorHandler {
 
         let coord = getMousePosition(evt, this.control_svg);
 
-        let pos = V2(coord.x, coord.y);
+        let pos = V2(coord.x, coord.y).add(this.mouseOffset);
+        this.element_pos[this.selectedVariable] = pos;
         // check if setter for this.selectedVariable exists
         // if it does, call it
         if (this.setter[this.selectedVariable] != undefined) {
@@ -891,6 +904,10 @@ class LocatorHandler {
         this.selectedVariable = null;
     }
 
+    setPos(name : string, pos : Vector2){
+        this.element_pos[name] = pos;
+        this.callbacks[name](pos, false);
+    }
     registerCallback(name : string, callback : (pos : Vector2) => any){
         this.callbacks[name] = callback;
     }
@@ -922,6 +939,7 @@ class LocatorHandler {
             this.addBlinkingCircleOuter(g);
         }
         this.svg_elements[name] = g;
+        this.element_pos[name]
         return g;
     }
 
