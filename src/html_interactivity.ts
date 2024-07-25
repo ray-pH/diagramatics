@@ -201,7 +201,11 @@ export class Interactive {
      * @param color color of the locator
      * @param track_diagram if provided, the locator will snap to the closest point on the diagram
      */
-    public locator(variable_name : string, value : Vector2, radius : number, color : string = 'blue', track_diagram? : Diagram, blink : boolean = true){
+    public locator(
+        variable_name : string, value : Vector2, radius : number, color : string = 'blue', 
+        track_diagram? : Diagram, blink : boolean = true,
+        callback?: (locator_name: string, position: Vector2) => any,
+    ){
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
         this.inp_variables[variable_name] = value;
 
@@ -221,15 +225,16 @@ export class Interactive {
 
 
         // ============== callback
-        const callback = (pos : Vector2, redraw : boolean = true) => {
+        const f_callback = (pos : Vector2, redraw : boolean = true) => {
             this.inp_variables[variable_name] = pos;
+            if (callback) callback(variable_name, pos);
             if (redraw) this.draw();
         }
-        this.locatorHandler.registerCallback(variable_name, callback);
+        this.locatorHandler.registerCallback(variable_name, f_callback);
 
         // ============== Circle element
 
-        let locator_svg = LocatorHandler.create_locator_circle_pointer_svg(radius, value, color, blink);
+        let locator_svg = this.locatorHandler.create_locator_circle_pointer_svg(variable_name, radius, value, color, blink);
         if(blink){
             // store the circle_outer into the LocatorHandler so that we can turn it off later
             let blinking_outers = locator_svg.getElementsByClassName("diagramatics-locator-blink");
@@ -267,7 +272,7 @@ export class Interactive {
 
         // set initial position
         let init_pos = setter(value);
-        callback(init_pos, false);
+        this.locatorHandler.setPos(variable_name, init_pos);
     }
 
 
@@ -280,8 +285,13 @@ export class Interactive {
      * @param diagram diagram of the locator
      * @param track_diagram if provided, the locator will snap to the closest point on the diagram
      * @param blink if true, the locator will blink
+     * @param callback callback function that will be called when the locator is moved
      */
-    public locator_custom(variable_name : string, value : Vector2, diagram : Diagram, track_diagram? : Diagram, blink : boolean = true){
+    public locator_custom(
+        variable_name : string, value : Vector2, diagram : Diagram, 
+        track_diagram? : Diagram, blink : boolean = true,
+        callback?: (locator_name: string, position: Vector2) => any,
+    ){
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
         this.inp_variables[variable_name] = value;
 
@@ -301,15 +311,16 @@ export class Interactive {
 
 
         // ============== callback
-        const callback = (pos : Vector2, redraw : boolean = true) => {
+        const f_callback = (pos : Vector2, redraw : boolean = true) => {
             this.inp_variables[variable_name] = pos;
+            if (callback) callback(variable_name, pos);
             if (redraw) this.draw();
         }
-        this.locatorHandler.registerCallback(variable_name, callback);
+        this.locatorHandler.registerCallback(variable_name, f_callback);
 
-        // ============== Circle element
+        // ============== SVG element
 
-        let locator_svg = this.locatorHandler!.create_locator_diagram_svg(diagram, blink);
+        let locator_svg = this.locatorHandler!.create_locator_diagram_svg(variable_name, diagram, blink);
         this.registerEventListener(locator_svg, 'mousedown', (evt:any) => {
             this.locatorHandler!.startDrag(evt, variable_name, locator_svg);
         });
@@ -341,7 +352,7 @@ export class Interactive {
 
         // set initial position
         let init_pos = setter(value);
-        callback(init_pos, false);
+        this.locatorHandler.setPos(variable_name, init_pos);
     }
 
     /**
@@ -830,18 +841,31 @@ class LocatorHandler {
 
     selectedElement  : SVGElement | null = null;
     selectedVariable : string | null = null;
-    callbacks : {[key : string] : (pos : Vector2) => any} = {};
+    mouseOffset : Vector2 = V2(0,0);
+    callbacks : {[key : string] : (pos : Vector2, redraw?: boolean) => any} = {};
     setter    : {[key : string] : (pos : Vector2) => any} = {};
     // store blinking circle_outer so that we can turn it off
+    svg_elements: {[key : string] : SVGElement} = {};
     blinking_circle_outers : Element[] = [];
     first_touch_callback : Function | null = null;
+    element_pos : {[key : string] : Vector2} = {};
 
     constructor(public control_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
     }
 
-    startDrag(_ : LocatorEvent, variable_name : string, selectedElement : SVGElement) {
+    startDrag(evt : LocatorEvent, variable_name : string, selectedElement : SVGElement) {
         this.selectedElement  = selectedElement;
         this.selectedVariable = variable_name;
+        
+        if (evt instanceof MouseEvent) { evt.preventDefault(); }
+        if (window.TouchEvent && evt instanceof TouchEvent) { evt.preventDefault(); }
+        let coord = getMousePosition(evt, this.control_svg);
+        let mousepos = V2(coord.x, coord.y);
+        let elementpos = this.element_pos[variable_name];
+        if (elementpos){
+            this.mouseOffset = elementpos.sub(mousepos);
+        }
+        
         this.handleBlinking();
     }
     drag(evt : LocatorEvent) {
@@ -853,7 +877,8 @@ class LocatorHandler {
 
         let coord = getMousePosition(evt, this.control_svg);
 
-        let pos = V2(coord.x, coord.y);
+        let pos = V2(coord.x, coord.y).add(this.mouseOffset);
+        this.element_pos[this.selectedVariable] = pos;
         // check if setter for this.selectedVariable exists
         // if it does, call it
         if (this.setter[this.selectedVariable] != undefined) {
@@ -879,6 +904,10 @@ class LocatorHandler {
         this.selectedVariable = null;
     }
 
+    setPos(name : string, pos : Vector2){
+        this.element_pos[name] = pos;
+        this.callbacks[name](pos, false);
+    }
     registerCallback(name : string, callback : (pos : Vector2) => any){
         this.callbacks[name] = callback;
     }
@@ -898,7 +927,9 @@ class LocatorHandler {
         if (this.first_touch_callback != null) this.first_touch_callback();
     }
 
-    create_locator_diagram_svg(diagram : Diagram, blink : boolean) : SVGGElement {
+    create_locator_diagram_svg(name: string, diagram : Diagram, blink : boolean) : SVGGElement {
+        this.svg_elements[name]?.remove();
+        
         let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
         f_draw_to_svg(this.control_svg, g, diagram.position(V2(0,0)), true, false, calculate_text_scale(this.diagram_svg));
         g.style.cursor = "pointer";
@@ -907,10 +938,14 @@ class LocatorHandler {
             g.classList.add("diagramatics-locator-blink");
             this.addBlinkingCircleOuter(g);
         }
+        this.svg_elements[name] = g;
+        this.element_pos[name]
         return g;
     }
 
-    static create_locator_circle_pointer_svg(radius : number, value : Vector2, color : string, blink : boolean) : SVGGElement {
+    create_locator_circle_pointer_svg(name: string, radius : number, value : Vector2, color : string, blink : boolean) : SVGGElement {
+        this.svg_elements[name]?.remove();
+        
         let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
         // set svg overflow to visible
         g.setAttribute("overflow", "visible");
@@ -937,6 +972,8 @@ class LocatorHandler {
         g.appendChild(circle_outer);
         g.appendChild(circle_inner);
         g.setAttribute("transform", `translate(${value.x},${-value.y})`)
+        
+        this.svg_elements[name] = g;
         return g;
     }
 
