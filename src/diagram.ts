@@ -1111,7 +1111,6 @@ export function line(start : Vector2, end : Vector2) : Diagram {
 /**
  * Create a polygon from a list of points
  * @param points list of points
- * @param names list of names for each path
  * @returns a polygon diagram
  */
 export function polygon(points: Vector2[]) : Diagram {
