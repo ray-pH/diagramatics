@@ -247,7 +247,6 @@ export class Interactive {
         this.registerEventListener(locator_svg, 'touchstart', (evt:any) => {
             this.locatorHandler!.startDrag(evt, variable_name, locator_svg);
         });
-        control_svg.appendChild(locator_svg);
 
         // =============== setter
         let setter;
@@ -286,11 +285,13 @@ export class Interactive {
      * @param track_diagram if provided, the locator will snap to the closest point on the diagram
      * @param blink if true, the locator will blink
      * @param callback callback function that will be called when the locator is moved
+     * @param callback_rightclick callback function that will be called when the locator is right clicked
      */
     public locator_custom(
         variable_name : string, value : Vector2, diagram : Diagram, 
         track_diagram? : Diagram, blink : boolean = true,
         callback?: (locator_name: string, position: Vector2) => any,
+        callback_rightclick?: (locator_name: string) => any
     ){
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
         this.inp_variables[variable_name] = value;
@@ -328,7 +329,12 @@ export class Interactive {
         this.registerEventListener(locator_svg, 'touchstart', (evt:any) => {
             this.locatorHandler!.startDrag(evt, variable_name, locator_svg);
         });
-        control_svg.appendChild(locator_svg);
+        if (callback_rightclick){
+          this.registerEventListener(locator_svg, 'contextmenu', (evt) => {
+            evt.preventDefault();
+            callback_rightclick(variable_name);
+          });
+        }
 
         // =============== setter
         let setter;
@@ -605,6 +611,12 @@ export class Interactive {
     public remove_dnd_draggable(name : string) {
         this.dragAndDropHandler?.remove_draggable(name);
     }
+    public remove_locator(name: string) {
+        this.locatorHandler?.remove(name);
+    }
+    public remove_button(name: string) {
+        this.buttonHandler?.remove(name);
+    }
 
     /**
      * @deprecated (use `Interactive.custom_object_g()` instead)
@@ -723,7 +735,23 @@ export class Interactive {
         if (this.buttonHandler == undefined) throw Error("buttonHandler in Interactive class is undefined");
 
         let n_callback = () => { callback(); this.draw(); }
-        this.buttonHandler.try_add_click(name, diagram, diagram_pressed, n_callback);
+        this.buttonHandler.try_add_click(name, diagram, diagram_pressed, diagram, n_callback);
+    }
+    
+    /**
+     * Create a click button
+     * @param name name of the button
+     * @param diagram diagram of the button
+     * @param diagram_pressed diagram of the button when it is pressed
+     * @param diagram_hover diagram of the button when it is hovered
+     * @param callback callback function when the button is clicked
+    */
+    public button_click_hover(name : string, diagram : Diagram, diagram_pressed : Diagram, diagram_hover : Diagram, callback : () => any){
+        this.init_button();
+        if (this.buttonHandler == undefined) throw Error("buttonHandler in Interactive class is undefined");
+
+        let n_callback = () => { callback(); this.draw(); }
+        this.buttonHandler.try_add_click(name, diagram, diagram_pressed, diagram_hover, n_callback);
     }
 }
 
@@ -904,6 +932,18 @@ class LocatorHandler {
         this.selectedElement = null;
         this.selectedVariable = null;
     }
+    
+    public remove(variable_name : string) : void {
+        if (this.selectedVariable == variable_name){
+            this.selectedElement = null;
+            this.selectedVariable = null;
+        }
+        delete this.callbacks[variable_name];
+        delete this.setter[variable_name];
+        this.svg_elements[variable_name]?.remove();
+        delete this.svg_elements[variable_name];
+        delete this.element_pos[variable_name];
+    }
 
     setPos(name : string, pos : Vector2){
         this.element_pos[name] = pos;
@@ -929,8 +969,6 @@ class LocatorHandler {
     }
 
     create_locator_diagram_svg(name: string, diagram : Diagram, blink : boolean) : SVGGElement {
-        this.svg_elements[name]?.remove();
-        
         let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
         f_draw_to_svg(this.control_svg, g, diagram.position(V2(0,0)), true, false, calculate_text_scale(this.diagram_svg));
         g.style.cursor = "pointer";
@@ -939,14 +977,20 @@ class LocatorHandler {
             g.classList.add("diagramatics-locator-blink");
             this.addBlinkingCircleOuter(g);
         }
+        
+        if (this.svg_elements[name]){
+            this.svg_elements[name].replaceWith(g);
+        } else {
+            this.control_svg.appendChild(g);
+        }
+        
+        
         this.svg_elements[name] = g;
         this.element_pos[name]
         return g;
     }
 
     create_locator_circle_pointer_svg(name: string, radius : number, value : Vector2, color : string, blink : boolean) : SVGGElement {
-        this.svg_elements[name]?.remove();
-        
         let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
         // set svg overflow to visible
         g.setAttribute("overflow", "visible");
@@ -973,6 +1017,11 @@ class LocatorHandler {
         g.appendChild(circle_outer);
         g.appendChild(circle_inner);
         g.setAttribute("transform", `translate(${value.x},${-value.y})`)
+        if (this.svg_elements[name]){
+            this.svg_elements[name].replaceWith(g);
+        } else {
+            this.control_svg.appendChild(g);
+        }
         
         this.svg_elements[name] = g;
         return g;
@@ -1474,17 +1523,25 @@ class DragAndDropHandler {
 class ButtonHandler {
     // callbacks : {[key : string] : (state : boolean) => any} = {};
     states : {[key : string] : boolean} = {};
-    svg_g_element : {[key : string] : [SVGGElement,SVGGElement]} = {};
+    svg_g_element : {[key : string] : [SVGGElement,SVGGElement,SVGElement|undefined]} = {};
     touchdownName : string | null = null;
 
     constructor(public button_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
+    }
+    
+    remove(name : string){
+        delete this.states[name];
+        const [a, b] = this.svg_g_element[name];
+        a?.remove();
+        b?.remove();
+        delete this.svg_g_element[name];
     }
 
     /** add a new toggle button if it doesn't exist, otherwise, update diagrams and callback */
     try_add_toggle(name : string, diagram_on : Diagram, diagram_off : Diagram, state : boolean, callback : (state : boolean, redraw? : boolean) => any) : setter_function_t {
         if (this.svg_g_element[name] != undefined) {
             // delete the old button
-            let [old_svg_on, old_svg_off] = this.svg_g_element[name];
+            let [old_svg_on, old_svg_off, _] = this.svg_g_element[name];
             old_svg_on.remove();
             old_svg_off.remove();
         }
@@ -1504,7 +1561,7 @@ class ButtonHandler {
 
         this.button_svg.appendChild(g_off);
         this.button_svg.appendChild(g_on);
-        this.svg_g_element[name] = [g_on, g_off];
+        this.svg_g_element[name] = [g_on, g_off, undefined];
 
         this.states[name] = state;
 
@@ -1551,18 +1608,22 @@ class ButtonHandler {
     }
 
     /** add a new click button if it doesn't exist, otherwise, update diagrams and callback */
-    try_add_click(name : string, diagram : Diagram, diagram_pressed : Diagram, callback : () => any){
+    try_add_click(
+        name : string, diagram : Diagram, diagram_pressed : Diagram, diagram_hover : Diagram,
+        callback : () => any
+    ){
         if (this.svg_g_element[name] != undefined) {
             // delete the old button
-            let [old_svg_normal, old_svg_pressed] = this.svg_g_element[name];
+            let [old_svg_normal, old_svg_pressed, old_svg_hover] = this.svg_g_element[name];
             old_svg_normal.remove();
             old_svg_pressed.remove();
+            old_svg_hover?.remove();
         }
-        this.add_click(name, diagram, diagram_pressed, callback);
+        this.add_click(name, diagram, diagram_pressed, diagram_hover, callback);
     }
 
     // TODO: handle touch input moving out of the button
-    add_click(name : string, diagram : Diagram, diagram_pressed : Diagram, callback : () => any){
+    add_click(name : string, diagram : Diagram, diagram_pressed : Diagram, diagram_hover : Diagram, callback : () => any){
         let g_normal = document.createElementNS("http://www.w3.org/2000/svg", "g");
         f_draw_to_svg(this.button_svg, g_normal, diagram, true, false, calculate_text_scale(this.diagram_svg));
         g_normal.setAttribute("overflow", "visible");
@@ -1572,27 +1633,53 @@ class ButtonHandler {
         f_draw_to_svg(this.button_svg, g_pressed, diagram_pressed, true, false, calculate_text_scale(this.diagram_svg));
         g_pressed.setAttribute("overflow", "visible");
         g_pressed.style.cursor = "pointer";
+        
+        let g_hover = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        f_draw_to_svg(this.button_svg, g_hover, diagram_hover, true, false, calculate_text_scale(this.diagram_svg));
+        g_hover.setAttribute("overflow", "visible");
+        g_hover.style.cursor = "pointer";
 
         this.button_svg.appendChild(g_normal);
         this.button_svg.appendChild(g_pressed);
-        this.svg_g_element[name] = [g_normal, g_pressed];
+        this.button_svg.appendChild(g_hover);
+        this.svg_g_element[name] = [g_normal, g_pressed, g_hover];
 
-        const set_display = (pressed : boolean) => {
+        const set_display = (pressed : boolean, hovered : boolean) => {
+            g_normal.setAttribute("display", !pressed && !hovered ? "block" : "none");
             g_pressed.setAttribute("display", pressed ? "block" : "none");
-            g_normal.setAttribute("display", pressed ? "none" : "block");
+            g_hover.setAttribute("display", hovered && !pressed ? "block" : "none");
         }
-        set_display(false);
+        set_display(false, false);
+        let pressed_state = false;
+        let hover_state = false;
+        
+        const update_display = () => {
+            set_display(pressed_state, hover_state);
+        }
 
         g_normal.onmousedown = (e) => {
             e.preventDefault();
             this.touchdownName = name;
-            set_display(true);
+            pressed_state = true;
+            update_display();
         }
         g_normal.onmouseup = (e) => {
             e.preventDefault();
             this.touchdownName = null;
         }
-        g_pressed.onmouseleave = (_e) => { set_display(false); }
+        g_normal.onmouseenter = (_e) => {
+            hover_state = true;
+            update_display();
+        }
+        g_normal.onmouseleave = (_e) => {
+            // hover_state = false;
+            update_display();
+        }
+        g_pressed.onmouseleave = (_e) => { 
+            hover_state = false;
+            pressed_state = false;
+            update_display();
+        }
         g_pressed.onmousedown = (e) => {
             e.preventDefault();
             this.touchdownName = name;
@@ -1600,28 +1687,47 @@ class ButtonHandler {
         g_pressed.onmouseup = (_e) => {
             if (this.touchdownName == name) callback();
             this.touchdownName = null;
-            set_display(false);
+            pressed_state = false;
+            update_display();
+        }
+        g_hover.onmousedown = (e) => {
+            e.preventDefault();
+            this.touchdownName = name;
+            pressed_state = true;
+            update_display();
+        }
+        g_hover.onmouseup = (e) => {
+            e.preventDefault();
+            this.touchdownName = null;
+        }
+        g_hover.onmouseleave = (_e) => {
+            hover_state = false;
+            update_display();
         }
 
         g_normal.ontouchstart = (e) => { 
             e.preventDefault();
             this.touchdownName = name; 
-            set_display(true);
+            pressed_state = true;
+            update_display();
         };
         g_normal.ontouchend = (_e) => {
             if (this.touchdownName == name) callback();
             this.touchdownName = null;
-            set_display(false);
+            pressed_state = false;
+            update_display();
         }
         g_pressed.ontouchstart = (e) => { 
             e.preventDefault();
             this.touchdownName = name; 
-            set_display(true);
+            pressed_state = true;
+            update_display();
         };
         g_pressed.ontouchend = (_e) => {
             if (this.touchdownName == name) callback();
             this.touchdownName = null;
-            set_display(false);
+            pressed_state = false;
+            update_display();
         }
             
             
