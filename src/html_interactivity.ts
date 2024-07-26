@@ -613,6 +613,12 @@ export class Interactive {
     public remove_dnd_draggable(name : string) {
         this.dragAndDropHandler?.remove_draggable(name);
     }
+    public remove_locator(name: string) {
+        this.locatorHandler?.remove(name);
+    }
+    public remove_button(name: string) {
+        this.buttonHandler?.remove(name);
+    }
 
     /**
      * @deprecated (use `Interactive.custom_object_g()` instead)
@@ -911,6 +917,18 @@ class LocatorHandler {
     endDrag(_ : LocatorEvent) {
         this.selectedElement = null;
         this.selectedVariable = null;
+    }
+    
+    public remove(variable_name : string) : void {
+        if (this.selectedVariable == variable_name){
+            this.selectedElement = null;
+            this.selectedVariable = null;
+        }
+        delete this.callbacks[variable_name];
+        delete this.setter[variable_name];
+        this.svg_elements[variable_name]?.remove();
+        delete this.svg_elements[variable_name];
+        delete this.element_pos[variable_name];
     }
 
     setPos(name : string, pos : Vector2){
@@ -1486,6 +1504,14 @@ class ButtonHandler {
     touchdownName : string | null = null;
 
     constructor(public button_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
+    }
+    
+    remove(name : string){
+        delete this.states[name];
+        const [a, b] = this.svg_g_element[name];
+        a?.remove();
+        b?.remove();
+        delete this.svg_g_element[name];
     }
 
     /** add a new toggle button if it doesn't exist, otherwise, update diagrams and callback */
