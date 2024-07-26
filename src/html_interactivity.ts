@@ -247,7 +247,6 @@ export class Interactive {
         this.registerEventListener(locator_svg, 'touchstart', (evt:any) => {
             this.locatorHandler!.startDrag(evt, variable_name, locator_svg);
         });
-        control_svg.appendChild(locator_svg);
 
         // =============== setter
         let setter;
@@ -336,7 +335,6 @@ export class Interactive {
             callback_rightclick(variable_name);
           });
         }
-        control_svg.appendChild(locator_svg);
 
         // =============== setter
         let setter;
@@ -971,8 +969,6 @@ class LocatorHandler {
     }
 
     create_locator_diagram_svg(name: string, diagram : Diagram, blink : boolean) : SVGGElement {
-        this.svg_elements[name]?.remove();
-        
         let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
         f_draw_to_svg(this.control_svg, g, diagram.position(V2(0,0)), true, false, calculate_text_scale(this.diagram_svg));
         g.style.cursor = "pointer";
@@ -981,14 +977,20 @@ class LocatorHandler {
             g.classList.add("diagramatics-locator-blink");
             this.addBlinkingCircleOuter(g);
         }
+        
+        if (this.svg_elements[name]){
+            this.svg_elements[name].replaceWith(g);
+        } else {
+            this.control_svg.appendChild(g);
+        }
+        
+        
         this.svg_elements[name] = g;
         this.element_pos[name]
         return g;
     }
 
     create_locator_circle_pointer_svg(name: string, radius : number, value : Vector2, color : string, blink : boolean) : SVGGElement {
-        this.svg_elements[name]?.remove();
-        
         let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
         // set svg overflow to visible
         g.setAttribute("overflow", "visible");
@@ -1015,6 +1017,11 @@ class LocatorHandler {
         g.appendChild(circle_outer);
         g.appendChild(circle_inner);
         g.setAttribute("transform", `translate(${value.x},${-value.y})`)
+        if (this.svg_elements[name]){
+            this.svg_elements[name].replaceWith(g);
+        } else {
+            this.control_svg.appendChild(g);
+        }
         
         this.svg_elements[name] = g;
         return g;
