@@ -737,7 +737,23 @@ export class Interactive {
         if (this.buttonHandler == undefined) throw Error("buttonHandler in Interactive class is undefined");
 
         let n_callback = () => { callback(); this.draw(); }
-        this.buttonHandler.try_add_click(name, diagram, diagram_pressed, n_callback);
+        this.buttonHandler.try_add_click(name, diagram, diagram_pressed, diagram, n_callback);
+    }
+    
+    /**
+     * Create a click button
+     * @param name name of the button
+     * @param diagram diagram of the button
+     * @param diagram_pressed diagram of the button when it is pressed
+     * @param diagram_hover diagram of the button when it is hovered
+     * @param callback callback function when the button is clicked
+    */
+    public button_click_hover(name : string, diagram : Diagram, diagram_pressed : Diagram, diagram_hover : Diagram, callback : () => any){
+        this.init_button();
+        if (this.buttonHandler == undefined) throw Error("buttonHandler in Interactive class is undefined");
+
+        let n_callback = () => { callback(); this.draw(); }
+        this.buttonHandler.try_add_click(name, diagram, diagram_pressed, diagram_hover, n_callback);
     }
 }
 
@@ -1500,7 +1516,7 @@ class DragAndDropHandler {
 class ButtonHandler {
     // callbacks : {[key : string] : (state : boolean) => any} = {};
     states : {[key : string] : boolean} = {};
-    svg_g_element : {[key : string] : [SVGGElement,SVGGElement]} = {};
+    svg_g_element : {[key : string] : [SVGGElement,SVGGElement,SVGElement|undefined]} = {};
     touchdownName : string | null = null;
 
     constructor(public button_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
@@ -1518,7 +1534,7 @@ class ButtonHandler {
     try_add_toggle(name : string, diagram_on : Diagram, diagram_off : Diagram, state : boolean, callback : (state : boolean, redraw? : boolean) => any) : setter_function_t {
         if (this.svg_g_element[name] != undefined) {
             // delete the old button
-            let [old_svg_on, old_svg_off] = this.svg_g_element[name];
+            let [old_svg_on, old_svg_off, _] = this.svg_g_element[name];
             old_svg_on.remove();
             old_svg_off.remove();
         }
@@ -1538,7 +1554,7 @@ class ButtonHandler {
 
         this.button_svg.appendChild(g_off);
         this.button_svg.appendChild(g_on);
-        this.svg_g_element[name] = [g_on, g_off];
+        this.svg_g_element[name] = [g_on, g_off, undefined];
 
         this.states[name] = state;
 
@@ -1585,18 +1601,22 @@ class ButtonHandler {
     }
 
     /** add a new click button if it doesn't exist, otherwise, update diagrams and callback */
-    try_add_click(name : string, diagram : Diagram, diagram_pressed : Diagram, callback : () => any){
+    try_add_click(
+        name : string, diagram : Diagram, diagram_pressed : Diagram, diagram_hover : Diagram,
+        callback : () => any
+    ){
         if (this.svg_g_element[name] != undefined) {
             // delete the old button
-            let [old_svg_normal, old_svg_pressed] = this.svg_g_element[name];
+            let [old_svg_normal, old_svg_pressed, old_svg_hover] = this.svg_g_element[name];
             old_svg_normal.remove();
             old_svg_pressed.remove();
+            old_svg_hover?.remove();
         }
-        this.add_click(name, diagram, diagram_pressed, callback);
+        this.add_click(name, diagram, diagram_pressed, diagram_hover, callback);
     }
 
     // TODO: handle touch input moving out of the button
-    add_click(name : string, diagram : Diagram, diagram_pressed : Diagram, callback : () => any){
+    add_click(name : string, diagram : Diagram, diagram_pressed : Diagram, diagram_hover : Diagram, callback : () => any){
         let g_normal = document.createElementNS("http://www.w3.org/2000/svg", "g");
         f_draw_to_svg(this.button_svg, g_normal, diagram, true, false, calculate_text_scale(this.diagram_svg));
         g_normal.setAttribute("overflow", "visible");
@@ -1606,27 +1626,53 @@ class ButtonHandler {
         f_draw_to_svg(this.button_svg, g_pressed, diagram_pressed, true, false, calculate_text_scale(this.diagram_svg));
         g_pressed.setAttribute("overflow", "visible");
         g_pressed.style.cursor = "pointer";
+        
+        let g_hover = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        f_draw_to_svg(this.button_svg, g_hover, diagram_hover, true, false, calculate_text_scale(this.diagram_svg));
+        g_hover.setAttribute("overflow", "visible");
+        g_hover.style.cursor = "pointer";
 
         this.button_svg.appendChild(g_normal);
         this.button_svg.appendChild(g_pressed);
-        this.svg_g_element[name] = [g_normal, g_pressed];
+        this.button_svg.appendChild(g_hover);
+        this.svg_g_element[name] = [g_normal, g_pressed, g_hover];
 
-        const set_display = (pressed : boolean) => {
+        const set_display = (pressed : boolean, hovered : boolean) => {
+            g_normal.setAttribute("display", !pressed && !hovered ? "block" : "none");
             g_pressed.setAttribute("display", pressed ? "block" : "none");
-            g_normal.setAttribute("display", pressed ? "none" : "block");
+            g_hover.setAttribute("display", hovered && !pressed ? "block" : "none");
         }
-        set_display(false);
+        set_display(false, false);
+        let pressed_state = false;
+        let hover_state = false;
+        
+        const update_display = () => {
+            set_display(pressed_state, hover_state);
+        }
 
         g_normal.onmousedown = (e) => {
             e.preventDefault();
             this.touchdownName = name;
-            set_display(true);
+            pressed_state = true;
+            update_display();
         }
         g_normal.onmouseup = (e) => {
             e.preventDefault();
             this.touchdownName = null;
         }
-        g_pressed.onmouseleave = (_e) => { set_display(false); }
+        g_normal.onmouseenter = (_e) => {
+            hover_state = true;
+            update_display();
+        }
+        g_normal.onmouseleave = (_e) => {
+            // hover_state = false;
+            update_display();
+        }
+        g_pressed.onmouseleave = (_e) => { 
+            hover_state = false;
+            pressed_state = false;
+            update_display();
+        }
         g_pressed.onmousedown = (e) => {
             e.preventDefault();
             this.touchdownName = name;
@@ -1634,28 +1680,47 @@ class ButtonHandler {
         g_pressed.onmouseup = (_e) => {
             if (this.touchdownName == name) callback();
             this.touchdownName = null;
-            set_display(false);
+            pressed_state = false;
+            update_display();
+        }
+        g_hover.onmousedown = (e) => {
+            e.preventDefault();
+            this.touchdownName = name;
+            pressed_state = true;
+            update_display();
+        }
+        g_hover.onmouseup = (e) => {
+            e.preventDefault();
+            this.touchdownName = null;
+        }
+        g_hover.onmouseleave = (_e) => {
+            hover_state = false;
+            update_display();
         }
 
         g_normal.ontouchstart = (e) => { 
             e.preventDefault();
             this.touchdownName = name; 
-            set_display(true);
+            pressed_state = true;
+            update_display();
         };
         g_normal.ontouchend = (_e) => {
             if (this.touchdownName == name) callback();
             this.touchdownName = null;
-            set_display(false);
+            pressed_state = false;
+            update_display();
         }
         g_pressed.ontouchstart = (e) => { 
             e.preventDefault();
             this.touchdownName = name; 
-            set_display(true);
+            pressed_state = true;
+            update_display();
         };
         g_pressed.ontouchend = (_e) => {
             if (this.touchdownName == name) callback();
             this.touchdownName = null;
-            set_display(false);
+            pressed_state = false;
+            update_display();
         }
             
             
