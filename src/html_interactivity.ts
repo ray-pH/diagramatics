@@ -286,11 +286,13 @@ export class Interactive {
      * @param track_diagram if provided, the locator will snap to the closest point on the diagram
      * @param blink if true, the locator will blink
      * @param callback callback function that will be called when the locator is moved
+     * @param callback_rightclick callback function that will be called when the locator is right clicked
      */
     public locator_custom(
         variable_name : string, value : Vector2, diagram : Diagram, 
         track_diagram? : Diagram, blink : boolean = true,
         callback?: (locator_name: string, position: Vector2) => any,
+        callback_rightclick?: (locator_name: string) => any
     ){
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
         this.inp_variables[variable_name] = value;
@@ -328,6 +330,12 @@ export class Interactive {
         this.registerEventListener(locator_svg, 'touchstart', (evt:any) => {
             this.locatorHandler!.startDrag(evt, variable_name, locator_svg);
         });
+        if (callback_rightclick){
+          this.registerEventListener(locator_svg, 'contextmenu', (evt) => {
+            evt.preventDefault();
+            callback_rightclick(variable_name);
+          });
+        }
         control_svg.appendChild(locator_svg);
 
         // =============== setter
