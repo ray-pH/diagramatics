@@ -268,6 +268,7 @@ export class Interactive {
             }
         }
         this.locatorHandler.registerSetter(variable_name, setter);
+        this.inp_setter[variable_name] = setter;
 
         // set initial position
         let init_pos = setter(value);
@@ -356,6 +357,7 @@ export class Interactive {
             }
         }
         this.locatorHandler.registerSetter(variable_name, setter);
+        this.inp_setter[variable_name] = setter;
 
         // set initial position
         let init_pos = setter(value);
