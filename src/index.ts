@@ -49,6 +49,7 @@ export {
 
 export * as mod from './modifier.js'
 export * as boolean from './boolean.js'
+export * as filter from './filter.js'
 
 // Extra Shapes
 export { 
