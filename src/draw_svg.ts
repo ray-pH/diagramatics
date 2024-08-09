@@ -67,7 +67,6 @@ function draw_polygon(
 
     // draw svg
     let polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-    console.log(style)
     for (let stylename in style) {
         polygon.style[stylename as any] = (style as any)[stylename as any];
     }
