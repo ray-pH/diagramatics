@@ -67,6 +67,7 @@ function draw_polygon(
 
     // draw svg
     let polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    console.log(style)
     for (let stylename in style) {
         polygon.style[stylename as any] = (style as any)[stylename as any];
     }
@@ -535,6 +536,7 @@ export interface draw_to_svg_options {
     padding? : number | number[],
     text_scaling_reference_svg? : SVGSVGElement,
     text_scaling_reference_padding? : number | number[],
+    filter_strings? : string[],
 }
 
 // TODO: replace draw_to_svg with the current draw_to_svg_element in the next major version
@@ -583,6 +585,8 @@ export function draw_to_svg_element(outer_svgelement : SVGSVGElement, diagram : 
         svgelement.setAttribute("height", "100%");
         outer_svgelement.appendChild(svgelement);
     }
+    
+    handle_filter_strings(outer_svgelement, options.filter_strings);
 
     let text_scaling_factor : number | undefined = undefined;
     if (options.text_scaling_reference_svg) {
@@ -636,6 +640,21 @@ export function draw_to_svg_element(outer_svgelement : SVGSVGElement, diagram : 
         
         // prepend
         svgelement.insertBefore(rect, svgelement.firstChild);
+    }
+}
+
+function handle_filter_strings(svgelement : SVGSVGElement, filter_strings? : string[]) : void {
+    if (filter_strings == undefined || filter_strings.length == 0) return;
+    
+    let defs = svgelement.querySelector("defs");
+    if (defs == null) {
+        defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+        svgelement.insertBefore(defs, svgelement.firstChild);
+    }
+    
+    defs.innerHTML = "";
+    for (let filter_string of filter_strings) {
+        defs.innerHTML += filter_string;
     }
 }
 
