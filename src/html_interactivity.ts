@@ -32,6 +32,10 @@ enum control_svg_name {
     custom    = "custom_int_svg",
     button    = "button_svg"
 }
+enum HTML_INT_TARGET {
+    DOCUMENT = "document",
+    SVG = "svg"
+} 
 
 /**
  * Object that controls the interactivity of the diagram
@@ -69,7 +73,8 @@ export class Interactive {
     constructor(
         public control_container_div : HTMLElement, 
         public diagram_outer_svg? : SVGSVGElement,
-        inp_object_? : {[key : string] : any}
+        inp_object_? : {[key : string] : any},
+        public event_target: HTML_INT_TARGET = HTML_INT_TARGET.SVG,
     ){
         if (inp_object_ != undefined){ this.inp_variables = inp_object_; }
     }
@@ -179,7 +184,7 @@ export class Interactive {
             svg_element.setAttribute("meta", metaname);
             svg_element.setAttribute("width", "100%");
             svg_element.setAttribute("height", "100%");
-            if (metaname == control_svg_name.dnd) svg_element.style.overflow = "visible";
+            if (this.isTargetingDocument()) svg_element.style.overflow = "visible";
             this.diagram_outer_svg.appendChild(svg_element);
         }
 
@@ -190,6 +195,10 @@ export class Interactive {
         let diagram_svg = this.get_svg_element("diagram_svg");
         this.diagram_svg = diagram_svg;
         return diagram_svg;
+    }
+    
+    isTargetingDocument() : boolean {
+        return this.event_target == HTML_INT_TARGET.DOCUMENT;
     }
 
     /**
@@ -216,11 +225,12 @@ export class Interactive {
         if (this.locatorHandler == undefined) {
             let locatorHandler = new LocatorHandler(control_svg, diagram_svg);
             this.locatorHandler = locatorHandler;
-            this.registerEventListener(this.diagram_outer_svg, 'mousemove',  (evt:any) => { locatorHandler.drag(evt)});
-            this.registerEventListener(this.diagram_outer_svg, 'mouseup',    (evt:any) => { locatorHandler.endDrag(evt)});
-            this.registerEventListener(this.diagram_outer_svg, 'touchmove',  (evt:any) => { locatorHandler.drag(evt)});
-            this.registerEventListener(this.diagram_outer_svg, 'touchend',   (evt:any) => { locatorHandler.endDrag(evt)});
-            this.registerEventListener(this.diagram_outer_svg, 'touchcancel',(evt:any) => { locatorHandler.endDrag(evt)});
+            const eventTarget = this.isTargetingDocument() ? document : this.diagram_outer_svg;
+            this.registerEventListener(eventTarget, 'mousemove',  (evt:any) => { locatorHandler.drag(evt)});
+            this.registerEventListener(eventTarget, 'mouseup',    (evt:any) => { locatorHandler.endDrag(evt)});
+            this.registerEventListener(eventTarget, 'touchmove',  (evt:any) => { locatorHandler.drag(evt)});
+            this.registerEventListener(eventTarget, 'touchend',   (evt:any) => { locatorHandler.endDrag(evt)});
+            this.registerEventListener(eventTarget, 'touchcancel',(evt:any) => { locatorHandler.endDrag(evt)});
         }
 
 
@@ -304,11 +314,12 @@ export class Interactive {
         if (this.locatorHandler == undefined) {
             let locatorHandler = new LocatorHandler(control_svg, diagram_svg);
             this.locatorHandler = locatorHandler;
-            this.registerEventListener(this.diagram_outer_svg, 'mousemove',  (evt:any) => { locatorHandler.drag(evt); })
-            this.registerEventListener(this.diagram_outer_svg, 'mouseup',    (evt:any) => { locatorHandler.endDrag(evt); })
-            this.registerEventListener(this.diagram_outer_svg, 'touchmove',  (evt:any) => { locatorHandler.drag(evt); })
-            this.registerEventListener(this.diagram_outer_svg, 'touchend',   (evt:any) => { locatorHandler.endDrag(evt); })
-            this.registerEventListener(this.diagram_outer_svg, 'touchcancel',(evt:any) => { locatorHandler.endDrag(evt); })
+            const eventTarget = this.isTargetingDocument() ? document : this.diagram_outer_svg;
+            this.registerEventListener(eventTarget, 'mousemove',  (evt:any) => { locatorHandler.drag(evt); })
+            this.registerEventListener(eventTarget, 'mouseup',    (evt:any) => { locatorHandler.endDrag(evt); })
+            this.registerEventListener(eventTarget, 'touchmove',  (evt:any) => { locatorHandler.drag(evt); })
+            this.registerEventListener(eventTarget, 'touchend',   (evt:any) => { locatorHandler.endDrag(evt); })
+            this.registerEventListener(eventTarget, 'touchcancel',(evt:any) => { locatorHandler.endDrag(evt); })
         }
 
 
@@ -475,12 +486,13 @@ export class Interactive {
         if (this.dragAndDropHandler == undefined) {
             let dragAndDropHandler = new DragAndDropHandler(dnd_svg, diagram_svg);
             this.dragAndDropHandler = dragAndDropHandler;
+            const eventTarget = this.isTargetingDocument() ? document : this.diagram_outer_svg;
             // this.registerEventListener(this.diagram_outer_svg, 'mousemove',  (evt:any) => {dragAndDropHandler.drag(evt);});
-            this.registerEventListener(document, 'mousemove',  (evt:any) => {dragAndDropHandler.drag(evt);});
-            this.registerEventListener(document, 'mouseup',    (evt:any) => {dragAndDropHandler.endDrag(evt);});
-            this.registerEventListener(document, 'touchmove',  (evt:any) => {dragAndDropHandler.drag(evt);});
-            this.registerEventListener(document, 'touchend',   (evt:any) => {dragAndDropHandler.endDrag(evt);});
-            this.registerEventListener(document, 'touchcancel',(evt:any) => {dragAndDropHandler.endDrag(evt);});
+            this.registerEventListener(eventTarget, 'mousemove',  (evt:any) => {dragAndDropHandler.drag(evt);});
+            this.registerEventListener(eventTarget, 'mouseup',    (evt:any) => {dragAndDropHandler.endDrag(evt);});
+            this.registerEventListener(eventTarget, 'touchmove',  (evt:any) => {dragAndDropHandler.drag(evt);});
+            this.registerEventListener(eventTarget, 'touchend',   (evt:any) => {dragAndDropHandler.endDrag(evt);});
+            this.registerEventListener(eventTarget, 'touchcancel',(evt:any) => {dragAndDropHandler.endDrag(evt);});
         }
     }
 
