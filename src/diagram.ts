@@ -187,6 +187,12 @@ export class Diagram {
             Object.setPrototypeOf(objd.path, Path.prototype);
             objd.path = objd.path.copy();
         }
+        
+        // bbox cache 
+        if (objd._bbox_cache != undefined && objd._bbox_cache.length == 2) {
+            Object.setPrototypeOf(objd._bbox_cache[0], Vector2.prototype);
+            Object.setPrototypeOf(objd._bbox_cache[1], Vector2.prototype);
+        }
     }
 
     /**
