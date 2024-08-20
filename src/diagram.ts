@@ -119,6 +119,8 @@ export class Diagram {
     imgdata       : Partial<ImageData>         = {};
     mutable       : boolean   = false;
     tags : string[] = [];
+    
+    private _bbox_cache : [Vector2, Vector2] | undefined = undefined;
 
     constructor(type_ : DiagramType, 
         args : { 
@@ -528,6 +530,7 @@ export class Diagram {
      * @returns [min, max] where min is the top left corner and max is the bottom right corner
      */
     public bounding_box() : [Vector2, Vector2] {
+        if (this._bbox_cache != undefined) return this._bbox_cache;
         let minx = Infinity, miny = Infinity;
         let maxx = -Infinity, maxy = -Infinity;
         if (this.type == DiagramType.Diagram){
@@ -539,7 +542,9 @@ export class Diagram {
                     maxx = Math.max(maxx, max.x);
                     maxy = Math.max(maxy, max.y);
                 }
-                return [new Vector2(minx, miny), new Vector2(maxx, maxy)];
+                const bbox = [new Vector2(minx, miny), new Vector2(maxx, maxy)] as [Vector2, Vector2];
+                this._bbox_cache = bbox;
+                return bbox;
         }
         else if (this.type == DiagramType.Curve || this.type == DiagramType.Polygon 
             || this.type == DiagramType.Image){
@@ -551,10 +556,14 @@ export class Diagram {
                     maxx = Math.max(maxx, point.x);
                     maxy = Math.max(maxy, point.y);
                 }
-                return [new Vector2(minx, miny), new Vector2(maxx, maxy)];
+                const bbox = [new Vector2(minx, miny), new Vector2(maxx, maxy)] as [Vector2, Vector2];
+                this._bbox_cache = bbox;
+                return bbox;
         } 
         else if (this.type == DiagramType.Text || this.type == DiagramType.MultilineText){
-            return [this.origin.copy(), this.origin.copy()];
+            const bbox = [this.origin.copy(), this.origin.copy()] as [Vector2, Vector2];
+            this._bbox_cache = bbox;
+            return bbox;
         }
         else {
             throw new Error("Unreachable, unknown diagram type : " + this.type);
@@ -567,6 +576,7 @@ export class Diagram {
      */
     public transform(transform_function : (p : Vector2) => Vector2) : Diagram {
         let newd : Diagram = this.copy_if_not_mutable();
+        newd._bbox_cache = undefined;
         // transform all children
         // newd.children = newd.children.map(c => c.transform(transform_function));
         for (let i = 0; i < newd.children.length; i++)
@@ -583,7 +593,13 @@ export class Diagram {
      * @param v vector to translate
      */
     public translate(v : Vector2) : Diagram {
-        return this.transform(Transform.translate(v));
+        // return this.transform(Transform.translate(v));
+        const prev_cached_bbox = this._bbox_cache;
+        const newd = this.transform(Transform.translate(v));
+        if (prev_cached_bbox != undefined) {
+            newd._bbox_cache = prev_cached_bbox.map(p => Transform.translate(v)(p)) as [Vector2, Vector2];
+        }
+        return newd;
     }
 
     /**
