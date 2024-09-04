@@ -62,6 +62,7 @@ export class Interactive {
     intervals : {[key : string] : any} = {};         
     
     public registeredEventListenerRemoveFunctions : (() => void)[] = [];
+    public single_int_mode: boolean = false;
 
     /**
      * @param control_container_div the div that contains the control elements
@@ -165,7 +166,7 @@ export class Interactive {
     }
     
 
-    get_svg_element(metaname : string) : SVGSVGElement {
+    get_svg_element(metaname: string, force_recreate: boolean = false) : SVGSVGElement {
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
         let diagram_svg : SVGSVGElement | undefined = undefined;
         // check if this.diagram_outer_svg has a child with meta=control_svg
@@ -179,6 +180,10 @@ export class Interactive {
             }
         }
 
+        if (this.single_int_mode && force_recreate && svg_element != undefined) {
+            svg_element.remove?.();
+            svg_element = undefined;
+        }
         if (svg_element == undefined) {
             svg_element = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             svg_element.setAttribute("meta", metaname);
@@ -219,7 +224,7 @@ export class Interactive {
         this.inp_variables[variable_name] = value;
 
         let diagram_svg  = this.get_diagram_svg();
-        let control_svg  = this.get_svg_element(control_svg_name.locator);
+        let control_svg  = this.get_svg_element(control_svg_name.locator, !this.locator_svg);
         this.locator_svg = control_svg;
         // if this is the fist time this function is called, create a locatorHandler
         if (this.locatorHandler == undefined) {
@@ -308,7 +313,7 @@ export class Interactive {
         this.inp_variables[variable_name] = value;
 
         let diagram_svg  = this.get_diagram_svg();
-        let control_svg  = this.get_svg_element(control_svg_name.locator);
+        let control_svg  = this.get_svg_element(control_svg_name.locator, !this.locator_svg);
         this.locator_svg = control_svg;
         // if this is the fist time this function is called, create a locatorHandler
         if (this.locatorHandler == undefined) {
@@ -479,7 +484,7 @@ export class Interactive {
     private init_drag_and_drop() {
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
         let diagram_svg = this.get_diagram_svg();
-        let dnd_svg     = this.get_svg_element(control_svg_name.dnd);
+        let dnd_svg     = this.get_svg_element(control_svg_name.dnd, !this.dnd_svg);
         this.dnd_svg    = dnd_svg;
 
         // if this is the fist time this function is called, create a dragAndDropHandler
@@ -645,7 +650,7 @@ export class Interactive {
     public custom_object(id : string, classlist: string[], diagram : Diagram) : SVGSVGElement {
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
         let diagram_svg = this.get_diagram_svg();
-        let control_svg = this.get_svg_element(control_svg_name.custom);
+        let control_svg = this.get_svg_element(control_svg_name.custom, !this.custom_svg);
 
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         f_draw_to_svg(svg, svg, diagram, true, false, calculate_text_scale(diagram_svg));
@@ -672,7 +677,7 @@ export class Interactive {
     public custom_object_g(id : string, classlist: string[], diagram : Diagram) : SVGGElement {
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
         let diagram_svg = this.get_diagram_svg();
-        let control_svg = this.get_svg_element(control_svg_name.custom);
+        let control_svg = this.get_svg_element(control_svg_name.custom, !this.custom_svg);
 
         let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
         f_draw_to_svg(control_svg, g, diagram, true, false, calculate_text_scale(diagram_svg));
@@ -692,7 +697,7 @@ export class Interactive {
     private init_button() {
         if (this.diagram_outer_svg == undefined) throw Error("diagram_outer_svg in Interactive class is undefined");
         let diagram_svg = this.get_diagram_svg();
-        let button_svg  = this.get_svg_element(control_svg_name.button);
+        let button_svg  = this.get_svg_element(control_svg_name.button, !this.button_svg);
         this.button_svg = button_svg;
 
         // if this is the fist time this function is called, create a dragAndDropHandler
