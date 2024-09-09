@@ -1235,7 +1235,7 @@ class DragAndDropHandler {
     public add_draggable_to_container(name : string, diagram : Diagram, container_name : string) {
         if (this.draggables[name] != undefined) {
             this.replace_draggable_svg(name, diagram);
-            this.move_draggable_to_container(name, container_name);
+            this.move_draggable_to_container(name, container_name, true);
             return;
         }
 
@@ -1312,7 +1312,7 @@ class DragAndDropHandler {
         try {
             for (let containerdata of data) {
                 for (let content of containerdata.content) {
-                    this.try_move_draggable_to_container(content, containerdata.container);
+                    this.try_move_draggable_to_container(content, containerdata.container, true);
                 }
             }
         } catch (_e) {
@@ -1406,7 +1406,7 @@ class DragAndDropHandler {
         this.callbacks[draggedElement.name](draggedElement.position);
     }
 
-    try_move_draggable_to_container(draggable_name : string, container_name : string) {
+    try_move_draggable_to_container(draggable_name : string, container_name : string, ignore_callback = false) {
         if (this.move_validation_function) {
             const valid = this.move_validation_function(draggable_name, container_name);
             if (!valid) return;
@@ -1414,14 +1414,14 @@ class DragAndDropHandler {
         let draggable = this.draggables[draggable_name];
         let container = this.containers[container_name];
         if (container.content.length + 1 <= container.capacity) {
-            this.move_draggable_to_container(draggable_name, container_name);
+            this.move_draggable_to_container(draggable_name, container_name, ignore_callback);
         } else if (container.capacity == 1){
             // only swap if the container has only 1 capacity
             // swap
             let original_container_name = draggable.container;
             let other_draggable_name = container.content[0];
             this.move_draggable_to_container(draggable_name, container_name, true);
-            this.move_draggable_to_container(other_draggable_name, original_container_name);
+            this.move_draggable_to_container(other_draggable_name, original_container_name, ignore_callback);
         }
     }
 
