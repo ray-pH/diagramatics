@@ -133,3 +133,10 @@
 .diagramatics-dnd-draggable.picked{
     fill-opacity: 0.5;
 }
+
+.diagramatics-dnd-focusrect {
+    visibility: hidden;
+}
+:focus > .diagramatics-dnd-focusrect {
+    visibility: visible;
+}
