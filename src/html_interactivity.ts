@@ -540,7 +540,11 @@ export class Interactive {
      * @param container_name name of the container
      * @param callback callback function when the draggable is moved
      */
-    public dnd_draggable_to_container(name : string, diagram : Diagram, container_name : string, callback? : (name:string, container:string) => any) {
+    public dnd_draggable_to_container(
+        name : string, diagram : Diagram, container_name : string, 
+        callback? : (name:string, container:string) => any,
+        onclickstart_callback? : () => any
+    ) {
         this.init_drag_and_drop();
         if (this.dragAndDropHandler == undefined) throw Error("dragAndDropHandler in Interactive class is undefined");
 
@@ -553,6 +557,7 @@ export class Interactive {
             if (redraw) this.draw();
         }
         this.dragAndDropHandler.registerCallback(name, dnd_callback);
+        if (onclickstart_callback) this.dragAndDropHandler.register_clickstart_callback(name, onclickstart_callback);
     }
     
     /**
@@ -579,6 +584,7 @@ export class Interactive {
             if (redraw) this.draw();
         }
         this.dragAndDropHandler.registerCallback(name, dnd_callback);
+        if (onclickstart_callback) this.dragAndDropHandler.register_clickstart_callback(name, onclickstart_callback);
     }
 
     /**
@@ -1290,6 +1296,9 @@ class DragAndDropHandler {
 
     registerCallback(name : string, callback : (pos : Vector2) => any){
         this.callbacks[name] = callback;
+    }
+    register_clickstart_callback(name : string, callback : () => any){
+        this.onclickstart_callback[name] = callback;
     }
 
     register_dropped_outside_callback(callback : (name : string) => any){
