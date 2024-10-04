@@ -55,6 +55,8 @@ export class Interactive {
     private dragAndDropHandler? : DragAndDropHandler = undefined;
     private buttonHandler? : ButtonHandler = undefined;
     // no support for canvas yet
+    
+    private focus_padding : number = 1;
 
     public draw_function : (inp_object : inpVariables_t, setter_object? : inpSetter_t) => any 
         = (_) => {};
@@ -204,6 +206,13 @@ export class Interactive {
     
     isTargetingDocument() : boolean {
         return this.event_target == HTML_INT_TARGET.DOCUMENT;
+    }
+    
+    set_focus_padding(padding : number) {
+        this.focus_padding = padding;
+        if (this.dragAndDropHandler) {
+            this.dragAndDropHandler.focus_padding = padding;
+        }
     }
 
     /**
@@ -490,6 +499,7 @@ export class Interactive {
         // if this is the fist time this function is called, create a dragAndDropHandler
         if (this.dragAndDropHandler == undefined) {
             let dragAndDropHandler = new DragAndDropHandler(dnd_svg, diagram_svg);
+            dragAndDropHandler.focus_padding = this.focus_padding;
             this.dragAndDropHandler = dragAndDropHandler;
             const eventTarget = this.isTargetingDocument() ? document : this.diagram_outer_svg;
             // this.registerEventListener(this.diagram_outer_svg, 'mousemove',  (evt:any) => {dragAndDropHandler.drag(evt);});
@@ -1074,7 +1084,8 @@ type DragAndDropData = {container:string, content:string[]}[]
 enum dnd_type {
     container = "diagramatics-dnd-container",
     draggable = "diagramatics-dnd-draggable",
-    ghost     = "diagramatics-dnd-draggable-ghost"
+    ghost     = "diagramatics-dnd-draggable-ghost",
+    focusrect = "diagramatics-dnd-focusrect"
 }
 
 //TODO: add more
@@ -1103,6 +1114,7 @@ class DragAndDropHandler {
     sort_content : boolean = false;
     dom_to_id_map : WeakMap<HTMLElement|SVGElement, string>;
     active_draggable_name: string | null = null; // active from tap/enter
+    focus_padding : number = 1;
 
     constructor(public dnd_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
         this.dom_to_id_map = new WeakMap();
@@ -1366,6 +1378,9 @@ class DragAndDropHandler {
         g.setAttribute("class", dnd_type.container);
         g.setAttribute("tabindex", "0");
         
+        g.onmousedown = (e) => {
+            e.preventDefault();
+        }
         this.register_tap_enter(g, () => {
             this.tap_enter_container(name);
         });
@@ -1373,6 +1388,8 @@ class DragAndDropHandler {
         this.dnd_svg.append(g);
         this.containers[name].svgelement = g;
         this.dom_to_id_map.set(g, name);
+        
+        this.add_focus_rect(g, diagram)
     }
     
     add_draggable_svg(name : string, diagram : Diagram) {
@@ -1400,6 +1417,25 @@ class DragAndDropHandler {
         this.dnd_svg.append(g);
         this.draggables[name].svgelement = g;
         this.dom_to_id_map.set(g, name);
+        this.add_focus_rect(g, diagram)
+    }
+    
+    add_focus_rect(g: SVGGElement, diagram : Diagram) {
+        const bbox = diagram.bounding_box();
+        const width = bbox[1].x - bbox[0].x + 2*this.focus_padding;
+        const height = bbox[1].y - bbox[0].y + 2*this.focus_padding;
+        // focus rect svg element
+        const focus_rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        focus_rect.setAttribute("width", width.toString());
+        focus_rect.setAttribute("height", height.toString());
+        focus_rect.setAttribute("x", (-width/2).toString());
+        focus_rect.setAttribute("y", (-height/2).toString());
+        focus_rect.setAttribute("fill", "none");
+        focus_rect.setAttribute("stroke", "black");
+        focus_rect.setAttribute("stroke-width", "1");
+        focus_rect.setAttribute("vector-effect", "non-scaling-stroke");
+        focus_rect.setAttribute("class", dnd_type.focusrect);
+        g.appendChild(focus_rect);
     }
 
     reposition_container_content(container_name : string){
