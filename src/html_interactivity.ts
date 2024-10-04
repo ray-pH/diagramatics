@@ -552,7 +552,11 @@ export class Interactive {
      * @param container_diagram diagram of the container, if not provided, a container will be created automatically
      * @param callback callback function when the draggable is moved
     */
-    public dnd_draggable(name : string, diagram : Diagram, container_diagram? : Diagram, callback? : (name:string, pos:Vector2) => any) {
+    public dnd_draggable(
+        name : string, diagram : Diagram, container_diagram? : Diagram, 
+        callback? : (name:string, pos:Vector2) => any,
+        onclickstart_callback? : () => any
+    ) {
         this.init_drag_and_drop();
         if (this.dragAndDropHandler == undefined) throw Error("dragAndDropHandler in Interactive class is undefined");
 
@@ -1090,6 +1094,7 @@ class DragAndDropHandler {
     containers : {[key : string] : DragAndDropContainerData} = {};
     draggables : {[key : string] : DragAndDropDraggableData} = {};
     callbacks : {[key : string] : (pos : Vector2) => any} = {};
+    onclickstart_callback : {[key : string] : () => any} = {};
     hoveredContainerName : string | null = null;
     draggedElementName : string | null = null;
     draggedElementGhost : SVGElement | null = null;
@@ -1097,6 +1102,7 @@ class DragAndDropHandler {
     move_validation_function : ((draggable_name: string, target_name: string) => boolean) | null = null;
     sort_content : boolean = false;
     dom_to_id_map : WeakMap<HTMLElement|SVGElement, string>;
+    active_draggable_name: string | null = null; // active from tap/enter
 
     constructor(public dnd_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
         this.dom_to_id_map = new WeakMap();
@@ -1324,6 +1330,32 @@ class DragAndDropHandler {
         let rect = rectangle_corner(...diagram.bounding_box()).move_origin(diagram.origin);
         return rect.strokedasharray([5]);
     }
+    
+    register_tap_enter(g: SVGElement, callback : () => any) {
+        g.onclick = (e) => {
+            callback();
+        }
+        g.onkeydown = (evt) => {
+            if (evt.key == "Enter") callback();
+        }
+    }
+    tap_enter_draggable(draggable_name: string){
+        this.reset_picked_class()
+        this.active_draggable_name = draggable_name;
+        let draggable = this.draggables[draggable_name];
+        if (draggable.svgelement == undefined) return;
+        draggable.svgelement.classList.add("picked");
+    }
+    tap_enter_container(container_name: string){
+        const containersvg = this.containers[container_name]?.svgelement;
+        containersvg?.blur?.();
+        
+        if (this.active_draggable_name == null) return;
+        this.try_move_draggable_to_container(this.active_draggable_name, container_name);
+
+        this.active_draggable_name = null;
+        this.reset_picked_class();
+    }
 
     add_container_svg(name : string, diagram: Diagram) {
         let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -1332,12 +1364,17 @@ class DragAndDropHandler {
         let position = diagram.origin;
         g.setAttribute("transform", `translate(${position.x},${-position.y})`)
         g.setAttribute("class", dnd_type.container);
-        this.dnd_svg.prepend(g);
-
+        g.setAttribute("tabindex", "0");
+        
+        this.register_tap_enter(g, () => {
+            this.tap_enter_container(name);
+        });
+        
+        this.dnd_svg.append(g);
         this.containers[name].svgelement = g;
         this.dom_to_id_map.set(g, name);
     }
-
+    
     add_draggable_svg(name : string, diagram : Diagram) {
         let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
         f_draw_to_svg(this.dnd_svg, g, diagram.position(V2(0,0)), true, false, calculate_text_scale(this.diagram_svg), dnd_type.draggable);
@@ -1345,6 +1382,7 @@ class DragAndDropHandler {
         g.setAttribute("transform", `translate(${position.x},${-position.y})`)
         g.setAttribute("class", dnd_type.draggable);
         g.setAttribute("draggable", "true");
+        g.setAttribute("tabindex", "0");
 
         g.onmousedown = (evt) => {
             this.draggedElementName = name;
@@ -1352,8 +1390,12 @@ class DragAndDropHandler {
         }
         g.ontouchstart = (evt) => {
             this.draggedElementName = name;
+            this.tap_enter_draggable(name)
             this.startDrag(evt);
         }
+        this.register_tap_enter(g, () => {
+            this.tap_enter_draggable(name);
+        });
 
         this.dnd_svg.append(g);
         this.draggables[name].svgelement = g;
