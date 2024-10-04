@@ -115,6 +115,15 @@
     fill-opacity: 0.5;
 }
 
+.diagramatics-dnd-draggable:focus{
+    outline: none;
+    fill-opacity: 0.5;
+}
+.diagramatics-dnd-container:focus{
+    outline: none;
+    fill-opacity: 0.5;
+}
+
 .diagramatics-dnd-container.hovered{
     fill-opacity: 0.5;
 }
