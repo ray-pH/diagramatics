@@ -9,6 +9,8 @@ import { HorizontalAlignment, VerticalAlignment, distribute_horizontal_and_align
 import { range } from './utils.js';
 
 type BBox = [Vector2, Vector2]
+const FOCUS_RECT_CLASSNAME = "diagramatics-focusrect"
+const FOCUS_NO_OUTLINE_CLASSNAME = "diagramatics-focusable-no-outline"
 
 function format_number(val : number, prec : number) {
     let fixed = val.toFixed(prec);
@@ -1091,7 +1093,6 @@ enum dnd_type {
     container = "diagramatics-dnd-container",
     draggable = "diagramatics-dnd-draggable",
     ghost     = "diagramatics-dnd-draggable-ghost",
-    focusrect = "diagramatics-dnd-focusrect"
 }
 
 //TODO: add more
@@ -1443,7 +1444,7 @@ class DragAndDropHandler {
         focus_rect.setAttribute("stroke", "black");
         focus_rect.setAttribute("stroke-width", "1");
         focus_rect.setAttribute("vector-effect", "non-scaling-stroke");
-        focus_rect.setAttribute("class", dnd_type.focusrect);
+        focus_rect.setAttribute("class", FOCUS_RECT_CLASSNAME);
         g.appendChild(focus_rect);
     }
 
@@ -1629,8 +1630,9 @@ class DragAndDropHandler {
 class ButtonHandler {
     // callbacks : {[key : string] : (state : boolean) => any} = {};
     states : {[key : string] : boolean} = {};
-    svg_g_element : {[key : string] : [SVGGElement,SVGGElement,SVGElement|undefined]} = {};
+    svg_g_element : {[key : string] : [SVGGElement,SVGGElement,SVGElement|undefined,SVGElement|undefined]} = {};
     touchdownName : string | null = null;
+    focus_padding: number = 1;
 
     constructor(public button_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
     }
@@ -1647,9 +1649,13 @@ class ButtonHandler {
     try_add_toggle(name : string, diagram_on : Diagram, diagram_off : Diagram, state : boolean, callback : (state : boolean, redraw? : boolean) => any) : setter_function_t {
         if (this.svg_g_element[name] != undefined) {
             // delete the old button
-            let [old_svg_on, old_svg_off, _] = this.svg_g_element[name];
-            old_svg_on.remove();
-            old_svg_off.remove();
+            let [old_svg_on, old_svg_off, _, g] = this.svg_g_element[name];
+            if (g != undefined) {
+                g.remove();
+            }else {
+                old_svg_on.remove();
+                old_svg_off.remove();
+            }
         }
         return this.add_toggle(name, diagram_on, diagram_off, state, callback);
     }
@@ -1665,9 +1671,14 @@ class ButtonHandler {
         g_on.setAttribute("overflow", "visible");
         g_on.style.cursor = "pointer";
 
-        this.button_svg.appendChild(g_off);
-        this.button_svg.appendChild(g_on);
-        this.svg_g_element[name] = [g_on, g_off, undefined];
+        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        g.setAttribute("overflow", "visible");
+        g.setAttribute("tabindex", "0");
+        g.appendChild(g_on)
+        g.appendChild(g_off)
+        
+        this.button_svg.appendChild(g);
+        this.svg_g_element[name] = [g_on, g_off, undefined, g];
 
         this.states[name] = state;
 
@@ -1682,33 +1693,17 @@ class ButtonHandler {
             callback(this.states[name], redraw);
             set_display(this.states[name]);
         }
-
-        g_on.onclick = (e) => { 
+        
+        g.onmousedown = (e) => {
             e.preventDefault();
-            update_state(false); 
-        };
-        g_off.onclick = (e) => { 
+        }
+        g.onclick = (e) => {
             e.preventDefault();
-            update_state(true); 
-        };
-        g_on.ontouchstart = (e) => { 
-            e.preventDefault();
-            this.touchdownName = name; 
-        };
-        g_off.ontouchstart = (e) => { 
-            e.preventDefault();
-            this.touchdownName = name; 
-        };
-
-        g_on.ontouchend = () => { 
-            if (this.touchdownName == name) update_state(false); 
-            this.touchdownName = null;
-        };
-        g_off.ontouchend = () => { 
-            if (this.touchdownName == name) update_state(true); 
-            this.touchdownName = null;
-        };
-
+            update_state(!this.states[name]);
+        }
+        g.onkeydown = (e) => {
+            if (e.key == "Enter") update_state(!this.states[name]);
+        }
         const setter = (state : boolean) => { update_state(state, false); }
         return setter;
     }
@@ -1720,10 +1715,14 @@ class ButtonHandler {
     ){
         if (this.svg_g_element[name] != undefined) {
             // delete the old button
-            let [old_svg_normal, old_svg_pressed, old_svg_hover] = this.svg_g_element[name];
-            old_svg_normal.remove();
-            old_svg_pressed.remove();
-            old_svg_hover?.remove();
+            let [old_svg_normal, old_svg_pressed, old_svg_hover, g] = this.svg_g_element[name];
+            if (g != undefined) {
+                g.remove();
+            }else {
+                old_svg_normal.remove();
+                old_svg_pressed.remove();
+                old_svg_hover?.remove();
+            }
         }
         this.add_click(name, diagram, diagram_pressed, diagram_hover, callback);
     }
@@ -1744,11 +1743,19 @@ class ButtonHandler {
         f_draw_to_svg(this.button_svg, g_hover, diagram_hover, true, false, calculate_text_scale(this.diagram_svg));
         g_hover.setAttribute("overflow", "visible");
         g_hover.style.cursor = "pointer";
+        
+        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        g.setAttribute("class", FOCUS_NO_OUTLINE_CLASSNAME)
+        g.setAttribute("overflow", "visible");
+        g.setAttribute("tabindex", "0");
+        g.appendChild(g_normal);
+        g.appendChild(g_pressed);
+        g.appendChild(g_hover);
+        this.button_svg.appendChild(g);
+        
+        this.add_focus_rect(g, diagram);
 
-        this.button_svg.appendChild(g_normal);
-        this.button_svg.appendChild(g_pressed);
-        this.button_svg.appendChild(g_hover);
-        this.svg_g_element[name] = [g_normal, g_pressed, g_hover];
+        this.svg_g_element[name] = [g_normal, g_pressed, g_hover, g];
 
         const set_display = (pressed : boolean, hovered : boolean) => {
             g_normal.setAttribute("display", !pressed && !hovered ? "block" : "none");
@@ -1763,80 +1770,66 @@ class ButtonHandler {
             set_display(pressed_state, hover_state);
         }
 
-        g_normal.onmousedown = (e) => {
-            e.preventDefault();
-            this.touchdownName = name;
-            pressed_state = true;
+        g.onblur = (_e) => {
+            hover_state = false;
+            pressed_state = false;
             update_display();
         }
-        g_normal.onmouseup = (e) => {
-            e.preventDefault();
-            this.touchdownName = null;
-        }
-        g_normal.onmouseenter = (_e) => {
+        g.onmouseenter = (_e) => {
             hover_state = true;
             update_display();
         }
-        g_normal.onmouseleave = (_e) => {
-            // hover_state = false;
-            update_display();
-        }
-        g_pressed.onmouseleave = (_e) => { 
+        g.onmouseleave = (_e) => {
             hover_state = false;
             pressed_state = false;
             update_display();
         }
-        g_pressed.onmousedown = (e) => {
+        g.onmousedown = (e) => {
             e.preventDefault();
-            this.touchdownName = name;
-        }
-        g_pressed.onmouseup = (_e) => {
-            if (this.touchdownName == name) callback();
-            this.touchdownName = null;
-            pressed_state = false;
-            update_display();
-        }
-        g_hover.onmousedown = (e) => {
-            e.preventDefault();
-            this.touchdownName = name;
             pressed_state = true;
             update_display();
         }
-        g_hover.onmouseup = (e) => {
-            e.preventDefault();
-            this.touchdownName = null;
+        g.onmouseup = (e) => {
+            pressed_state = false;
+            update_display();
         }
-        g_hover.onmouseleave = (_e) => {
+        g.onclick = (e) => {
+            callback();
             hover_state = false;
-            update_display();
-        }
-
-        g_normal.ontouchstart = (e) => { 
-            e.preventDefault();
-            this.touchdownName = name; 
-            pressed_state = true;
-            update_display();
-        };
-        g_normal.ontouchend = (_e) => {
-            if (this.touchdownName == name) callback();
-            this.touchdownName = null;
             pressed_state = false;
             update_display();
         }
-        g_pressed.ontouchstart = (e) => { 
-            e.preventDefault();
-            this.touchdownName = name; 
-            pressed_state = true;
-            update_display();
-        };
-        g_pressed.ontouchend = (_e) => {
-            if (this.touchdownName == name) callback();
-            this.touchdownName = null;
+        g.onkeydown = (e) => {
+            if (e.key == "Enter") {
+                callback();
+                pressed_state = true;
+                update_display();
+            }
+        }
+        g.onkeyup = (e) => {
             pressed_state = false;
             update_display();
         }
-            
-            
+    }
+    
+    add_focus_rect(g: SVGGElement, diagram : Diagram) {
+        const bbox = diagram.bounding_box();
+        const width = bbox[1].x - bbox[0].x + 2*this.focus_padding;
+        const height = bbox[1].y - bbox[0].y + 2*this.focus_padding;
+        // focus rect svg element
+        const focus_rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        focus_rect.setAttribute("width", width.toString());
+        focus_rect.setAttribute("height", height.toString());
+        // focus_rect.setAttribute("x", (-width/2).toString());
+        // focus_rect.setAttribute("y", (-height/2).toString());
+        focus_rect.setAttribute("x", (bbox[0].x - this.focus_padding).toString());
+        focus_rect.setAttribute("y", (-bbox[1].y - this.focus_padding).toString());
+        focus_rect.setAttribute("fill", "none");
+        focus_rect.setAttribute("stroke", "black");
+        focus_rect.setAttribute("stroke-width", "1");
+        focus_rect.setAttribute("vector-effect", "non-scaling-stroke");
+        focus_rect.setAttribute("class", FOCUS_RECT_CLASSNAME);
+        g.appendChild(focus_rect);
     }
         
 }
