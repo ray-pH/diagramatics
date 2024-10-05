@@ -1630,7 +1630,7 @@ class DragAndDropHandler {
 class ButtonHandler {
     // callbacks : {[key : string] : (state : boolean) => any} = {};
     states : {[key : string] : boolean} = {};
-    svg_g_element : {[key : string] : [SVGGElement,SVGGElement,SVGElement|undefined,SVGElement|undefined]} = {};
+    svg_g_element : {[key : string] : SVGGElement|undefined} = {};
     touchdownName : string | null = null;
     focus_padding: number = 1;
 
@@ -1639,28 +1639,27 @@ class ButtonHandler {
     
     remove(name : string){
         delete this.states[name];
-        const [a, b] = this.svg_g_element[name];
-        a?.remove();
-        b?.remove();
+        const g = this.svg_g_element[name];
+        g?.remove();
         delete this.svg_g_element[name];
     }
 
     /** add a new toggle button if it doesn't exist, otherwise, update diagrams and callback */
     try_add_toggle(name : string, diagram_on : Diagram, diagram_off : Diagram, state : boolean, callback : (state : boolean, redraw? : boolean) => any) : setter_function_t {
-        if (this.svg_g_element[name] != undefined) {
-            // delete the old button
-            let [old_svg_on, old_svg_off, _, g] = this.svg_g_element[name];
-            if (g != undefined) {
-                g.remove();
-            }else {
-                old_svg_on.remove();
-                old_svg_off.remove();
-            }
+        let g = this.svg_g_element[name];
+        if (g) {
+            g.innerHTML = "";
+        } else {
+            g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            this.button_svg.appendChild(g);
         }
-        return this.add_toggle(name, diagram_on, diagram_off, state, callback);
+        return this.add_toggle(name, diagram_on, diagram_off, state, g, callback);
     }
 
-    add_toggle(name : string, diagram_on : Diagram, diagram_off : Diagram, state : boolean, callback : (state : boolean, redraw? : boolean) => any) : setter_function_t {
+    private add_toggle(
+        name : string, diagram_on : Diagram, diagram_off : Diagram, state : boolean,
+        g : SVGGElement, callback : (state : boolean, redraw? : boolean) => any
+    ) : setter_function_t {
         let g_off = document.createElementNS("http://www.w3.org/2000/svg", "g");
         f_draw_to_svg(this.button_svg, g_off, diagram_off, true, false, calculate_text_scale(this.diagram_svg));
         g_off.setAttribute("overflow", "visible");
@@ -1671,15 +1670,12 @@ class ButtonHandler {
         g_on.setAttribute("overflow", "visible");
         g_on.style.cursor = "pointer";
 
-        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
         g.setAttribute("overflow", "visible");
         g.setAttribute("tabindex", "0");
         g.appendChild(g_on)
         g.appendChild(g_off)
         
-        this.button_svg.appendChild(g);
-        this.svg_g_element[name] = [g_on, g_off, undefined, g];
-
+        this.svg_g_element[name] = g;
         this.states[name] = state;
 
         const set_display = (state : boolean) => {
@@ -1713,22 +1709,20 @@ class ButtonHandler {
         name : string, diagram : Diagram, diagram_pressed : Diagram, diagram_hover : Diagram,
         callback : () => any
     ){
-        if (this.svg_g_element[name] != undefined) {
-            // delete the old button
-            let [old_svg_normal, old_svg_pressed, old_svg_hover, g] = this.svg_g_element[name];
-            if (g != undefined) {
-                g.remove();
-            }else {
-                old_svg_normal.remove();
-                old_svg_pressed.remove();
-                old_svg_hover?.remove();
-            }
+        let g = this.svg_g_element[name];
+        if (g) {
+            g.innerHTML = "";
+        } else {
+            g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            this.button_svg.appendChild(g);
         }
-        this.add_click(name, diagram, diagram_pressed, diagram_hover, callback);
+        this.add_click(name, diagram, diagram_pressed, diagram_hover, g, callback);
     }
 
-    // TODO: handle touch input moving out of the button
-    add_click(name : string, diagram : Diagram, diagram_pressed : Diagram, diagram_hover : Diagram, callback : () => any){
+    private add_click(
+        name : string, diagram : Diagram, diagram_pressed : Diagram, diagram_hover : Diagram, 
+        g : SVGGElement, callback : () => any
+    ){
         let g_normal = document.createElementNS("http://www.w3.org/2000/svg", "g");
         f_draw_to_svg(this.button_svg, g_normal, diagram, true, false, calculate_text_scale(this.diagram_svg));
         g_normal.setAttribute("overflow", "visible");
@@ -1744,18 +1738,15 @@ class ButtonHandler {
         g_hover.setAttribute("overflow", "visible");
         g_hover.style.cursor = "pointer";
         
-        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
         g.setAttribute("class", FOCUS_NO_OUTLINE_CLASSNAME)
         g.setAttribute("overflow", "visible");
         g.setAttribute("tabindex", "0");
         g.appendChild(g_normal);
         g.appendChild(g_pressed);
         g.appendChild(g_hover);
-        this.button_svg.appendChild(g);
-        
         this.add_focus_rect(g, diagram);
 
-        this.svg_g_element[name] = [g_normal, g_pressed, g_hover, g];
+        this.svg_g_element[name] = g;
 
         const set_display = (pressed : boolean, hovered : boolean) => {
             g_normal.setAttribute("display", !pressed && !hovered ? "block" : "none");
