@@ -1355,20 +1355,21 @@ class DragAndDropHandler {
         return rect.strokedasharray([5]);
     }
     
-    register_tap_enter(g: SVGElement, callback : () => any) {
+    register_tap_enter(g: SVGElement, callback : (keyboard?: boolean) => any) {
         g.onclick = (e) => {
-            callback();
+            callback(false);
         }
         g.onkeydown = (evt) => {
-            if (evt.key == "Enter") callback();
+            if (evt.key == "Enter") callback(true);
         }
     }
-    tap_enter_draggable(draggable_name: string){
+    tap_enter_draggable(draggable_name: string, keyboard?: boolean){
         this.reset_picked_class()
         this.active_draggable_name = draggable_name;
         let draggable = this.draggables[draggable_name];
         if (draggable.svgelement == undefined) return;
         draggable.svgelement.classList.add("picked");
+        if (keyboard) this.onclickstart_callback[draggable_name]?.();
     }
     tap_enter_container(container_name: string){
         const containersvg = this.containers[container_name]?.svgelement;
@@ -1422,8 +1423,8 @@ class DragAndDropHandler {
             this.tap_enter_draggable(name)
             this.startDrag(evt);
         }
-        this.register_tap_enter(g, () => {
-            this.tap_enter_draggable(name);
+        this.register_tap_enter(g, (keyboard?: boolean) => {
+            this.tap_enter_draggable(name, keyboard);
         });
 
         this.dnd_svg.append(g);
@@ -1531,6 +1532,7 @@ class DragAndDropHandler {
         let draggable = this.draggables[this.draggedElementName];
         if (draggable.svgelement == undefined) return;
         draggable.svgelement.classList.add("picked");
+        this.onclickstart_callback[this.draggedElementName]?.();
         this.draggedElementGhost = draggable.svgelement.cloneNode(true) as SVGElement;
         // set pointer-events : none
         this.draggedElementGhost.style.pointerEvents = "none";
