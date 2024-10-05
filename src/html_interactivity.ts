@@ -540,7 +540,8 @@ export class Interactive {
      * @param name name of the draggable
      * @param diagram diagram of the draggable
      * @param container_name name of the container
-     * @param callback callback function when the draggable is moved
+     * @param callback callback function (called after the draggable is moved)
+     * @param onclickstart_callback callback function (called at the start of the drag)
      */
     public dnd_draggable_to_container(
         name : string, diagram : Diagram, container_name : string, 
@@ -567,7 +568,8 @@ export class Interactive {
      * @param name name of the draggable
      * @param diagram diagram of the draggable
      * @param container_diagram diagram of the container, if not provided, a container will be created automatically
-     * @param callback callback function when the draggable is moved
+     * @param callback callback function (called after the draggable is moved)
+     * @param onclickstart_callback callback function (called at the start of the drag)
     */
     public dnd_draggable(
         name : string, diagram : Diagram, container_diagram? : Diagram, 
@@ -1582,7 +1584,6 @@ class DragAndDropHandler {
         } else if (element_data.type == dnd_type.draggable) {
             this.hoveredContainerName = this.draggables[element_data.name]?.container;
             this.draggables[element_data.name].svgelement?.classList.add("hovered");
-            // this.containers[this.hoveredContainerName]?.svgelement?.classList.add("hovered");
         }
 
         let coord = getMousePosition(evt, this.dnd_svg);
@@ -1811,8 +1812,6 @@ class ButtonHandler {
         const focus_rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         focus_rect.setAttribute("width", width.toString());
         focus_rect.setAttribute("height", height.toString());
-        // focus_rect.setAttribute("x", (-width/2).toString());
-        // focus_rect.setAttribute("y", (-height/2).toString());
         focus_rect.setAttribute("x", (bbox[0].x - this.focus_padding).toString());
         focus_rect.setAttribute("y", (-bbox[1].y - this.focus_padding).toString());
         focus_rect.setAttribute("fill", "none");
