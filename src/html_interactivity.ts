@@ -215,6 +215,9 @@ export class Interactive {
         if (this.dragAndDropHandler) {
             this.dragAndDropHandler.focus_padding = padding;
         }
+        if (this.buttonHandler){
+            this.buttonHandler.focus_padding = padding;
+        }
     }
 
     /**
@@ -735,6 +738,7 @@ export class Interactive {
         // if this is the fist time this function is called, create a dragAndDropHandler
         if (this.buttonHandler == undefined) {
             let buttonHandler = new ButtonHandler(button_svg, diagram_svg);
+            buttonHandler.focus_padding = this.focus_padding;
             this.buttonHandler = buttonHandler;
         }
     }
