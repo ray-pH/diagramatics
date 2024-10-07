@@ -636,6 +636,14 @@ export class Interactive {
     }
     
     /**
+    * reorder the tabindex of the containers
+    * @param container_names 
+    */
+    public dnd_reorder_tabindex(container_names: string[]){
+        this.dragAndDropHandler?.reorder_svg_container_tabindex(container_names);
+    }
+    
+    /**
     * Get the content size of a container
     */
     public  get_dnd_container_content_size(container_name : string) : [number,number] {
@@ -1506,6 +1514,14 @@ class DragAndDropHandler {
             } else {
                 container.svgelement?.setAttribute("tabindex", "0")
             }
+        }
+    }
+    
+    public reorder_svg_container_tabindex(container_names: string[]){
+        for (let container_name of container_names) {
+            const g = this.get_container_outer_g(container_name);
+            if (g == undefined) continue;
+            this.dnd_svg.appendChild(g);
         }
     }
 
