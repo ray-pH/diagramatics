@@ -1242,10 +1242,12 @@ class DragAndDropHandler {
     private replace_draggable_svg(name : string, diagram : Diagram) {
         let draggable = this.draggables[name];
         if (draggable == undefined) return;
+        let outer_g = draggable.svgelement?.parentNode as SVGGElement;
+        if (outer_g == undefined) return;
         draggable.svgelement?.remove();
         draggable.diagram = diagram;
         draggable.diagram_size = size(diagram);
-        this.add_draggable_svg(name, diagram);
+        this.add_draggable_svg(name, diagram, outer_g);
         this.reposition_container_content(draggable.container)
     }
     private replace_container_svg(name : string, diagram : Diagram, capacity? : number, config? : dnd_container_config) {
@@ -1317,17 +1319,26 @@ class DragAndDropHandler {
         this.dnd_svg.setAttribute("viewBox", this.diagram_svg.getAttribute("viewBox") as string);
         this.dnd_svg.setAttribute("preserveAspectRatio", this.diagram_svg.getAttribute("preserveAspectRatio") as string);
     }
-    drawSvg(){
-        for (let name in this.containers){
-            if (this.containers[name].svgelement) continue;
-            this.add_container_svg(name, this.containers[name].diagram);
+    public drawSvg(){
+        for (let container_name in this.containers){
+            const container_data = this.containers[container_name];
+            if (container_data?.svgelement == undefined) {
+                this.add_container_svg(container_name, container_data.diagram);
+            }
+            
+            const outer_g = this.get_container_outer_g(container_name)
+            if (outer_g == undefined) continue;
+            
+            for (let draggable_name of container_data.content){
+                const draggable_data = this.draggables[draggable_name];
+                if (draggable_data?.svgelement) continue;
+                this.add_draggable_svg(draggable_name, draggable_data.diagram, outer_g)
+            }
         }
-        for (let name in this.draggables){
-            if (this.draggables[name].svgelement) continue;
-            this.add_draggable_svg(name, this.draggables[name].diagram);
-        }
-        for (let name in this.containers)
+        for (let name in this.containers) {
             this.reposition_container_content(name);
+            this.reconfigure_container_tabindex(name);
+        }
     }
 
     getData() : DragAndDropData {
@@ -1373,7 +1384,7 @@ class DragAndDropHandler {
     }
     tap_enter_container(container_name: string){
         const containersvg = this.containers[container_name]?.svgelement;
-        containersvg?.blur?.();
+        // containersvg?.blur?.();
         
         if (this.active_draggable_name == null) return;
         this.try_move_draggable_to_container(this.active_draggable_name, container_name);
@@ -1381,8 +1392,19 @@ class DragAndDropHandler {
         this.active_draggable_name = null;
         this.reset_picked_class();
     }
+    
+    private get_container_outer_g(container_name : string) : SVGGElement {
+        const container_data = this.containers[container_name];
+        return container_data?.svgelement?.parentNode as SVGGElement;
+    }
 
-    add_container_svg(name : string, diagram: Diagram) {
+    private add_container_svg(name : string, diagram: Diagram) {
+        let outer_g = this.get_container_outer_g(name)
+        if (!outer_g) {
+            outer_g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            this.dnd_svg.append(outer_g);
+        }
+        
         let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
         f_draw_to_svg(this.dnd_svg, g, diagram.position(V2(0,0)), 
             false, false, calculate_text_scale(this.diagram_svg), dnd_type.container);
@@ -1398,14 +1420,14 @@ class DragAndDropHandler {
             this.tap_enter_container(name);
         });
         
-        this.dnd_svg.append(g);
+        outer_g.append(g);
         this.containers[name].svgelement = g;
         this.dom_to_id_map.set(g, name);
         
         this.add_focus_rect(g, diagram)
     }
     
-    add_draggable_svg(name : string, diagram : Diagram) {
+    private add_draggable_svg(name : string, diagram : Diagram, outer_g : SVGGElement) {
         let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
         f_draw_to_svg(this.dnd_svg, g, diagram.position(V2(0,0)), true, false, calculate_text_scale(this.diagram_svg), dnd_type.draggable);
         let position = diagram.origin;
@@ -1427,13 +1449,13 @@ class DragAndDropHandler {
             this.tap_enter_draggable(name, keyboard);
         });
 
-        this.dnd_svg.append(g);
+        outer_g.append(g);
         this.draggables[name].svgelement = g;
         this.dom_to_id_map.set(g, name);
         this.add_focus_rect(g, diagram)
     }
     
-    add_focus_rect(g: SVGGElement, diagram : Diagram) {
+    private add_focus_rect(g: SVGGElement, diagram : Diagram) {
         const bbox = diagram.bounding_box();
         const width = bbox[1].x - bbox[0].x + 2*this.focus_padding;
         const height = bbox[1].y - bbox[0].y + 2*this.focus_padding;
@@ -1450,6 +1472,42 @@ class DragAndDropHandler {
         focus_rect.setAttribute("class", FOCUS_RECT_CLASSNAME);
         g.appendChild(focus_rect);
     }
+    
+    private move_svg_draggable_to_container(draggable_name : string, container_name : string){
+        const draggable_svg = this.draggables[draggable_name]?.svgelement;
+        if (draggable_svg == undefined) return;
+        const container_outer_g = this.get_container_outer_g(container_name);
+        if (container_outer_g == undefined) return;
+        container_outer_g.appendChild(draggable_svg);
+    }
+    
+    private reorder_svg_container_content(container_name : string){
+        const content = this.containers[container_name]?.content;
+        const g = this.get_container_outer_g(container_name);
+        if (content == undefined || g == undefined) return;
+        for (let draggable_name of content) {
+            const draggable_svg = this.draggables[draggable_name]?.svgelement;
+            if (draggable_svg == undefined) continue;
+            g.appendChild(draggable_svg)
+        }
+    }
+    
+    private reconfigure_container_tabindex(container_name : string) {
+        const container = this.containers[container_name];
+        if (container == undefined) return;
+        if (container.capacity == 1) {
+            if (container.content.length == 1) {
+                container.svgelement?.setAttribute("tabindex", "-1")
+                if (container.svgelement == document.activeElement){
+                    // set the focus to the content
+                    const content = container.content[0];
+                    this.draggables[content]?.svgelement?.focus();
+                }
+            } else {
+                container.svgelement?.setAttribute("tabindex", "0")
+            }
+        }
+    }
 
     reposition_container_content(container_name : string){
         let container = this.containers[container_name];
@@ -1457,8 +1515,10 @@ class DragAndDropHandler {
         
         if (this.sort_content){
             container.content.sort()
+            this.reorder_svg_container_content(container_name)
         } else if (container.config?.sorting_function) {
             container.content.sort(container.config.sorting_function);
+            this.reorder_svg_container_content(container_name)
         }
         const bbox = container.config.custom_region_box ?? container.diagram.bounding_box();
         const position_map = this.generate_position_map(bbox, container.config, container.capacity, container.content);
@@ -1475,7 +1535,7 @@ class DragAndDropHandler {
         this.containers[container_name].content = 
             this.containers[container_name].content.filter((name) => name != draggable_name);
     }
-    move_draggable_to_container(draggable_name : string, container_name : string, ignore_callback = false) {
+    private move_draggable_to_container(draggable_name : string, container_name : string, ignore_callback = false) {
         let draggable = this.draggables[draggable_name];
         if (draggable == undefined) return;
 
@@ -1488,9 +1548,12 @@ class DragAndDropHandler {
         this.remove_draggable_from_container(draggable_name, original_container_name);
         draggable.container = container_name;
         container.content.push(draggable_name);
+        this.move_svg_draggable_to_container(draggable_name, container_name)
 
         this.reposition_container_content(container_name);
         this.reposition_container_content(original_container_name);
+        this.reconfigure_container_tabindex(container_name);
+        this.reconfigure_container_tabindex(original_container_name);
 
         if (ignore_callback) return;
         let draggedElement = this.draggables[draggable_name];
