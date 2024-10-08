@@ -1901,7 +1901,7 @@ class ButtonHandler {
     }
     
     add_focus_rect(g: SVGGElement, diagram : Diagram) {
-        const bbox = diagram.position(V2(0,0)).bounding_box();
+        const bbox = diagram.bounding_box();
         const pad = this.focus_padding;
         const width = bbox[1].x - bbox[0].x + 2*pad;
         const height = bbox[1].y - bbox[0].y + 2*pad;
