@@ -1391,17 +1391,29 @@ class DragAndDropHandler {
         }
     }
     tap_enter_draggable(draggable_name: string, keyboard?: boolean){
-        this.reset_picked_class()
-        this.active_draggable_name = draggable_name;
-        let draggable = this.draggables[draggable_name];
-        if (draggable.svgelement == undefined) return;
-        draggable.svgelement.classList.add("picked");
-        if (keyboard) this.onclickstart_callback[draggable_name]?.();
+        if (this.active_draggable_name == null){
+            // select the draggable
+            this.reset_picked_class()
+            this.active_draggable_name = draggable_name;
+            let draggable = this.draggables[draggable_name];
+            if (draggable.svgelement == undefined) return;
+            draggable.svgelement.classList.add("picked");
+            if (keyboard) this.onclickstart_callback[draggable_name]?.();
+        } else if (draggable_name == this.active_draggable_name) {
+            // unselect the draggable
+            this.reset_picked_class()
+            this.active_draggable_name = null;
+        } else {
+            // try to switch if possible
+            const target_container = this.draggables[draggable_name]?.container;
+            if (target_container) {
+                this.try_move_draggable_to_container(this.active_draggable_name, target_container);
+            }
+            this.reset_picked_class()
+            this.active_draggable_name = null;
+        }
     }
     tap_enter_container(container_name: string){
-        const containersvg = this.containers[container_name]?.svgelement;
-        // containersvg?.blur?.();
-        
         if (this.active_draggable_name == null) return;
         this.try_move_draggable_to_container(this.active_draggable_name, container_name);
 
