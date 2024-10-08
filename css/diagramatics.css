@@ -109,29 +109,27 @@
 /*---------------------- Drag and Drop --------------*/
 .diagramatics-dnd-draggable:hover{
     cursor: pointer;
-    fill-opacity: 0.5;
+    opacity: 0.5;
 }
 .diagramatics-dnd-container:hover{
-    fill-opacity: 0.5;
+    opacity: 0.5;
 }
 
-.diagramatics-dnd-draggable:focus{
+.diagramatics-dnd-draggable:focus {
     outline: none;
-    fill-opacity: 0.5;
 }
 .diagramatics-dnd-container:focus{
     outline: none;
-    fill-opacity: 0.5;
 }
 
 .diagramatics-dnd-container.hovered{
-    fill-opacity: 0.5;
+    opacity: 0.5;
 }
 .diagramatics-dnd-draggable.hovered{
-    fill-opacity: 0.5;
+    opacity: 0.5;
 }
-.diagramatics-dnd-draggable.picked{
-    fill-opacity: 0.5;
+.diagramatics-dnd-draggable.picked > :not(.diagramatics-focusrect){
+    opacity: 0.5 !important;
 }
 
 /*---------------------- a11y --------------*/
