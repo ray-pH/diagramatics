@@ -1265,11 +1265,13 @@ class DragAndDropHandler {
     private replace_container_svg(name : string, diagram : Diagram, capacity? : number, config? : dnd_container_config) {
         let container = this.containers[name];
         if (container == undefined) return;
+        const outer_g = this.get_container_outer_g(name);
+        if (outer_g == undefined) return;
         container.svgelement?.remove();
         container.diagram = diagram;
         if (capacity) container.capacity = capacity;
         if (config) container.config = config;
-        this.add_container_svg(name, diagram);
+        this.add_container_svg(name, diagram, outer_g);
         this.reposition_container_content(name);
     }
 
@@ -1335,7 +1337,9 @@ class DragAndDropHandler {
         for (let container_name in this.containers){
             const container_data = this.containers[container_name];
             if (container_data?.svgelement == undefined) {
-                this.add_container_svg(container_name, container_data.diagram);
+                const outer_g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                this.dnd_svg.append(outer_g);
+                this.add_container_svg(container_name, container_data.diagram, outer_g);
             }
             
             const outer_g = this.get_container_outer_g(container_name)
@@ -1410,13 +1414,7 @@ class DragAndDropHandler {
         return container_data?.svgelement?.parentNode as SVGGElement;
     }
 
-    private add_container_svg(name : string, diagram: Diagram) {
-        let outer_g = this.get_container_outer_g(name)
-        if (!outer_g) {
-            outer_g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-            this.dnd_svg.append(outer_g);
-        }
-        
+    private add_container_svg(name : string, diagram: Diagram, outer_g: SVGGElement) {
         let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
         f_draw_to_svg(this.dnd_svg, g, diagram.position(V2(0,0)), 
             false, false, calculate_text_scale(this.diagram_svg), dnd_type.container);
@@ -1432,7 +1430,7 @@ class DragAndDropHandler {
             this.tap_enter_container(name);
         });
         
-        outer_g.append(g);
+        outer_g.prepend(g);
         this.containers[name].svgelement = g;
         this.dom_to_id_map.set(g, name);
         
@@ -1468,15 +1466,16 @@ class DragAndDropHandler {
     }
     
     private add_focus_rect(g: SVGGElement, diagram : Diagram) {
-        const bbox = diagram.bounding_box();
-        const width = bbox[1].x - bbox[0].x + 2*this.focus_padding;
-        const height = bbox[1].y - bbox[0].y + 2*this.focus_padding;
+        const bbox = diagram.position(V2(0,0)).bounding_box();
+        const pad = this.focus_padding;
+        const width = bbox[1].x - bbox[0].x + 2*pad;
+        const height = bbox[1].y - bbox[0].y + 2*pad;
         // focus rect svg element
         const focus_rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         focus_rect.setAttribute("width", width.toString());
         focus_rect.setAttribute("height", height.toString());
-        focus_rect.setAttribute("x", (-width/2).toString());
-        focus_rect.setAttribute("y", (-height/2).toString());
+        focus_rect.setAttribute("x", (bbox[0].x - pad).toString());
+        focus_rect.setAttribute("y", (-bbox[1].y - pad).toString());
         focus_rect.setAttribute("fill", "none");
         focus_rect.setAttribute("stroke", "black");
         focus_rect.setAttribute("stroke-width", "1");
@@ -1890,15 +1889,16 @@ class ButtonHandler {
     }
     
     add_focus_rect(g: SVGGElement, diagram : Diagram) {
-        const bbox = diagram.bounding_box();
-        const width = bbox[1].x - bbox[0].x + 2*this.focus_padding;
-        const height = bbox[1].y - bbox[0].y + 2*this.focus_padding;
+        const bbox = diagram.position(V2(0,0)).bounding_box();
+        const pad = this.focus_padding;
+        const width = bbox[1].x - bbox[0].x + 2*pad;
+        const height = bbox[1].y - bbox[0].y + 2*pad;
         // focus rect svg element
         const focus_rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         focus_rect.setAttribute("width", width.toString());
         focus_rect.setAttribute("height", height.toString());
-        focus_rect.setAttribute("x", (bbox[0].x - this.focus_padding).toString());
-        focus_rect.setAttribute("y", (-bbox[1].y - this.focus_padding).toString());
+        focus_rect.setAttribute("x", (bbox[0].x - pad).toString());
+        focus_rect.setAttribute("y", (-bbox[1].y - pad).toString());
         focus_rect.setAttribute("fill", "none");
         focus_rect.setAttribute("stroke", "black");
         focus_rect.setAttribute("stroke-width", "1");
