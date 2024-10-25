@@ -15,6 +15,7 @@ export enum DiagramType {
     Image   = 'image',
     Diagram = 'diagram',
     MultilineText = 'multilinetext',
+    ForeignObject = 'foreignObject',
 }
 
 export const DEFAULT_FONTSIZE = "16"; // 16px (12pt) is the web default
@@ -60,6 +61,13 @@ export type TextData = {
 
 export type ImageData = {
     "src"    : string,
+}
+
+export type ForeignObjectData = {
+    "innerHTML": string,
+    "scale-factor"? : number,
+    "original-width"?: number,
+    "original-height"?: number,
 }
 
 type ExtraTspanStyle = {
@@ -117,6 +125,7 @@ export class Diagram {
     textdata      : Partial<TextData>          = {};
     multilinedata : Partial<MultilineTextData> = {};
     imgdata       : Partial<ImageData>         = {};
+    foreignobjdata: Partial<ForeignObjectData> = {};
     mutable       : boolean   = false;
     tags : string[] = [];
     
@@ -129,6 +138,7 @@ export class Diagram {
             textdata? : Partial<TextData>, 
             imgdata?  : Partial<ImageData>,
             multilinedata? : Partial<MultilineTextData>,
+            foreignobjdata? : Partial<ForeignObjectData>,
             tags?     : string[],
         } = {}
     ) {
@@ -139,6 +149,7 @@ export class Diagram {
         if (args.imgdata)  { this.imgdata  = args.imgdata; }
         if (args.tags)     { this.tags     = args.tags; }
         if (args.multilinedata) { this.multilinedata = args.multilinedata; }
+        if (args.foreignobjdata) { this.foreignobjdata = args.foreignobjdata; }
     }
 
     /**
@@ -553,7 +564,7 @@ export class Diagram {
                 return bbox;
         }
         else if (this.type == DiagramType.Curve || this.type == DiagramType.Polygon 
-            || this.type == DiagramType.Image){
+            || this.type == DiagramType.Image || this.type == DiagramType.ForeignObject){
                 if (this.path == undefined) { throw new Error(this.type + " must have a path"); }
                 for (let p = 0; p < this.path.points.length; p++) {
                     let point = this.path.points[p];
@@ -1218,6 +1229,28 @@ export function multiline_bb(bbstr : string, linespace? : string, split_by_word 
         path : new Path([new Vector2(0, 0)]),
     });
     return dmulti;
+}
+
+/**
+ * *NOTE: this is an experimental feature*
+ * Create a foreignObject diagram
+ * @param innerHTML
+ * @param width width of the foreignObject
+ * @param height height of the foreignObject
+ * @param scalex scale of the foreignObject in the x direction
+ * @param scaley scale of the foreignObject in the y direction
+ * if scaley is not defined, scalex is used for both x and y
+ * @returns an image diagram
+ */
+export function foreign_object(innerHTML : string, width: number, height: number, scale_factor: number) : Diagram {
+    let foreignobjdata: ForeignObjectData = { innerHTML, "original-width": width, "original-height": height, "scale-factor": scale_factor };
+    // path: bottom-left, bottom-right, top-right, top-left
+    let path: Path = new Path([
+        V2(-width/2, -height/2), V2(width/2, -height/2),
+        V2(width/2, height/2), V2(-width/2, height/2),
+    ]);
+    let foreignObject = new Diagram(DiagramType.ForeignObject, {foreignobjdata, path});
+    return foreignObject;
 }
 
 

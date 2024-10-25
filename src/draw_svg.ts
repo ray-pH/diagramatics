@@ -221,6 +221,55 @@ function draw_image(
 }
 
 /**
+ */
+function draw_foreign_object(
+    target_element: SVGSVGElement|SVGGElement,
+    diagram : Diagram, embed_image : boolean, svgtag? : string
+) : void {
+    let obj = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
+    let div = document.createElement("div");
+    if (diagram.foreignobjdata.innerHTML == undefined) return;
+    // make sure path is defined and have 4 points
+    if (diagram.path == undefined) return;
+    if (diagram.path.points.length != 4) return;
+
+    // it's calculated like this to be able to apply linear transformation
+    // path: bottom-left, bottom-right, top-right, top-left
+    // width  : 0-1
+    // height : 1-2
+    let width  = diagram.path.points[1].sub(diagram.path.points[0]).length();
+    let height = diagram.path.points[2].sub(diagram.path.points[1]).length();
+    
+    let data = diagram.foreignobjdata;
+    let scaleX = width / (data["original-width"] ?? 1) * (data["scale-factor"] ?? 1);
+    let scaleY = height / (data["original-height"] ?? 1) * (data["scale-factor"] ?? 1);
+    
+    // calculate the linear transformation matrix
+    // [ a c ]
+    // [ b d ]
+    let ex = diagram.path.points[1].sub(diagram.path.points[0]).normalize();
+    let ey = diagram.path.points[3].sub(diagram.path.points[0]).normalize();
+    let a =  ex.x; let b = -ex.y;
+    let c = -ey.x; let d =  ey.y;
+
+    let xpos = diagram.path.points[3].x;
+    let ypos = -diagram.path.points[3].y;
+
+    obj.setAttribute("width", width.toString());
+    obj.setAttribute("height", height.toString());
+    obj.setAttribute("transform", `matrix(${a} ${b} ${c} ${d} ${xpos} ${ypos})`);
+    obj.style.overflow = "visible";
+    div.style.textWrap = "nowrap";
+    div.style.transformOrigin = "top left";
+    div.style.transform = `scale(${scaleX},${scaleY})`
+    div.innerHTML = diagram.foreignobjdata.innerHTML;
+    if (svgtag != undefined) obj.setAttribute("_dg_tag", svgtag);
+
+    obj.appendChild(div);
+    target_element.appendChild(obj);
+}
+
+/**
  * Collect all DiagramType.Text in the diagram
  * @param diagram the outer diagram
  * @returns a list of DiagramType.Text
@@ -483,6 +532,8 @@ export function f_draw_to_svg(
         // do nothing
     } else if (diagram.type == DiagramType.Image){
         draw_image(target_element, diagram, embed_image, svgtag);
+    } else if (diagram.type == DiagramType.ForeignObject){
+        draw_foreign_object(target_element, diagram, embed_image, svgtag);
     } else if (diagram.type == DiagramType.Diagram){
         for (let d of diagram.children) {
             f_draw_to_svg(svgelement, target_element, d, false, embed_image, undefined, svgtag);
