@@ -10,6 +10,7 @@ enum TableOrientation {
 }
 
 export type cell_style = { index : [number,number], fill? : string, stroke? : string, strokewidth? : number };
+export type alignment_config = string[][];
 
 /**
  * Create a table with diagrams inside
@@ -22,6 +23,44 @@ export type cell_style = { index : [number,number], fill? : string, stroke? : st
  */
 export function table(diagrams : Diagram[][], padding : number | number[] = 0, orientation : TableOrientation = TableOrientation.ROWS, 
     min_rowsize : number = 0, min_colsize : number = 0) : Diagram {
+        
+    const config = {
+        padding,
+        orientation,
+        min_rowsize,
+        min_colsize,
+    };
+    return advanced_table(diagrams, config);
+}
+
+export interface advanced_table_config {
+    padding? : number | number[]; // 0
+    orientation? : TableOrientation; // TableOrientation.ROWS
+    min_rowsize? : number; // 0
+    min_colsize? : number; // 0
+    alignment? : string[][]; // []
+}
+/**
+ * Create a table with diagrams inside
+ * @param diagrams 2D array of diagrams
+ * @param config, config for the table
+ * ```typescript
+ * interface advanced_table_config {
+ *     padding? : number | number[]; // 0
+ *     orientation? : 'rows' | 'columns'; // 'rows'
+ *     min_rowsize? : number; // 0
+ *     min_colsize? : number; // 0
+ *     alignment? : string[][]; // []
+ * }
+ * ```
+ */
+export function advanced_table(diagrams : Diagram[][], config: advanced_table_config) : Diagram {
+    const padding = config.padding ?? 0;
+    const orientation = config.orientation ?? TableOrientation.ROWS;
+    const min_rowsize = config.min_rowsize ?? 0;
+    const min_colsize = config.min_colsize ?? 0;
+    const alignment = config.alignment ?? [];
+    
     // if the orientation is columns, then we just transpose the rows and columns
     let diagram_rows = orientation == TableOrientation.ROWS ? diagrams : transpose(diagrams);
 
@@ -47,7 +86,7 @@ export function table(diagrams : Diagram[][], padding : number | number[] = 0, o
         }
     }
 
-    return fixed_size(diagrams, rowsizes, colsizes, orientation);
+    return fixed_size(diagrams, rowsizes, colsizes, orientation, pad, alignment);
 }
 
 /**
@@ -92,29 +131,34 @@ export function style_cell(table_diagram : Diagram, styles : cell_style[]) : Dia
  * if `colsizes.length` is less than `diagrams[0].length`, the last value will be repeated
  * @param orientation orientation of the table (default: 'rows')
  * can be 'rows' or 'columns'
+ * @alignment alignment config for the table
  * @returns a diagram of the table with the diagrams inside
  */
 export function fixed_size(diagrams : Diagram[][], rowsizes : number[], colsizes : number[]
-    , orientation : TableOrientation = TableOrientation.ROWS ) : Diagram 
+    , orientation: TableOrientation = TableOrientation.ROWS, padding: number|number[] = 0,
+    alignment: alignment_config = []) : Diagram
 {
+    const pad = expand_directional_value(padding);
     // if the orientation is columns, then we just transpose the rows and columns
     let diagram_rows = orientation == TableOrientation.ROWS ? diagrams : transpose(diagrams);
     let row_count = diagram_rows.length;
     let col_count = Math.max(...diagram_rows.map(row => row.length));
 
     const empty_map = get_empty_map(diagrams);
-    let table = empty_fixed_size(row_count, col_count, rowsizes, colsizes, empty_map);
-    let points = get_points(table);
+    const table = empty_fixed_size(row_count, col_count, rowsizes, colsizes, empty_map);
+    const cells = get_padded_cells(table, pad);
 
     let diagram_grid : Diagram[] = [];
     for (let r = 0; r < row_count; r++) {
         for (let c = 0; c < col_count; c++) {
             let d = diagram_rows[r][c];
             if (d == undefined) continue;
-            d = d.move_origin('center-center').position(points[r][c])
-                .append_tags(TAG.TABLE_CONTENT)
+            d = d.append_tags(TAG.TABLE_CONTENT)
                 .append_tags(TAG.ROW_ + r)
                 .append_tags(TAG.COL_ + c);
+            const alignment_value: any = alignment[r]?.[c] ?? 'center-center';
+            console.log(r,c,alignment_value);
+            d = d.move_origin(alignment_value).position(cells[r][c].get_anchor(alignment_value))
             diagram_grid.push(d);
         }
     }
@@ -203,6 +247,40 @@ export function get_points(table_diagram : Diagram) : Vector2[][] {
         let cols : Vector2[] = [];
         for (let cell of row.children){
             cols.push(cell.origin);
+        }
+        rows.push(cols);
+    }
+    return rows;
+}
+
+/**
+ * Get the padded cells of a table diagram
+ * @param table_diagram a table diagram
+ * @returns a 2D array of Diagram
+ */
+export function get_padded_cells(table_diagram : Diagram, padding: number|number[] = 0) : Diagram[][] {
+    const pad = expand_directional_value(padding);
+    
+    let table_diagram_ = table_diagram;
+    if (table_diagram.tags.includes(TAG.CONTAIN_TABLE)) {
+        for (let d of table_diagram.children){
+            if (d.tags.includes(TAG.TABLE)) {
+                table_diagram_ = d;
+                break;
+            }
+        }
+    }
+    if (!table_diagram_.tags.includes(TAG.TABLE)) return [];
+
+    let rows : Diagram[][] = [];
+    for (let row of table_diagram_.children){
+        let cols : Diagram[] = [];
+        for (let cell of row.children){
+            const [cell_bottomleft, cell_topright] = cell.bounding_box();
+            // include the padding
+            const bottomleft = cell_bottomleft.add(V2(pad[3], pad[2]));
+            const topright = cell_topright.sub(V2(pad[1], pad[0]));
+            cols.push(rectangle_corner(bottomleft, topright));
         }
         rows.push(cols);
     }
