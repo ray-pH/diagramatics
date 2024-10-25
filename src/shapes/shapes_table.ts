@@ -157,7 +157,6 @@ export function fixed_size(diagrams : Diagram[][], rowsizes : number[], colsizes
                 .append_tags(TAG.ROW_ + r)
                 .append_tags(TAG.COL_ + c);
             const alignment_value: any = alignment[r]?.[c] ?? 'center-center';
-            console.log(r,c,alignment_value);
             d = d.move_origin(alignment_value).position(cells[r][c].get_anchor(alignment_value))
             diagram_grid.push(d);
         }
