@@ -765,7 +765,10 @@ export class Diagram {
             case "bottom-left"   : return new Vector2(minx, miny);
             case "bottom-center" : return new Vector2(midx, miny);
             case "bottom-right"  : return new Vector2(maxx, miny);
-            default: throw new Error("Unknown anchor " + anchor);
+            default: {
+                console.error("Unknown anchor " + anchor);
+                return new Vector2(midx,midy);
+            }
         }
     }
 
