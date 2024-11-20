@@ -417,7 +417,7 @@ export class Diagram {
             return newd; 
         } else if (newd.type == DiagramType.Polygon || newd.type == DiagramType.Curve 
             || newd.type == DiagramType.Text || newd.type == DiagramType.Image 
-            || newd.type == DiagramType.MultilineText
+            || newd.type == DiagramType.MultilineText || newd.type == DiagramType.ForeignObject
         ) {
             newd.style[stylename] = stylevalue;
         } else if (newd.type == DiagramType.Diagram) {
