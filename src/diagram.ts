@@ -78,6 +78,8 @@ type ExtraTspanStyle = {
     "baseline-shift" : string,
     "font-size-scale-factor": number,
     "is-prev-word" : boolean, // tag to indicate that this is part of the previous word
+    "text-decoration@underline": boolean, // text-decoration builder
+    "text-decoration@line-through": boolean, // text-decoration builder
 }
 export type TextSpanData = {
     "text"  : string,

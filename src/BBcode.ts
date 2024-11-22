@@ -161,6 +161,8 @@ export class BB_multiline {
                 case "var"        : style["textvar"] = true; break;
                 case "tag"        : style["tag"] = tag["tag"]; break;
                 case "lineheight" : style["_line-height"] = tag["lineheight"]; break;
+                case "u"          : style["text-decoration@underline"] = true; break;
+                case "s"          : style["text-decoration@line-through"] = true; break;
                 case "sup": {
                     style["baseline-shift"] = "super";
                     style["font-size-scale-factor"] = 0.7;
