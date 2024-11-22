@@ -426,6 +426,10 @@ function draw_multiline_texts(
                 * scale * dg_scale_factor * font_size_scale_factor;
 
             if (tspanstyle["tag"]) tspan.setAttribute("_dg_tag", tspanstyle["tag"] as string);
+            
+            let text_decoration : string[] = [];
+            if (tspanstyle["text-decoration@underline"]) text_decoration.push("underline");
+            if (tspanstyle["text-decoration@line-through"]) text_decoration.push("line-through");
 
             tspan.style.whiteSpace = "pre";
             // if we do style.whiteSpace in `textsvg`, it doesnt work in Apple's webkit
@@ -437,12 +441,14 @@ function draw_multiline_texts(
             tspan.setAttribute("font-size", font_size.toString());
             tspan.setAttribute("font-weight", tspanstyle["font-weight"] as string);
             // tspan.setAttribute("text-anchor", tspanstyle["text-anchor"] as string);
-            tspan.style["fill"] = get_color(tspanstyle.fill as string, tab_color);
-            tspan.style["stroke"] = get_color(tspanstyle.stroke as string, tab_color);
-            tspan.style["opacity"] = tspanstyle.opacity as string;
+            tspan.style.fill = get_color(tspanstyle.fill as string, tab_color);
+            tspan.style.stroke = get_color(tspanstyle.stroke as string, tab_color);
+            tspan.style.opacity = tspanstyle.opacity as string;
             // if baseline-shift is defined, set it
             if (tspanstyle["baseline-shift"]) 
                 tspan.setAttribute("baseline-shift", tspanstyle["baseline-shift"] as string);
+            if (text_decoration.length > 0) 
+                tspan.style.textDecoration = text_decoration.join(" ");
 
             let text = tspandata.text;
             if (tspanstyle["textvar"]) text = str_to_mathematical_italic(text);
