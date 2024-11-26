@@ -7,13 +7,23 @@ type PolyBoolPoly = {
     regions: Point[][];
     inverted: boolean;
 }
-function dg_to_polybool(d : Diagram) : PolyBoolPoly {
-    const dg_points = d.path?.points ?? [];
-    const points = dg_points.map(p => [p.x, p.y] as Point);
-    return {
-        regions: [points],
-        inverted: false
-    };
+function dg_to_polybool(d : Diagram, tolerance? : number) : PolyBoolPoly {
+    if (d.type == DiagramType.Diagram) {
+        const pol = tolerance ? new PolyBool(new GeometryEpsilon(tolerance)) : polybool;
+        const polybool_children = d.children.map(c => dg_to_polybool(c, tolerance));
+        let unioned = polybool_children[0];
+        for (let i = 1; i < polybool_children.length; i++) {
+            unioned = pol.union(unioned, polybool_children[i]);
+        }
+        return unioned;
+    } else {
+        const dg_points = d.path?.points ?? [];
+        const points = dg_points.map(p => [p.x, p.y] as Point);
+        return {
+            regions: [points],
+            inverted: false
+        };
+    }
 }
 
 function polybool_to_dg(poly : PolyBoolPoly) : Diagram {
@@ -39,8 +49,8 @@ function polybool_to_dg(poly : PolyBoolPoly) : Diagram {
 */
 export function union(d1 : Diagram, d2 : Diagram, tolerance? : number) : Diagram {
     const pol = tolerance ? new PolyBool(new GeometryEpsilon(tolerance)) : polybool;
-    const shape1 = dg_to_polybool(d1);
-    const shape2 = dg_to_polybool(d2);
+    const shape1 = dg_to_polybool(d1, tolerance);
+    const shape2 = dg_to_polybool(d2, tolerance);
     const result = pol.union(shape1, shape2);
     return polybool_to_dg(result);
 }
@@ -54,8 +64,8 @@ export function union(d1 : Diagram, d2 : Diagram, tolerance? : number) : Diagram
 */
 export function difference(d1 : Diagram, d2 : Diagram, tolerance? : number) : Diagram {
     const pol = tolerance ? new PolyBool(new GeometryEpsilon(tolerance)) : polybool;
-    const shape1 = dg_to_polybool(d1);
-    const shape2 = dg_to_polybool(d2);
+    const shape1 = dg_to_polybool(d1, tolerance);
+    const shape2 = dg_to_polybool(d2, tolerance);
     const result = pol.difference(shape1, shape2);
     return polybool_to_dg(result);
 }
@@ -69,8 +79,8 @@ export function difference(d1 : Diagram, d2 : Diagram, tolerance? : number) : Di
 */
 export function intersect(d1 : Diagram, d2 : Diagram, tolerance? : number) : Diagram {
     const pol = tolerance ? new PolyBool(new GeometryEpsilon(tolerance)) : polybool;
-    const shape1 = dg_to_polybool(d1);
-    const shape2 = dg_to_polybool(d2);
+    const shape1 = dg_to_polybool(d1, tolerance);
+    const shape2 = dg_to_polybool(d2, tolerance);
     const result = pol.intersect(shape1, shape2);
     return polybool_to_dg(result);
 }
@@ -84,8 +94,8 @@ export function intersect(d1 : Diagram, d2 : Diagram, tolerance? : number) : Dia
 */
 export function xor(d1 : Diagram, d2 : Diagram, tolerance? : number) : Diagram {
     const pol = tolerance ? new PolyBool(new GeometryEpsilon(tolerance)) : polybool;
-    const shape1 = dg_to_polybool(d1);
-    const shape2 = dg_to_polybool(d2);
+    const shape1 = dg_to_polybool(d1, tolerance);
+    const shape2 = dg_to_polybool(d2, tolerance);
     const result = pol.xor(shape1, shape2);
     return polybool_to_dg(result);
 }
