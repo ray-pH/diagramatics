@@ -257,11 +257,10 @@ function draw_foreign_object(
 
     obj.setAttribute("width", width.toString());
     obj.setAttribute("height", height.toString());
-    obj.setAttribute("transform", `matrix(${a} ${b} ${c} ${d} ${xpos} ${ypos})`);
+    obj.setAttribute("transform", `matrix(${a*scaleX} ${b*scaleX} ${c*scaleY} ${d*scaleY} ${xpos} ${ypos})`);
     obj.style.overflow = "visible";
     div.style.textWrap = "nowrap";
     div.style.transformOrigin = "top left";
-    div.style.transform = `scale(${scaleX},${scaleY})`
     div.innerHTML = diagram.foreignobjdata.innerHTML;
     if (svgtag != undefined) obj.setAttribute("_dg_tag", svgtag);
 
