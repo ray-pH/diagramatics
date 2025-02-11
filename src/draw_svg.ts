@@ -58,7 +58,7 @@ export function reset_default_styles() : void {
 
 function draw_polygon(
     svgelement : SVGSVGElement, target_element : SVGSVGElement|SVGGElement,
-    diagram : Diagram, svgtag? : string
+    diagram : Diagram, global_scale_factor: number = 1, svgtag? : string
 ) : void {
     // get properties
     let style = {...default_diagram_style, ...diagram.style}; // use default if not defined
@@ -80,8 +80,8 @@ function draw_polygon(
         for (let i = 0; i < diagram.path.points.length; i++) {
             let p = diagram.path.points[i];
             var point = svgelement.createSVGPoint();
-            point.x =  p.x;
-            point.y = -p.y;
+            point.x =  p.x * global_scale_factor;
+            point.y = -p.y * global_scale_factor;
             polygon.points.appendItem(point);
         }
     }
@@ -90,7 +90,7 @@ function draw_polygon(
 
 function draw_curve(
     svgelement : SVGSVGElement, target_element : SVGSVGElement|SVGGElement,
-    diagram : Diagram, svgtag? : string
+    diagram : Diagram, global_scale_factor: number, svgtag? : string
 ) : void {
     // get properties
     let style = {...default_diagram_style, ...diagram.style}; // use default if not defined
@@ -109,8 +109,8 @@ function draw_curve(
         for (let i = 0; i < diagram.path.points.length; i++) {
             let p = diagram.path.points[i];
             var point = svgelement.createSVGPoint();
-            point.x =  p.x;
-            point.y = -p.y;
+            point.x =  p.x * global_scale_factor;
+            point.y = -p.y * global_scale_factor;
             polyline.points.appendItem(point);
         }
     }
@@ -179,7 +179,7 @@ function set_image_href_dataURL(img : SVGImageElement, src : string) : void{
  */
 function draw_image(
     target_element: SVGSVGElement|SVGGElement,
-    diagram : Diagram, embed_image : boolean, svgtag? : string
+    diagram : Diagram, embed_image : boolean, global_scale_factor: number, svgtag? : string
 ) : void {
     let image = document.createElementNS("http://www.w3.org/2000/svg", "image");
     image.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
@@ -192,8 +192,8 @@ function draw_image(
     // path: bottom-left, bottom-right, top-right, top-left
     // width  : 0-1
     // height : 1-2
-    let width  = diagram.path.points[1].sub(diagram.path.points[0]).length();
-    let height = diagram.path.points[2].sub(diagram.path.points[1]).length();
+    let width  = diagram.path.points[1].sub(diagram.path.points[0]).length() * global_scale_factor;
+    let height = diagram.path.points[2].sub(diagram.path.points[1]).length() * global_scale_factor;
     
     // calculate the linear transformation matrix
     // [ a c ]
@@ -203,8 +203,8 @@ function draw_image(
     let a =  ex.x; let b = -ex.y;
     let c = -ey.x; let d =  ey.y;
 
-    let xpos = diagram.path.points[3].x;
-    let ypos = -diagram.path.points[3].y;
+    let xpos = diagram.path.points[3].x * global_scale_factor;
+    let ypos = -diagram.path.points[3].y * global_scale_factor;
 
     if (embed_image) {
         set_image_href_dataURL(image, diagram.imgdata.src);
@@ -224,7 +224,7 @@ function draw_image(
  */
 function draw_foreign_object(
     target_element: SVGSVGElement|SVGGElement,
-    diagram : Diagram, embed_image : boolean, svgtag? : string
+    diagram : Diagram, embed_image : boolean, global_scale_factor: number, svgtag? : string
 ) : void {
     let obj = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
     let div = document.createElement("div");
@@ -304,7 +304,9 @@ export function calculate_text_scale(referencesvgelement : SVGSVGElement, paddin
 function draw_texts(
     target_element: SVGSVGElement|SVGGElement,
     diagrams : Diagram[], 
-    calculated_scale : number, svgtag? : string
+    calculated_scale : number, 
+    global_scale_factor : number,
+    svgtag? : string
 ) : void {
     for (let diagram of diagrams) {
         let style = {...default_text_diagram_style, ...diagram.style}; // use default if not defined
@@ -322,7 +324,7 @@ function draw_texts(
         let angle_deg = to_degree(parseFloat(textdata["angle"] as string));
 
         let scale = textdata["font-scale"] == "auto" ? 
-            calculated_scale : parseFloat(textdata["font-scale"] as string);
+            calculated_scale : parseFloat(textdata["font-scale"] as string) * global_scale_factor;
         let font_size = parseFloat(textdata["font-size"] as string) * scale;
 
         // set font styles (font-family, font-size, font-weight)
@@ -363,7 +365,8 @@ function draw_texts(
  */
 function draw_multiline_texts(
     target_element : SVGSVGElement|SVGGElement,
-    diagrams : Diagram[],  calculated_scale : number, svgtag? : string
+    diagrams : Diagram[],  calculated_scale : number, global_scale_factor : number,
+    svgtag? : string
 ) : void {
     for (let diagram of diagrams) {
     //     let style = {...default_text_diagram_style, ...diagram.style}; // use default if not defined
@@ -419,7 +422,7 @@ function draw_multiline_texts(
             }
 
             let scale = tspanstyle["font-scale"] == "auto" ? 
-                calculated_scale : parseFloat(tspanstyle["font-scale"] as string);
+                calculated_scale : parseFloat(tspanstyle["font-scale"] as string) * global_scale_factor;
             let font_size_scale_factor = tspanstyle["font-size-scale-factor"] ?? 1;
             let font_size = parseFloat(tspanstyle["font-size"] as string) 
                 * scale * dg_scale_factor * font_size_scale_factor;
@@ -522,26 +525,27 @@ export function get_tagged_svg_element(tag : string, svgelement : SVGElement) : 
  * @param embed_image (optional) whether to embed images
  * this allow the image to be downloaded as SVG with the image embedded
  * @param text_scaling_factor (optional) the scaling factor for text
+ * @param global_scale_factor (optional) the global scaling factor for the diagram
  * @param svgtag (optional) the tag to add to the svg element
  */
 export function f_draw_to_svg(
     svgelement : SVGSVGElement, target_element: SVGSVGElement|SVGGElement,
     diagram : Diagram, render_text : boolean = true, embed_image : boolean = false,
-    text_scaling_factor? : number, svgtag? : string
+    text_scaling_factor? : number, global_scale_factor : number = 1, svgtag? : string, 
 ) : void {
     if (diagram.type == DiagramType.Polygon) {
-        draw_polygon(svgelement, target_element, diagram, svgtag);
+        draw_polygon(svgelement, target_element, diagram, global_scale_factor, svgtag);
     } else if (diagram.type == DiagramType.Curve){
-        draw_curve(svgelement, target_element, diagram, svgtag);
+        draw_curve(svgelement, target_element, diagram, global_scale_factor, svgtag);
     } else if (diagram.type == DiagramType.Text || diagram.type == DiagramType.MultilineText){
         // do nothing
     } else if (diagram.type == DiagramType.Image){
-        draw_image(target_element, diagram, embed_image, svgtag);
+        draw_image(target_element, diagram, embed_image, global_scale_factor, svgtag);
     } else if (diagram.type == DiagramType.ForeignObject){
-        draw_foreign_object(target_element, diagram, embed_image, svgtag);
+        draw_foreign_object(target_element, diagram, embed_image, global_scale_factor, svgtag);
     } else if (diagram.type == DiagramType.Diagram){
         for (let d of diagram.children) {
-            f_draw_to_svg(svgelement, target_element, d, false, embed_image, undefined, svgtag);
+            f_draw_to_svg(svgelement, target_element, d, false, embed_image, undefined, global_scale_factor, svgtag);
         }
     } else {
         console.warn("Unreachable, unknown diagram type : " + diagram.type);
@@ -555,8 +559,8 @@ export function f_draw_to_svg(
         }
         let text_diagrams      : Diagram[] = collect_text(diagram, DiagramType.Text);
         let multiline_diagrams : Diagram[] = collect_text(diagram, DiagramType.MultilineText);
-        draw_texts(target_element, text_diagrams, text_scaling_factor ?? 1, svgtag);
-        draw_multiline_texts(target_element, multiline_diagrams, text_scaling_factor ?? 1, svgtag);
+        draw_texts(target_element, text_diagrams, text_scaling_factor ?? 1, global_scale_factor, svgtag);
+        draw_multiline_texts(target_element, multiline_diagrams, text_scaling_factor ?? 1, global_scale_factor, svgtag);
     }
     
 }
@@ -592,6 +596,7 @@ export interface draw_to_svg_options {
     text_scaling_reference_svg? : SVGSVGElement,
     text_scaling_reference_padding? : number | number[],
     filter_strings? : string[],
+    global_scale_factor? : number,
 }
 
 // TODO: replace draw_to_svg with the current draw_to_svg_element in the next major version
@@ -611,6 +616,8 @@ export interface draw_to_svg_options {
  *    padding? : number | number[] (10),
  *    text_scaling_reference_svg? : SVGSVGElement (undefined),
  *    text_scaling_reference_padding? : number | number[] (undefined),
+ *    filter_strings? : string[] (undefined),
+ *    global_scale_factor? : number (undefined),
  * }
  * ````
  * define `text_scaling_reference_svg` and `text_scaling_reference_padding` to scale text based on another svg element
@@ -620,6 +627,7 @@ export function draw_to_svg_element(outer_svgelement : SVGSVGElement, diagram : 
     const render_text = options.render_text ?? true;
     const clear_svg = options.clear_svg ?? true;
     const embed_image = options.embed_image ?? false;
+    const global_scale_factor = options.global_scale_factor ?? 1;
     
     let svgelement : SVGSVGElement | undefined = undefined;
     // check if outer_svgelement has a child with meta=diagram_svg
@@ -656,7 +664,7 @@ export function draw_to_svg_element(outer_svgelement : SVGSVGElement, diagram : 
     // TODO : for performance, do smart clearing of svg, and not just clear everything
     if (clear_svg) svgelement.innerHTML = "";
 
-    f_draw_to_svg(svgelement, svgelement, diagram, render_text, embed_image, text_scaling_factor);
+    f_draw_to_svg(svgelement, svgelement, diagram, render_text, embed_image, text_scaling_factor, global_scale_factor);
 
     if (set_html_attribute) {
         const pad_px = expand_directional_value(options.padding ?? 10);

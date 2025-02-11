@@ -59,6 +59,7 @@ export class Interactive {
     // no support for canvas yet
     
     private focus_padding : number = 1;
+    private global_scale_factor = 1;
 
     public draw_function : (inp_object : inpVariables_t, setter_object? : inpSetter_t) => any 
         = (_) => {};
@@ -242,7 +243,7 @@ export class Interactive {
         this.locator_svg = control_svg;
         // if this is the fist time this function is called, create a locatorHandler
         if (this.locatorHandler == undefined) {
-            let locatorHandler = new LocatorHandler(control_svg, diagram_svg);
+            let locatorHandler = new LocatorHandler(control_svg, diagram_svg, this.global_scale_factor);
             this.locatorHandler = locatorHandler;
             const eventTarget = this.isTargetingDocument() ? document : this.diagram_outer_svg;
             this.registerEventListener(eventTarget, 'mousemove',  (evt:any) => { locatorHandler.drag(evt)});
@@ -285,14 +286,16 @@ export class Interactive {
             if (track_diagram.path == undefined) throw Error(`diagram {diagtam.type} must have a path`);
             let track = track_diagram.path.points;
             setter = (pos : Vector2) => {
+                const s = this.global_scale_factor;
                 let coord = closest_point_from_points(pos, track);
-                locator_svg.setAttribute("transform", `translate(${coord.x},${-coord.y})`)
+                locator_svg.setAttribute("transform", `translate(${coord.x * s},${-coord.y * s})`)
                 return coord;
             }
         }
         else{
             setter = (pos : Vector2) => {
-                locator_svg.setAttribute("transform", `translate(${pos.x},${-pos.y})`)
+                const s = this.global_scale_factor;
+                locator_svg.setAttribute("transform", `translate(${pos.x * s},${-pos.y * s})`)
                 return pos;
             }
         }
@@ -331,7 +334,7 @@ export class Interactive {
         this.locator_svg = control_svg;
         // if this is the fist time this function is called, create a locatorHandler
         if (this.locatorHandler == undefined) {
-            let locatorHandler = new LocatorHandler(control_svg, diagram_svg);
+            let locatorHandler = new LocatorHandler(control_svg, diagram_svg, this.global_scale_factor);
             this.locatorHandler = locatorHandler;
             const eventTarget = this.isTargetingDocument() ? document : this.diagram_outer_svg;
             this.registerEventListener(eventTarget, 'mousemove',  (evt:any) => { locatorHandler.drag(evt); })
@@ -503,7 +506,7 @@ export class Interactive {
 
         // if this is the fist time this function is called, create a dragAndDropHandler
         if (this.dragAndDropHandler == undefined) {
-            let dragAndDropHandler = new DragAndDropHandler(dnd_svg, diagram_svg);
+            let dragAndDropHandler = new DragAndDropHandler(dnd_svg, diagram_svg, this.global_scale_factor);
             dragAndDropHandler.focus_padding = this.focus_padding;
             this.dragAndDropHandler = dragAndDropHandler;
             const eventTarget = this.isTargetingDocument() ? document : this.diagram_outer_svg;
@@ -514,6 +517,13 @@ export class Interactive {
             this.registerEventListener(eventTarget, 'touchend',   (evt:any) => {dragAndDropHandler.endDrag(evt);});
             this.registerEventListener(eventTarget, 'touchcancel',(evt:any) => {dragAndDropHandler.endDrag(evt);});
         }
+    }
+    
+    set_global_scale_factor(factor: number) {
+        this.global_scale_factor = factor;
+        if (this.buttonHandler) this.buttonHandler.global_scale_factor = factor;
+        if (this.locatorHandler) this.locatorHandler.global_scale_factor = factor;
+        if (this.dragAndDropHandler) this.dragAndDropHandler.global_scale_factor = factor;
     }
 
     /**
@@ -688,7 +698,7 @@ export class Interactive {
         let control_svg = this.get_svg_element(control_svg_name.custom, !this.custom_svg);
 
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        f_draw_to_svg(svg, svg, diagram, true, false, calculate_text_scale(diagram_svg));
+        f_draw_to_svg(svg, svg, diagram, true, false, calculate_text_scale(diagram_svg), this.global_scale_factor);
         svg.setAttribute("overflow", "visible");
         svg.setAttribute("class", classlist.join(" "));
         svg.setAttribute("id",id);
@@ -715,7 +725,7 @@ export class Interactive {
         let control_svg = this.get_svg_element(control_svg_name.custom, !this.custom_svg);
 
         let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        f_draw_to_svg(control_svg, g, diagram, true, false, calculate_text_scale(diagram_svg));
+        f_draw_to_svg(control_svg, g, diagram, true, false, calculate_text_scale(diagram_svg), this.global_scale_factor);
         g.setAttribute("overflow", "visible");
         g.setAttribute("class", classlist.join(" "));
         g.setAttribute("id",id);
@@ -737,7 +747,7 @@ export class Interactive {
 
         // if this is the fist time this function is called, create a dragAndDropHandler
         if (this.buttonHandler == undefined) {
-            let buttonHandler = new ButtonHandler(button_svg, diagram_svg);
+            let buttonHandler = new ButtonHandler(button_svg, diagram_svg, this.global_scale_factor);
             buttonHandler.focus_padding = this.focus_padding;
             this.buttonHandler = buttonHandler;
         }
@@ -934,17 +944,18 @@ class LocatorHandler {
     first_touch_callback : Function | null = null;
     element_pos : {[key : string] : Vector2} = {};
 
-    constructor(public control_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
+    constructor(public control_svg : SVGSVGElement, public diagram_svg : SVGSVGElement, public global_scale_factor : number){
     }
 
     startDrag(evt : LocatorEvent, variable_name : string, selectedElement : SVGElement) {
         this.selectedElement  = selectedElement;
         this.selectedVariable = variable_name;
         
+        const s = this.global_scale_factor;
         if (evt instanceof MouseEvent) { evt.preventDefault(); }
         if (window.TouchEvent && evt instanceof TouchEvent) { evt.preventDefault(); }
         let coord = getMousePosition(evt, this.control_svg);
-        let mousepos = V2(coord.x, coord.y);
+        let mousepos = V2(coord.x/s, coord.y/s);
         let elementpos = this.element_pos[variable_name];
         if (elementpos){
             this.mouseOffset = elementpos.sub(mousepos);
@@ -961,7 +972,8 @@ class LocatorHandler {
 
         let coord = getMousePosition(evt, this.control_svg);
 
-        let pos = V2(coord.x, coord.y).add(this.mouseOffset);
+        const s = this.global_scale_factor;
+        let pos = V2(coord.x/s, coord.y/s).add(this.mouseOffset);
         this.element_pos[this.selectedVariable] = pos;
         // check if setter for this.selectedVariable exists
         // if it does, call it
@@ -1025,7 +1037,7 @@ class LocatorHandler {
 
     create_locator_diagram_svg(name: string, diagram : Diagram, blink : boolean) : SVGGElement {
         let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        f_draw_to_svg(this.control_svg, g, diagram.position(V2(0,0)), true, false, calculate_text_scale(this.diagram_svg));
+        f_draw_to_svg(this.control_svg, g, diagram.position(V2(0,0)), true, false, calculate_text_scale(this.diagram_svg), this.global_scale_factor);
         g.style.cursor = "pointer";
         g.setAttribute("overflow", "visible");
         if (blink) {
@@ -1069,9 +1081,10 @@ class LocatorHandler {
         circle_inner.setAttribute("stroke", "none");
         circle_inner.classList.add("diagramatics-locator-inner");
 
+        const s = this.global_scale_factor;
         g.appendChild(circle_outer);
         g.appendChild(circle_inner);
-        g.setAttribute("transform", `translate(${value.x},${-value.y})`)
+        g.setAttribute("transform", `translate(${value.x * s},${-value.y * s})`)
         if (this.svg_elements[name]){
             this.svg_elements[name].replaceWith(g);
         } else {
@@ -1137,7 +1150,7 @@ class DragAndDropHandler {
     active_draggable_name: string | null = null; // active from tap/enter
     focus_padding : number = 1;
 
-    constructor(public dnd_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
+    constructor(public dnd_svg : SVGSVGElement, public diagram_svg : SVGSVGElement, public global_scale_factor : number){
         this.dom_to_id_map = new WeakMap();
     }
 
@@ -1429,9 +1442,10 @@ class DragAndDropHandler {
     private add_container_svg(name : string, diagram: Diagram, outer_g: SVGGElement) {
         let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
         f_draw_to_svg(this.dnd_svg, g, diagram.position(V2(0,0)), 
-            false, false, calculate_text_scale(this.diagram_svg), dnd_type.container);
+            false, false, calculate_text_scale(this.diagram_svg), this.global_scale_factor, dnd_type.container);
+        const s = this.global_scale_factor;
         let position = diagram.origin;
-        g.setAttribute("transform", `translate(${position.x},${-position.y})`)
+        g.setAttribute("transform", `translate(${position.x * s},${-position.y * s})`)
         g.setAttribute("class", dnd_type.container);
         g.setAttribute("tabindex", "0");
         
@@ -1451,9 +1465,10 @@ class DragAndDropHandler {
     
     private add_draggable_svg(name : string, diagram : Diagram, outer_g : SVGGElement) {
         let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        f_draw_to_svg(this.dnd_svg, g, diagram.position(V2(0,0)), true, false, calculate_text_scale(this.diagram_svg), dnd_type.draggable);
+        f_draw_to_svg(this.dnd_svg, g, diagram.position(V2(0,0)), true, false, calculate_text_scale(this.diagram_svg), this.global_scale_factor, dnd_type.draggable);
+        const s = this.global_scale_factor;
         let position = diagram.origin;
-        g.setAttribute("transform", `translate(${position.x},${-position.y})`)
+        g.setAttribute("transform", `translate(${position.x * s},${-position.y * s})`)
         g.setAttribute("class", dnd_type.draggable);
         g.setAttribute("draggable", "true");
         g.setAttribute("tabindex", "0");
@@ -1480,14 +1495,15 @@ class DragAndDropHandler {
     private add_focus_rect(g: SVGGElement, diagram : Diagram) {
         const bbox = diagram.position(V2(0,0)).bounding_box();
         const pad = this.focus_padding;
+        const s = this.global_scale_factor;
         const width = bbox[1].x - bbox[0].x + 2*pad;
         const height = bbox[1].y - bbox[0].y + 2*pad;
         // focus rect svg element
         const focus_rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        focus_rect.setAttribute("width", width.toString());
-        focus_rect.setAttribute("height", height.toString());
-        focus_rect.setAttribute("x", (bbox[0].x - pad).toString());
-        focus_rect.setAttribute("y", (-bbox[1].y - pad).toString());
+        focus_rect.setAttribute("width", (width * s).toString());
+        focus_rect.setAttribute("height", (height * s).toString());
+        focus_rect.setAttribute("x", ((bbox[0].x - pad) * s).toString());
+        focus_rect.setAttribute("y", ((-bbox[1].y - pad) * s).toString());
         focus_rect.setAttribute("fill", "none");
         focus_rect.setAttribute("stroke", "black");
         focus_rect.setAttribute("stroke-width", "1");
@@ -1554,12 +1570,13 @@ class DragAndDropHandler {
         const bbox = container.config.custom_region_box ?? container.diagram.bounding_box();
         const position_map = this.generate_position_map(bbox, container.config, container.capacity, container.content);
 
+        const s = this.global_scale_factor;
         for (let i = 0; i < container.content.length; i++) {
             let draggable = this.draggables[container.content[i]];
             let pos = position_map[i] ?? container.diagram.origin;
             draggable.diagram = draggable.diagram.position(pos);
             draggable.position = pos;
-            draggable.svgelement?.setAttribute("transform", `translate(${pos.x},${-pos.y})`);
+            draggable.svgelement?.setAttribute("transform", `translate(${pos.x * s},${-pos.y * s})`);
         }
     }
     remove_draggable_from_container(draggable_name : string, container_name : string) {
@@ -1731,7 +1748,7 @@ class ButtonHandler {
     touchdownName : string | null = null;
     focus_padding: number = 1;
 
-    constructor(public button_svg : SVGSVGElement, public diagram_svg : SVGSVGElement){
+    constructor(public button_svg : SVGSVGElement, public diagram_svg : SVGSVGElement, public global_scale_factor : number){
     }
     
     remove(name : string){
@@ -1758,12 +1775,12 @@ class ButtonHandler {
         g : SVGGElement, callback : (state : boolean, redraw? : boolean) => any
     ) : setter_function_t {
         let g_off = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        f_draw_to_svg(this.button_svg, g_off, diagram_off, true, false, calculate_text_scale(this.diagram_svg));
+        f_draw_to_svg(this.button_svg, g_off, diagram_off, true, false, calculate_text_scale(this.diagram_svg), this.global_scale_factor);
         g_off.setAttribute("overflow", "visible");
         g_off.style.cursor = "pointer";
 
         let g_on = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        f_draw_to_svg(this.button_svg, g_on, diagram_on, true, false, calculate_text_scale(this.diagram_svg));
+        f_draw_to_svg(this.button_svg, g_on, diagram_on, true, false, calculate_text_scale(this.diagram_svg), this.global_scale_factor);
         g_on.setAttribute("overflow", "visible");
         g_on.style.cursor = "pointer";
 
@@ -1821,17 +1838,17 @@ class ButtonHandler {
         g : SVGGElement, callback : () => any
     ){
         let g_normal = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        f_draw_to_svg(this.button_svg, g_normal, diagram, true, false, calculate_text_scale(this.diagram_svg));
+        f_draw_to_svg(this.button_svg, g_normal, diagram, true, false, calculate_text_scale(this.diagram_svg), this.global_scale_factor);
         g_normal.setAttribute("overflow", "visible");
         g_normal.style.cursor = "pointer";
 
         let g_pressed = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        f_draw_to_svg(this.button_svg, g_pressed, diagram_pressed, true, false, calculate_text_scale(this.diagram_svg));
+        f_draw_to_svg(this.button_svg, g_pressed, diagram_pressed, true, false, calculate_text_scale(this.diagram_svg), this.global_scale_factor);
         g_pressed.setAttribute("overflow", "visible");
         g_pressed.style.cursor = "pointer";
         
         let g_hover = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        f_draw_to_svg(this.button_svg, g_hover, diagram_hover, true, false, calculate_text_scale(this.diagram_svg));
+        f_draw_to_svg(this.button_svg, g_hover, diagram_hover, true, false, calculate_text_scale(this.diagram_svg), this.global_scale_factor);
         g_hover.setAttribute("overflow", "visible");
         g_hover.style.cursor = "pointer";
         
