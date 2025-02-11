@@ -254,10 +254,11 @@ function draw_foreign_object(
 
     let xpos = diagram.path.points[3].x;
     let ypos = -diagram.path.points[3].y;
+    const gs = global_scale_factor;
 
     obj.setAttribute("width", width.toString());
     obj.setAttribute("height", height.toString());
-    obj.setAttribute("transform", `matrix(${a*scaleX} ${b*scaleX} ${c*scaleY} ${d*scaleY} ${xpos} ${ypos})`);
+    obj.setAttribute("transform", `matrix(${a*scaleX} ${b*scaleX} ${c*scaleY} ${d*scaleY} ${xpos*gs} ${ypos*gs})`);
     obj.style.overflow = "visible";
     div.style.textWrap = "nowrap";
     div.style.transformOrigin = "top left";
@@ -471,9 +472,10 @@ function draw_multiline_texts(
         // text.setAttribute("font-weight", textdata["font-weight"] as string);
         // text.setAttribute("text-anchor", textdata["text-anchor"] as string);
         // // text.setAttribute("dominant-baseline", textdata["dominant-baseline"] as string);
+        const gs = global_scale_factor;
         textsvg.setAttribute("dy", textdata["dy"] as string);
         textsvg.setAttribute("text-anchor", textdata["text-anchor"] as string);
-        textsvg.setAttribute("transform", `translate(${xpos} ${ypos}) rotate(${angle_deg}) `);
+        textsvg.setAttribute("transform", `translate(${xpos*gs} ${ypos*gs}) rotate(${angle_deg}) `);
         if (svgtag != undefined) textsvg.setAttribute("_dg_tag", svgtag);
         //
         // // custom attribute for tex display
