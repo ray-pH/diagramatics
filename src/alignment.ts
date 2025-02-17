@@ -201,17 +201,21 @@ export function distribute_grid_row(diagrams : Diagram[], column_count : number,
  * alignment can be 'top', 'center', or 'bottom'
  * @param horizontal_alignment horizontal alignment of the diagrams (default = 'left')
  * alignment can be 'left', 'center', or 'right'
+ * @param tolerancePercentage tolerance percentage for the width of the diagrams (default = 1)
  */
 export function distribute_variable_row(diagrams: Diagram[], container_width : number, 
     vertical_space : number = 0, horizontal_space : number = 0, 
     vertical_alignment : VerticalAlignment = 'center', 
-    horizontal_alignment : HorizontalAlignment = 'left'
+    horizontal_alignment : HorizontalAlignment = 'left',
+    tolerancePercentage : number = 1
 ) : Diagram {
     if (diagrams.length == 0) { return empty(); }
 
     let rows : Diagram[] = [];
     let current_row : Diagram[] = [];
     let current_row_w = 0;
+    
+    const width_tolerance = container_width * tolerancePercentage/100;
 
     function add_diagrams_to_rows(arr : Diagram[]) {
         let distributed_row_dg = distribute_horizontal_and_align(arr, horizontal_space, vertical_alignment);
@@ -223,13 +227,13 @@ export function distribute_variable_row(diagrams: Diagram[], container_width : n
     for (let i = 0; i < diagrams.length; i++) {
         let d = diagrams[i];
         let w = size(d)[0];
-        if (w > container_width) {
+        if (w > container_width + width_tolerance) {
             if (current_row.length > 0) add_diagrams_to_rows(current_row);
             current_row.push(d); add_diagrams_to_rows(current_row);
             continue;
         }
 
-        if (current_row_w + horizontal_space + w > container_width) add_diagrams_to_rows(current_row);
+        if (current_row_w + horizontal_space + w > container_width + width_tolerance) add_diagrams_to_rows(current_row);
 
         current_row.push(d);
         current_row_w += w + horizontal_space;
