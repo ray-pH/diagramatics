@@ -52,6 +52,10 @@ export class BB_Lexer {
     static parse(text : string) : BB_Token[] | null {
         let tokens : BB_Token[] = [];
 
+        // Replace escaped brackets with placeholders
+        text = text.replace(/\\\[/g, '__ESCAPED_LBRACKET__')
+                   .replace(/\\\]/g, '__ESCAPED_RBRACKET__');
+        
         let pos = 0;
         let len = text.length;
         while (pos < len) {
@@ -62,7 +66,11 @@ export class BB_Lexer {
             // no more tags, add the rest of the text
                 tokens.push({ 
                     type: BB_TokenType.TEXT, 
-                    attributes: {_text : text.substring(pos)} 
+                    attributes: {
+                        _text : text.substring(pos)
+                            .replace(/__ESCAPED_LBRACKET__/g, '[')
+                            .replace(/__ESCAPED_RBRACKET__/g, ']')
+                    } 
                 });
                 break;
             }
@@ -70,7 +78,11 @@ export class BB_Lexer {
             // add the text before the [
                 tokens.push({ 
                     type: BB_TokenType.TEXT, 
-                    attributes: {_text : text.substring(pos, TagLeft)} 
+                    attributes: {
+                        _text : text.substring(pos, TagLeft)
+                            .replace(/__ESCAPED_LBRACKET__/g, '[')
+                            .replace(/__ESCAPED_RBRACKET__/g, ']')
+                    } 
                 });
             }
 
