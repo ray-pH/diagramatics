@@ -29,9 +29,10 @@ jobs:
       - name: Create the docs directory locally in CI
         run: npm run docs
 
-      - name: Upload Artifacts
-        uses: actions/upload-pages-artifact@v2
+      - name: Upload Docs Artifact
+        uses: actions/upload-artifact@v4
         with:
+          name: docs
           path: 'docs/'
 
   deploy:
@@ -47,6 +48,20 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     
     steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Download Docs Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docs
+          path: 'docs/'
+
+      - name: Upload to GitHub Pages
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: 'docs/'
+
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v2
