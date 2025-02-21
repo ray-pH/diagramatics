@@ -58,10 +58,10 @@ jobs:
           path: 'docs/'
 
       - name: Upload to GitHub Pages
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v4
         with:
           path: 'docs/'
 
       - name: Deploy
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4
