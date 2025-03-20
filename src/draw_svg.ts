@@ -393,6 +393,8 @@ function draw_multiline_texts(
 
         if (diagram.multilinedata?.content == undefined) { throw new Error("MultilineText must have multilinedata"); }
         let dg_scale_factor = diagram.multilinedata["scale-factor"] ?? 1;
+        let is_first_element = true;
+        
         for (let tspandata of diagram.multilinedata.content) {
 
             // create tspan for each tspandata
@@ -405,6 +407,13 @@ function draw_multiline_texts(
                 ...{ "font-size": diagram_font_size },
                 ...tspandata.style
             };
+            
+            if (is_first_element) {
+                tspan.setAttribute("x", "0");
+                let textdata_dy = textdata["dy"] ?? "0";
+                tspanstyle.dy = textdata_dy;
+                is_first_element = false;
+            }
 
             let scale = tspanstyle["font-scale"] == "auto" ?
                 calculated_scale : parseFloat(tspanstyle["font-scale"] as string) * global_scale_factor;
