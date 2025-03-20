@@ -4,6 +4,8 @@ import { to_degree, expand_directional_value } from "./utils.js";
 import { str_to_mathematical_italic, str_to_normal_from_mathematical_italic } from './unicode_utils.js'
 import { TAG } from "./tag_names.js";
 
+const is_firefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+
 // TODO : add guard for the dictionary key
 // since the implementation is using `for (let stylename in style)` without checking
 // if the correct key is in the dictionary, it can lead to unintended behavior
@@ -390,47 +392,29 @@ function draw_multiline_texts(
 
 
         if (diagram.multilinedata?.content == undefined) { throw new Error("MultilineText must have multilinedata"); }
-        // let current_line : number = 0;
         let dg_scale_factor = diagram.multilinedata["scale-factor"] ?? 1;
-        let is_firstline : boolean = true;
-        let is_in_front  : boolean = true;
-        let newline_dy   : string  = "1em";
         for (let tspandata of diagram.multilinedata.content) {
-
-            if (tspandata.text == "\n") { 
-                is_in_front = true; 
-                newline_dy = tspandata.style['dy'] ?? "1em";
-                continue; 
-            }
 
             // create tspan for each tspandata
             let tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
 
-            let not_setting_dy = (tspandata.style['dy'] == undefined)
             let tspanstyle = {
-                ...default_text_diagram_style, 
+                ...default_text_diagram_style,
                 ...textdata,
-                ...{dy : "0", dx : "0"}, 
-                ...{"font-size" : diagram_font_size},
+                ...{ dy: "0", dx: "0" },
+                ...{ "font-size": diagram_font_size },
                 ...tspandata.style
             };
 
-            if (is_in_front) {
-                tspan.setAttribute("x", "0");
-                let textdata_dy = textdata["dy"] as string ?? "0";
-                if (not_setting_dy) tspanstyle.dy = is_firstline ? textdata_dy : newline_dy;
-                is_in_front = false;
-            }
-
-            let scale = tspanstyle["font-scale"] == "auto" ? 
+            let scale = tspanstyle["font-scale"] == "auto" ?
                 calculated_scale : parseFloat(tspanstyle["font-scale"] as string) * global_scale_factor;
             let font_size_scale_factor = tspanstyle["font-size-scale-factor"] ?? 1;
-            let font_size = parseFloat(tspanstyle["font-size"] as string) 
+            let font_size = parseFloat(tspanstyle["font-size"] as string)
                 * scale * dg_scale_factor * font_size_scale_factor;
 
             if (tspanstyle["tag"]) tspan.setAttribute("_dg_tag", tspanstyle["tag"] as string);
             
-            let text_decoration : string[] = [];
+            let text_decoration: string[] = [];
             if (tspanstyle["text-decoration@underline"]) text_decoration.push("underline");
             if (tspanstyle["text-decoration@line-through"]) text_decoration.push("line-through");
 
@@ -447,18 +431,41 @@ function draw_multiline_texts(
             tspan.style.fill = get_color(tspanstyle.fill as string, tab_color);
             tspan.style.stroke = get_color(tspanstyle.stroke as string, tab_color);
             tspan.style.opacity = tspanstyle.opacity as string;
+            
             // if baseline-shift is defined, set it
-            if (tspanstyle["baseline-shift"]) 
-                tspan.setAttribute("baseline-shift", tspanstyle["baseline-shift"] as string);
-            if (text_decoration.length > 0) 
+            let firefox_baseline_shift_reset = "";
+            if (tspanstyle["baseline-shift"])
+                if (is_firefox) {
+                    // firefox doesn't support baseline-shift
+                    const [set, reset] = get_firefox_baseline_shift(tspanstyle["baseline-shift"] as string);
+                    firefox_baseline_shift_reset = reset;
+                    tspan.setAttribute("dy", set);
+                } else {
+                    tspan.setAttribute("baseline-shift", tspanstyle["baseline-shift"] as string);
+                }
+            if (text_decoration.length > 0)
                 tspan.style.textDecoration = text_decoration.join(" ");
 
             let text = tspandata.text;
-            if (tspanstyle["textvar"]) text = str_to_mathematical_italic(text);
-            tspan.innerHTML = text;
+            
+            if (text == "\n") {
+                tspan.innerHTML = "&#8203;";
+                tspan.setAttribute("x", "0");
+                const newline_dy = tspandata.style['dy'] ?? "1em";
+                tspan.setAttribute("dy", newline_dy);
+            } else {
+                if (tspanstyle["textvar"]) text = str_to_mathematical_italic(text);
+                tspan.innerHTML = text;
+            }
+            
             textsvg.appendChild(tspan);
-
-            is_firstline = false;
+            
+            if (firefox_baseline_shift_reset) {
+                let resettspan = tspan.cloneNode(true) as SVGTSpanElement;
+                resettspan.setAttribute("dy", firefox_baseline_shift_reset);
+                resettspan.innerHTML = "&#8203;";
+                textsvg.appendChild(resettspan);
+            }
         }
 
         //
@@ -495,6 +502,14 @@ function draw_multiline_texts(
         //
         // // add to svgelement
         target_element.appendChild(textsvg);
+    }
+}
+
+function get_firefox_baseline_shift(baseline_shift : string) : [string, string] {
+    switch (baseline_shift) {
+        case "super": return ["-0.6em", "0.6em"];
+        case "-20%": return ["0.2em", "-0.2em"];
+        default: return ["0", "0"];
     }
 }
 
