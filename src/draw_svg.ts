@@ -4,7 +4,7 @@ import { to_degree, expand_directional_value } from "./utils.js";
 import { str_to_mathematical_italic, str_to_normal_from_mathematical_italic } from './unicode_utils.js'
 import { TAG } from "./tag_names.js";
 
-const is_firefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+const is_firefox = typeof navigator !== 'undefined' && navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
 
 // TODO : add guard for the dictionary key
 // since the implementation is using `for (let stylename in style)` without checking
