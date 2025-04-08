@@ -87,6 +87,10 @@ function draw_polygon(
             polygon.points.appendItem(point);
         }
     }
+    
+    if (diagram.tags) {
+        polygon.setAttribute('_dg_elem_tag', diagram.tags.join(" "));
+    }
 }
 
 
@@ -115,6 +119,10 @@ function draw_curve(
             point.y = -p.y * global_scale_factor;
             polyline.points.appendItem(point);
         }
+    }
+    
+    if (diagram.tags) {
+        polyline.setAttribute('_dg_elem_tag', diagram.tags.join(" "));
     }
 }
 
@@ -220,6 +228,9 @@ function draw_image(
     if (svgtag != undefined) image.setAttribute("_dg_tag", svgtag);
 
     target_element.appendChild(image);
+    if (diagram.tags) {
+        image.setAttribute('_dg_elem_tag', diagram.tags.join(" "));
+    }
 }
 
 /**
@@ -269,6 +280,9 @@ function draw_foreign_object(
 
     obj.appendChild(div);
     target_element.appendChild(obj);
+    if (diagram.tags) {
+        obj.setAttribute('_dg_elem_tag', diagram.tags.join(" "));
+    }
 }
 
 /**
@@ -358,6 +372,9 @@ function draw_texts(
 
         // add to svgelement
         target_element.appendChild(text);
+        if (diagram.tags) {
+            text.setAttribute('_dg_elem_tag', diagram.tags.join(" "));
+        }
     }
 }
 
@@ -511,6 +528,9 @@ function draw_multiline_texts(
         //
         // // add to svgelement
         target_element.appendChild(textsvg);
+        if (diagram.tags) {
+            textsvg.setAttribute('_dg_elem_tag', diagram.tags.join(" "));
+        }
     }
 }
 
