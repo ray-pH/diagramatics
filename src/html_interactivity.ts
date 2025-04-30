@@ -379,13 +379,15 @@ export class Interactive {
             let track = track_diagram.path.points;
             setter = (pos : Vector2) => {
                 let coord = closest_point_from_points(pos, track);
-                locator_svg.setAttribute("transform", `translate(${coord.x},${-coord.y})`)
+                const s = this.global_scale_factor;
+                locator_svg.setAttribute("transform", `translate(${coord.x * s},${-coord.y * s})`)
                 return coord;
             }
         }
         else{
             setter = (pos : Vector2) => {
-                locator_svg.setAttribute("transform", `translate(${pos.x},${-pos.y})`)
+                const s = this.global_scale_factor;
+                locator_svg.setAttribute("transform", `translate(${pos.x * s},${-pos.y * s})`)
                 return pos;
             }
         }
