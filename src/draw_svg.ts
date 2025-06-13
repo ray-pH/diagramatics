@@ -220,6 +220,8 @@ function draw_image(
     target_element.appendChild(image);
 }
 
+const is_safari = navigator.userAgent.indexOf("Safari") != -1 && navigator.userAgent.indexOf("Chrome") == -1;
+
 /**
  */
 function draw_foreign_object(
@@ -261,7 +263,7 @@ function draw_foreign_object(
     obj.style.overflow = "visible";
     div.style.textWrap = "nowrap";
     div.style.transformOrigin = "top left";
-    div.style.transform = `scale(${scaleX},${scaleY})`
+    if (!is_safari) div.style.transform = `scale(${scaleX},${scaleY})`
     div.innerHTML = diagram.foreignobjdata.innerHTML;
     if (svgtag != undefined) obj.setAttribute("_dg_tag", svgtag);
 
