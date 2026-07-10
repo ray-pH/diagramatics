@@ -1151,6 +1151,7 @@ class DragAndDropHandler {
     dom_to_id_map : WeakMap<HTMLElement|SVGElement, string>;
     active_draggable_name: string | null = null; // active from tap/enter
     focus_padding : number = 1;
+    has_moved : boolean = false;
 
     constructor(public dnd_svg : SVGSVGElement, public diagram_svg : SVGSVGElement, public global_scale_factor : number){
         this.dom_to_id_map = new WeakMap();
@@ -1634,6 +1635,7 @@ class DragAndDropHandler {
         if (evt instanceof MouseEvent) { evt.preventDefault(); }
         if (window.TouchEvent && evt instanceof TouchEvent) { evt.preventDefault(); }
         this.hoveredContainerName = null;
+        this.has_moved = false;
 
         // reset container hovered class
         this.reset_hovered_class();
@@ -1687,6 +1689,7 @@ class DragAndDropHandler {
     drag(evt : DnDEvent) {
         if (this.draggedElementName == null) return;
         if (this.draggedElementGhost == null) return;
+        this.has_moved = true;
         if (evt instanceof MouseEvent) { evt.preventDefault(); }
         if (window.TouchEvent && evt instanceof TouchEvent) { evt.preventDefault(); }
 
@@ -1715,6 +1718,10 @@ class DragAndDropHandler {
         if (this.hoveredContainerName == null && this.draggedElementName != null 
             && this.dropped_outside_callback != null){
             this.dropped_outside_callback(this.draggedElementName);
+        }
+
+        if (this.has_moved) {
+            this.active_draggable_name = null;
         }
 
         this.draggedElementName = null;
