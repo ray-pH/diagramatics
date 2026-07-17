@@ -332,8 +332,10 @@ function draw_texts(
 
         let textdata = {...default_textdata, ...diagram.textdata}; // use default if not defined
         if (diagram.path == undefined) { throw new Error("Text must have a path"); }
-        // draw svg of text
-        let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        // get svg of text
+        let text = diagram.svg_element as SVGTextElement; // typecast because we're sure its not undefined
+
+
         // text.setAttribute("x", diagram.path.points[0].x.toString());
         // text.setAttribute("y", (-diagram.path.points[0].y).toString());
         let xpos = diagram.path.points[0].x;
@@ -370,8 +372,6 @@ function draw_texts(
             text_content = str_to_mathematical_italic(text_content);
         text.innerHTML = text_content;
 
-        // add to svgelement
-        target_element.appendChild(text);
         if (diagram.tags) {
             text.setAttribute('_dg_elem_tag', diagram.tags.join(" "));
         }
@@ -395,8 +395,8 @@ function draw_multiline_texts(
     //
     //     let textdata = {...default_textdata, ...diagram.textdata}; // use default if not defined
         if (diagram.path == undefined) { throw new Error("Text must have a path"); }
-        // draw svg of text
-        let textsvg = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        // get svg of text
+        let textsvg = diagram.svg_element as SVGTextElement; // typecast because we're sure its not undefined
         let xpos = diagram.path.points[0].x;
         let ypos = -diagram.path.points[0].y;
         // let angle_deg = to_degree(parseFloat(textdata["angle"] as string));
@@ -526,8 +526,6 @@ function draw_multiline_texts(
         //     text_content = str_to_mathematical_italic(text_content);
         // text.innerHTML = text_content;
         //
-        // // add to svgelement
-        target_element.appendChild(textsvg);
         if (diagram.tags) {
             textsvg.setAttribute('_dg_elem_tag', diagram.tags.join(" "));
         }
@@ -584,7 +582,10 @@ export function f_draw_to_svg(
     } else if (diagram.type == DiagramType.Curve){
         draw_curve(svgelement, target_element, diagram, global_scale_factor, svgtag);
     } else if (diagram.type == DiagramType.Text || diagram.type == DiagramType.MultilineText){
-        // do nothing
+        // we create and add the element here to preserve rendering order to maintain z-index
+        let text_element =  document.createElementNS("http://www.w3.org/2000/svg", "text");
+        diagram.svg_element = text_element;
+        target_element.appendChild(text_element);
     } else if (diagram.type == DiagramType.Image){
         draw_image(target_element, diagram, embed_image, global_scale_factor, svgtag);
     } else if (diagram.type == DiagramType.ForeignObject){

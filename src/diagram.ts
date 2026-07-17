@@ -130,6 +130,7 @@ export class Diagram {
     foreignobjdata: Partial<ForeignObjectData> = {};
     mutable       : boolean   = false;
     tags : string[] = [];
+    svg_element : SVGSVGElement | SVGTextElement | undefined = undefined;
     
     private _bbox_cache : [Vector2, Vector2] | undefined = undefined;
 
